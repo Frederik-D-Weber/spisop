@@ -1,0 +1,23 @@
+## REQUIRED,,
+ChannelsOfInterestFileName,ChannelsOfInterest.txt,Filename of file containing comma seperated channel names for analysis per line for respective dataset
+MeanFactorNegativePeak,1.25,Factor in means for threshold of negative peaks default 1.25
+MeanFactorPeak2Peak,1.25,Factor in means for threshold of negative peak to positive peak amplitude default 1.25
+MinDetectionFreq,0.5,Minimal frequency within detection criteria in Hz i.e. select intervals of zero corssings with minmal length of 1/f default 0.5
+MaxDetectionFreq,1.11,Maximal frequency within detection criteria in Hz i.e. select intervals of zero corssings with maximal length of 1/f default 1.11
+## OPTIONAL,,
+AVGoverChannels,no,Average over prefiltered channels either yes or no default no
+FrequencyBoundaryMethod,generalminmaxfreq,Method for determining frequency boundaries for detection either generalminmaxfreq or indcenterfreq in case of generalminmaxfreq a center frequency file is ignored as well as parameters for pre and post center frequency filters default generalminmaxfreq  
+CenterFrequenciesFileName,CenterFrequencies.txt,Filename of file containing one center frequency per line for analysis for respective dataset
+PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff,0.2,prefilter frequency before downsampling. if 0 then no prefiltering is applied. should be set to 0.1 to 0.3 if data was not previously filtered. default 0.2
+PreDetectionHighPassFilter_FpassLeft_or_F3dBcutoff,0.3,pass frequency in Hz for the low pass filter after downsampling to look for zero crossings. should be greater than StopToPassTransitionWidth_hp (core parameters) added to PreDownSampleHighPassFilter_FpassLeft default 0.3
+PreDetectionLowPassFilterFreq_FpassRight,3.5,pass frequency in Hz for the low pass filter after downsampling to look for zero crossings. should be greater than StopToPassTransitionWidth_hp (core parameters) added to PreDownSampleHighPassFilter_FpassLeft default 3.5
+preCenterFreqFilterTo_FpassLeft,1.5,Left power band boundary (left pass band edge) as defined by amount of Hz bigger than center frequency default 1.5
+postCenterFreqFilterTo_FpassRight,1.5,Right power band boundary (right pass band edge)as defined by amount of Hz smaller than center frequency default 1.5
+MinAbsoluteDownToUpPeakPotential,0,Minimum absolute potential difference previous to take means to select as valid event (i.e. peak to peak or peak to trough) default 0
+MaxAbsoluteDownToUpPeakPotential,Inf,Maximum absolute potential difference previous to take means to select as valid event (i.e. peak to peak or peak to trough) default Inf
+MinAbsoluteUpPeakPotential,10E-6,Minimum absolute potential previous to take means to select as valid event (e.g. 5E-6 for 5 micro Potential above zero) default 10E-6
+MaxAbsoluteDownPeakPotential,-15E-6,Maximum absolute potential previous to take means to select as valid event (e.g. -5E-6 for 5 micro Potential below zero) default -15E-6
+sleepStagesOfInterest,SWS S2, sleep stages of interest to be analysed possible values are in unique subsets of either Wake MT REM S1 NonREM or Wake MT REM S1 S2 SWS or Wake MT REM S1 S2 S3 S4 e.g. SWS S2 is equivalent to NonREM default NonREM
+FrqOfSmplWished,100,Frequency to analyse per second/Hz note data will be downsampled after filtering to this Frequency.
+DataSetsWhich,all,Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
+DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset

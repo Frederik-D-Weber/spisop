@@ -1,0 +1,20 @@
+EventsTestFilePathsFileName,EventsFilePaths_Spindle.txt,Filename of file containing test events file paths in comma separated values format per line ( at least one )
+EventsTargetFilePathsFileName,EventsFilePaths_SO.txt,Filename of file containing target events file paths in comma separated values format per line ( at least one )
+EventsTestTimePointColumn,seconds_trough_max,variable name for event value in test events files
+EventsTargetTimePointColumn,seconds_trough_max,variable name for event value in target events files
+EventsTestCompareColumns,datasetnum channel,variable names for columns used for matching test events against events columns in target events files separated by a space character
+EventsTargetCompareColumns,datasetnum channel,variable names for columns used for matching target against events columns in test events files separated by a space character
+EventsTestGroupSummaryByColumns,datasetnum channel stage_alt,variable names for columns in test event file used for grouping matches separated by a space character
+EventTargetTimeWindowOffsetTime,0,time point offset of the time window test events can fall into with respect to target events time points in units used for EventsTargetCompareColumns default 0
+UseSecondColumnAndOnlyOffsetsForTimeWindow,yes,if a second column and a second offset is used to define the time window either yes or no if yes EventsTestTimePointColumn and EventsTestTimePointColumn2 and respective EventTargetTimeWindowOffsetTime and EventTargetTimeWindowOffsetTime2 are used to define the left and right boundaries for the time window if no then instead EventsTestTimePointColumn and EventTargetTimeWindowOffsetTime and EventTargetTimeWindowPreOffsetTime and EventTargetTimeWindowPostOffsetTime are used default no
+EventsTargetTimePointColumn2,seconds_end,second variable name for event value in target events files giving the right time point boundary and is only used if UseSecondColumnAndOnlyOffsetsForTimeWindow is set to yes
+EventTargetTimeWindowOffsetTime2,0.5,second time point offset of the time window test events can fall into with respect to target events time points in units used for EventsTargetCompareColumns and is only used if UseSecondColumnAndOnlyOffsetsForTimeWindow is set to yes default 0
+EventTargetTimeWindowPreOffsetTime,1,time before target event plus offset to define time window that test events can fall into with respect to target events time points in units used for EventsTargetCompareColumns default 1
+EventTargetTimeWindowPostOffsetTime,1,time after target event plus offset to define time window that test events can fall into with respect to target events time points in units used for EventsTargetCompareColumns default 1
+EventTestTimePointOffsetTime,0,time point offset of test events in units used for EventsTestTimePointColumn default 0
+EventsFilesWhich,all,Event files to be processed either all or subset if subset then EventsFilesNumbers is used for selection default all
+EventsFilesNumbers,1 2,The line numbers of the events file to be processed if EventsFilesWhich parameter is set to subset
+EventsTestFilterForColumn,,variable name for event value in test events files to apply text filter to if nothing is entered it is not filtered e.g. channel default is no value entered 
+EventsTargetFilterForColumn,,variable name for event value in test events files to apply text filter to if nothing is entered it is not filtered e.g. channel default is no value entered
+EventsTestFilterValues,,variable values for EventsTestFilterForColum in test events files to apply text filter e.g. Cz
+EventsTargetFilterValues,,variable values for EventsTargetFilterForColum in test events files to apply text filter e.g. Cz

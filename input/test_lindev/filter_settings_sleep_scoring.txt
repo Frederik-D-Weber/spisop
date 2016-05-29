@@ -1,0 +1,11 @@
+channel_label,channel_order,filter_definitions
+EMG,7,hp 10
+HEOG,1,hp 0.3 lp 35
+VEOG,1.5,hp 0.3 lp 35
+C3:A2,2,hp 0.3 lp 35
+C4:A1,4,hp 0.3 lp 35
+Cz:A1A2,3,hp 0.3 lp 35
+C3:A2fspind,5,bp 12 15
+C3:A2sspind,6,bp 9 12
+C3:A2SO,8,hp 0.5 lp 2
+C3:A2theta,9,bp 4 8

@@ -1,0 +1,4 @@
+referenceChannels,toBeReferencedChannels,newImplicitRefChannelLabel
+A2,C3,
+A1,C4,
+A1 A2,F* P* O* T* -EMG -EOG,Cz

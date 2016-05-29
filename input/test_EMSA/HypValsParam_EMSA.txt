@@ -1,0 +1,10 @@
+## REQUIRED,,
+LightsOffsFileName,LightsOffs_EMSA.txt,Filename of file containing one sample number of lights off moment marker per line for each dataset
+## OPTIONAL,,
+DataSetsWhich,all,Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
+DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset
+SleepOnsetDefinition,S1_XREM, either S1 or S1_NonREM or S1_XREM or NonREM or XREM. S1: starting with first S1 is sleep onset, nothing else. S1_NonREM: starting with first S1 if directly followed by either S2, S3 or S4, otherwise with first S2 or S3 or S4. S1_XREM: starting with first S1 if directly followed by either S2, S3, S4, or REM, otherwise with first S2 or S3 or S4 or REM. NonREM: starting with first one of S2, S3 or S4. XREM, starting with first one of S2, S3 or S4 or REM. default S1_XREM
+ExportHypnogram,yes,if the hypnogram should be exported for an excerpt either no or yes default no
+ExportHypnogramStartOffset,sleeponset, the either sleeponset or eegonset or lightsoff default sleeponset
+ExportHypnogramStartTime,0,time after ExportHypnogramStartOffset to cut in minutes default 0
+ExportHypnogramEndTime,90,next time after ExportHypnogramStartOffset to cut in minutes that needs to be bigger than ExportHypnogramStartTime default 90

@@ -1,0 +1,17 @@
+## REQUIRED,,
+ChannelsOfInterestFileName,ChannelsOfInterest_short_frontal.txt,Filename of file containing comma seperated channel names for analysis per line for respective dataset  
+FrequencyPeaksOutputFilname,FrequencyPeaks_slow.csv,Filename of file containing resulting frequeny peaks per line for respective dataset default FrequencyPeaks.txt;
+sleepStagesOfInterest,SWS,sleep stages of interest to be analysed possible values are in unique subsets of either Wake MT REM S1 NonREM or Wake MT REM S1 S2 SWS or Wake MT REM S1 S2 S3 S4 e.g. SWS S2 is equivalent to NonREM default NonREM
+## OPTIONAL,,
+PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff,1,should be lower than half of MinSuspectFreq if 0 then no prefiltering is applied. should be set to at least 0.1 if data was not previously filtered. default 1
+SegmentLength,10,Segmentation of data of interest in time windows of a specific length in seconds recomended to be lower than the epoch length default 10
+SegmentOverlap,0.5,Overlap of segments during segmentation in fraction of segment length as value in the interval [0,1) default 0.5
+FrqOfSmplWished,100,Frequency to analyse per second/Hz note data will be downsampled after filtering to this Frequency.
+MinSuspectFreq,6,Left power band boundary as defined by minimal frequeny in Hz default 6
+MaxSuspectFreq,18,Left power band boundary as defined by minimal frequeny in Hz default 18
+SmoothFreqWindowSize,0.3,the parameter giving the smoothing window size for power spectra (visual) in Hz. The smoothing is done in odd steps of (1/SegmentLength) Hz i.e. if (1/SegmentLength) = 0.1 then the possible steps are 0.1 0.3 0.5 etc. it is rounded up to the next odd such frequency default 0.3
+MinFreqStepPadding,1,Minimum Frequency steps to padd left or rigth of MinSuspectFreq and MaxSuspectFreq for automatic spindle detection default 1 e.g. (1/SegmentLength)*1 = 0.1 Hz padding
+MinPeakDistanceInHerz,1,minimal frequency distance of automatic detected peaks in Hz default 1
+ExpectedNumberOfPeaks,2,number of expected peaks to search for either 1 or 2 default 2
+DataSetsWhich,all,Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
+DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset

@@ -1,0 +1,17 @@
+sleepStagesOfInterest,SWS S2, sleep stages of interest to be analysed possible values are in unique subsets of either Wake MT REM S1 NonREM or Wake MT REM S1 S2 SWS or Wake MT REM S1 S2
+EventsFilePathsFileName,EventsPath_EMSA.txt,Filename of file containing events file in comma separated values format per line for each dataset
+EventsColumn,seconds_trough_max,variable name for event value in events file
+ChannelColumn,channel,variable name for channel column in events file
+ChannelsOfInterestFileName,ChannelsOfInterest_EMSA_SO.txt,Filename of file containing comma seperated channel names for analysis per line for respective dataset
+PreEventBufferTime,1.5,seconds buffer to the left of new non-event i.e. distance to left boundary
+PostEventBufferTime,1.5,seconds buffer to the right of new non-event i.e. distance to right boundary
+PreBoundaryNonEventBufferTimeToEvents,2,seconds buffer to the left of old events i.e. the minimal distance difference to the boundaries of new non-events
+PostBoundaryNonEventBufferTimeToEvents,2,seconds buffer to the right of old events to the minimal distance difference to the boundaries of new non-events
+NonOverlapConsideringAllChannels,no,either yes or no default no
+SDsearchWindowArroundDetectedEvent,40,Standard deviation to search for new non-event away from corresponding event in seconds 
+MaxTrialsBeforeIncreaseSDsearchWindowArroundDetectedEvent,1000,number of trys of search until increase standard deviation to search for new non-event away from corresponding event in seconds 
+MaxTrialsBeforeStopSearch,10000,maximum number of trys of search until stop and take the last quess to search for new non-event away from corresponding event in seconds 
+SDsearchWindowArroundDetectedEventStepsize,20,Amount to increase standard deviation to search for new non-event away from corresponding event in seconds 
+RandomSeed,135632,seed number for random number generator default 135632
+DataSetsWhich,all,Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
+DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset

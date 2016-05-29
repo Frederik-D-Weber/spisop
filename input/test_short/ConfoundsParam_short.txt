@@ -1,0 +1,18 @@
+## REQUIRED,,
+ChannelsOfInterestFileName,ChannelsOfInterest_confounds_short.txt,Filename of file containing comma seperated channel names for analysis per line for respective dataset
+FrqOfSmplWished,100,Frequency to analyse per second/Hz note data will be downsampled after filtering to this Frequency.
+## OPTIONAL,,
+AVGoverChannels,no,Average over prefiltered channels either yes or no default no
+PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff,5,should be lower than half of MinSuspectFreq if 0 then no prefiltering is applied. should be set to at least 0.1 to 0.3 if data was not previously filtered. default 5
+sleepStagesOfInterest,S1 NonREM REM, sleep stages of interest to be analysed possible values are in unique subsets of either Wake MT REM S1 NonREM or Wake MT REM S1 S2 SWS or Wake MT REM S1 S2 S3 S4 e.g. SWS S2 is equivalent to NonREM default NonREM
+DataSetsWhich,all,Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
+DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset
+NewEpochLength,30,in seconds default 30
+PreArtifactPadding,3,in seconds default 3
+PostArtifactPadding,3,in seconds default 3
+BandPassPreDetectionFilterFrequencies,10 20, in Hz default 0.5 100
+MinMaxAllowedPotentialCriterion,yes,either yes or no default yes
+MinAllowedPotential,-50, in Potential. e.g. 50 µV
+MaxAllowedPotential,50, in Potential. e.g. -50 µV
+OperatorForChannelCombination,or,either and or or default or
+IncludeMAepochs,yes,if MA or artifact epochs of previous scoring should be considered either yes or no default yes.

@@ -1,0 +1,3 @@
+D:\spisop_toolbox_beta2.3\input\test_lindev\Hypnograms1.txt
+D:\spisop_toolbox_beta2.3\input\test_lindev\Hypnograms2.txt
+D:\spisop_toolbox_beta2.3\input\test_lindev\Hypnograms3.txt

@@ -1,0 +1,14 @@
+## REQUIRED,,
+ChannelsOfInterestFileName,ChannelsOfInterest_short.txt,Filename of file containing comma seperated channel names for analysis per line for respective dataset
+sleepStagesOfInterest,SWS S2, sleep stages of interest to be analysed possible values are in unique subsets of either Wake MT REM S1 NonREM or Wake MT REM S1 S2 SWS or Wake MT REM S1 S2 S3 S4 e.g. SWS S2 is equivalent to NonREM default NonREM
+## OPTIONAL,,
+AVGoverChannels,no,Average over prefiltered channels either yes or no default no
+FrequencyBandsFileName,FrequencyBands.txt,Filename of file containing name of frequency and frequency band (two numbers) per line for analysis for respective dataset
+PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff,0.1,should be lower than half of MinSuspectFreq if 0 then no prefiltering is applied. should be set to 0.1 to 0.3 if data was not previously filtered. default 0.1
+SegmentLength,5,Segmentation of data of interest in time windows of a specific length in seconds recomended to be lower than the epoch length default 5
+SegmentOverlap,0.9,Overlap of segments during segmentation in fraction of segment length as value in the interval [0,1) default 0.9
+ft_power_cfg_taper,hanning,choose either dpss or hanning as parameter for tapering method during power sprectrum analysis resulting in the use of either multi-taper method (MTM) based on discrete prolate spheroidal sequences (DPSS or Slepian sequences) as tapers or a single-taper based on Hanning or on Hamming windows. in case of hanning the ft_power_cfg_tapsmofrq parameter is ignored default hanning
+ft_power_cfg_tapsmofrq,0.1,taper smoothing frequency for spectral smoothing trough multi-tapering (only). Note that 1 Hz smoothing meansplus-minus 1 Hz (2 Hz smoothing box) and lower values speed up calculation default 0.1
+FrqOfSmplWished,100,Frequency to analyse per second/Hz note data will be downsampled after filtering to this Frequency.
+DataSetsWhich,all,Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
+DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset

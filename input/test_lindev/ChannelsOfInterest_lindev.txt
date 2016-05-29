@@ -1,0 +1,2 @@
+F3,F4,Fz,C3,C4,Cz,P3,P4,Pz
+F3,F4,Fz,C3,C4,Cz,P3,P4,Pz

@@ -1,0 +1,3 @@
+D:\spisop_toolbox_beta2.3\test_datasets\short\ExpS12.eeg
+D:\spisop_toolbox_beta2.3\test_datasets\short\ExpS15.eeg
+D:\spisop_toolbox_beta2.3\test_datasets\short\ExpS28.eeg

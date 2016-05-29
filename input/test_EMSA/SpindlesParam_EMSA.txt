@@ -1,0 +1,32 @@
+## REQUIRED,,
+ChannelsOfInterestFileName,ChannelsOfInterest_EMSA.txt,Filename of file containing comma seperated channel names for analysis per line for respective dataset
+CenterFrequenciesFileName,CenterFrequencies_EMSA.txt,Filename of file containing one center frequency per line for analysis for respective dataset
+sleepStagesOfInterest,SWS S2,sleep stages of interest to be analysed possible values are in unique subsets of either Wake MT REM S1 NonREM or Wake MT REM S1 S2 SWS or Wake MT REM S1 S2 S3 S4 e.g. SWS S2 is equivalent to NonREM default NonREM
+SDmethod,respectivechan,Method for aggregating standard deviation (SD) possible is meanoverchan or valuesoverchan or respectivechan i.e. respectivechan uses SD of each channel for channel meanoverchan uses mean of SD over all channels for each channel valuesoverchan uses SD over all values in all channels for each channel default respectivechan
+EnvelopeMethod,smoothedRMSwd,the method for creating the envelope either hilbertEnv for the absolute value of the hilbert tranform of the signal or smoothedRMSwd for a smoothed moving symetric root mean squared of window of length RMSTimeWndw further symetrically smoothed with window length MovAvgTimeWndw. default smoothedRMSwd
+factorSDbeginEnd,1.5,Factor in standard deviations for threshold of the signal for smoothed RMS signal for begin and end of event default 1.5 for both smoothedRMSwd and hilbertEnv 
+factorSDcriterion,1.5,Factor in standard deviations for threshold of the signal for smoothed RMS signal for minimum criterion to reach to count as an event. must be greater or equal than factorSDbeginEnd default 1.5 for smoothedRMSwd and 2.25 for hilbertEnv 
+preCenterFreqFilterTo_FpassLeft,1,Left power band boundary (left pass band edge or cut-off frequency edge if fieltrip filters are used) as defined by amount of Hz bigger than center frequency default 1
+postCenterFreqFilterTo_FpassRight,1,Right power band boundary (right pass band edge or cut-off frequency edge if fieltrip filters are used) as defined by amount of Hz smaller than center frequency default 1
+MinDetectionLength,0.5,Minimal time within detection criteria in seconds i.e. RMS above threshold default 0.5
+MaxDetectionLength,3,Maximal time within detection criteria in seconds i.e. RMS above threshold default 3
+## OPTIONAL,,
+AVGoverChannels,no,Average over prefiltered channels either yes or no default no
+MergeEventsInProximityWithinDetectionMargins,0,proximity of boundaries of events in seconds in order to be merged within margins of MinDetectionLength and MaxDetectionLength with 0 meaning no merging and all further selection filters like MinAbsoluteDownToUpPeakPotential and MaxAbsoluteDownToUpPeakPotential applied after merging default 0
+MinAbsoluteDownToUpPeakPotential,0,Minimum absolute potential difference to select as valid event (i.e. peak to peak or peak to trough) default 0
+MaxAbsoluteDownToUpPeakPotential,200,Maximum absolute potential difference to select as valid event (i.e. peak to peak or peak to trough) default Inf
+UseAbsoluteEnvelopeThreshold,no,If abosolute positive envelope threshold for all channels should be used. In this case the factorSDbeginEnd and factorSDcriterion is not applied. either yes or no default no
+AbsoluteEnvelopeThresholdBeginEnd,4,Abosolute positive envelope potential threshold for all channels for begin and end of event default 4 (for microVolts potential)
+AbsoluteEnvelopeThresholdCriterion,4,Abosolute positive envelope potential threshold for all channels for minimum criterion to reach to count as an event. must be greater or equal than AbsoluteEnvelopeThresholdBeginEnd default 4 (for microVolts potential)
+FrqOfSmplWished,100,Frequency to analyse per second/Hz note data will be downsampled after filtering to this Frequency.
+DataSetsWhich,all,Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
+DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset
+## ADVANCED,,
+RMSTimeWndw,0.2,Time window for RMS in seconds default 0.2
+MovAvgTimeWndw,0.2,Time window for moving average in smoothing RMS in seconds default 0.2
+PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff,0.5,prefilter frequency before downsampling. if 0 then no prefiltering is applied. should be set to 0.3 to 0.5 if data was not previously filtered. default 0.5
+MinDetectionFrequency_FpassLeft,4,Left power band boundary (left pass band edge) for center frequeny minus the preCenterFreqFilter as defined by minimum Hz an event is detected in default 4
+MaxDetectionFrequency_FpassRight,100,Right power band boundary (right pass band edge) for center frequeny plus the postCenterFreqFilter as defined by maximum Hz an event is detected in default 100
+## NEW,,
+OverwiteGlobalThresholdsAndUseIndividualDatasetEnvelopeThreholds,no,determine if the Threshold Criterions for all datasets should be overwritten by the Thresholds stated in the file given in Parameter IndividualDatasetEnvelopeThreholdsFileName. either yes or no default no
+IndividualDatasetEnvelopeThresholdsFileName,SpindlesIndividualDatasetEnvelopeThreholds.txt,Filename of file containing Threshold given in positive number pairs of ThresholdBeginEnd and ThresholdCriterion separated by one comma per line for respective dataset

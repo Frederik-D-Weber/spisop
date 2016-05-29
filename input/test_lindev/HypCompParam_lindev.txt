@@ -1,0 +1,20 @@
+## REQUIRED,,
+HypnogramLinksFileName,HypnogramLinks_lindev.txt,Filename of file containing a paht to a file in which every line a references with another path to a file containing the paths of all hypnograms to compare. 
+## OPTIONAL,,
+DataSetsWhich,all,Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
+DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset
+referenceOption,firstInList,which hypnogram should be chosen as a reference for comparison. either firstInList or consensushypnogram default firstInList
+statisticsAlphaLevel,0.05,the alpha level for the statistics default 0.05
+##EpochOffset,0,defines the Epochs to skip before comparison. either a number like 0 or mixed. in case of mixed EpochOffsetsFileName is considered
+##EpochOffsetsFileName,EpochOffsets.txt,Filename of file containing one number defining an epoch offset (number of epochs to skip) for each dataset
+SkipStatistics,no,choose if statistics output shall be skipped e.g. for figure creation only. in this case no consensus figure is created either yes or no default no
+GenerateHypnogramFigures,yes,choose if for all hypnograms a Figure shall be created. either yes or no default no
+GenerateHypnogramFiguresConsensus,yes,choose if consensus hypnograms figures shall be created. either yes or no default yes
+GenerateHypnogramFiguresFormat,pdf, choose format dimensions (in inches 1in=2.54 cm) of hypnograms. either png or epsc or svg or tiff or pdf or bmp or fig default png
+GenerateHypnogramFiguresUnit,inches, choose dimension unit (in inches 1in=2.54 cm) of hypnograms. either points or normalized or inches or centimeters or pixels default inches
+GenerateHypnogramFiguresFormatWidth,12, choose format dimensions in units stated in Parameter GenerateHypnogramFiguresUnit of hypnograms. default 12
+GenerateHypnogramFiguresFormatHeight,4, choose format dimensions in n units stated in Parameter GenerateHypnogramFiguresUnit of hypnograms. default 4
+GenerateHypnogramFiguresFormatResolution,300, choose resolution in pixesl per inches (1 in=2.54 cm) of hypnograms. default 300
+GenerateHypnogramFiguresFormatFontSize,0.2, Font size in units stated in Parameter GenerateHypnogramFiguresUnit. default 0.2
+SleepOnsetDefinition,S1_XREM,either S1 or S1_NonREM or S1_XREM or NonREM or XREM. S1: starting with first S1 is sleep onset, nothing else. S1_NonREM: starting with first S1 if directly followed by either S2, S3 or S4, otherwise with first S2 or S3 or S4. S1_XREM: starting with first S1 if directly followed by either S2, S3, S4, or REM, otherwise with first S2 or S3 or S4 or REM. NonREM: starting with first one of S2, S3 or S4. XREM, starting with first one of S2, S3 or S4 or REM. default S1_XREM
+HypnogramTimeTicks,20,the time ticks in minutes the hypnograms shall have in the Figure output

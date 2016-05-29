@@ -1,0 +1,2 @@
+D:\spisop_toolbox_beta2.3\output\test_lindev\test_lindev_run1_spindle_events_datanum_1.csv
+D:\spisop_toolbox_beta2.3\output\test_lindev\test_lindev_run1_spindle_events_datanum_2.csv

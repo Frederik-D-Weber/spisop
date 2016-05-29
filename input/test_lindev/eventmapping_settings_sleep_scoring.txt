@@ -1,0 +1,11 @@
+channel_label,event_channel_label
+EMG,EMG
+HEOG,HEOG
+VEOG,VEOG
+C3:A2,C3
+C4:A1,C4
+Cz:A1A2,Cz
+C3:A2fspind,C3
+C3:A2sspind,C3
+C3:A2SO,C3
+C3:A2theta,C3

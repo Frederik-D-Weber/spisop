@@ -1,0 +1,6 @@
+so,0.5,1
+delta,1,4
+theta,4,8
+slow_spindle,9,12
+fast_spindle,12,15
+beta,15,30
