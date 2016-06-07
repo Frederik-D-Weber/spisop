@@ -22,16 +22,15 @@ addpath(currentFullInstallationFilePath);
 %% -------- run until here to initilize -------- % 
 
 
-%% test analysis 'test_short'
+%% tutorial analysis 'test_short'
 
-%% set prefix sting/text
-%% Specify the dataset naming in the
-% datasetAndInputFolderName, it gives a name you want for the datasets/study/etc 
-% that you want to  analyze
-% !!! There needs to be another folder in the input folder with the same
-% name !!!
-% an output folder with the same name is created automatically if not existent
-%the test analyisis for dataset 'short' with three short night datasets:
+% Specify the name of your dataset below (datasetAndInputFolderName) and
+% create a folder in the /input/ folder with the same name. This is
+% essential! The input folder will contain text files that provide all
+% important parameters and settings.
+% An output folder with the same name will be created automatically if not 
+% existent. These are the parameters for the tutorial dataset 'test_short' 
+% with three short night datasets:
 datasetAndInputFolderName = 'test_short';
 outputFilesPrefixString = 'run1';
 tempCoreParamFile = 'CoreParam_short.txt';
