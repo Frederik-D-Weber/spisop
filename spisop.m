@@ -9,7 +9,14 @@ prefixExtentionName = '';
 parallelComputation = 'no';
 numParallelWorkers = 2;
 
+
+
 if (nargin < NStandardParam) || (nargin > NMaxParam)
+    if (nargin < 1)
+
+    helpdlg(sprintf(['SpiSOP is a command line tool!\n\n It does NOT run by double clicking it.\nYou need to give parameters in a command line... \n\n' ...
+        getUsageString()]),'It does not work like this!');
+    end
     fprintf(['Wrong number of input arguments, should be between ' num2str(NStandardParam) ' and ' num2str(NMaxParam) ' but is ' nargin '\n'])
     printUsage();
 end
@@ -158,8 +165,8 @@ out = 'finished';
 
 end
 
-function printUsage()
-sprintf(['USAGE: spisop(.exe) functionName currentFullInstallationFilePath inputFolderName outputFolderName coreParamFile functionParamFile\n'...
+function fstring = getUsageString()
+fstring = ['USAGE: spisop(.exe) functionName currentFullInstallationFilePath inputFolderName outputFolderName coreParamFile functionParamFile\n'...
         'REQUIRED PARAMETERS: ' '\n'...
         ' functionName is the name of the function to call e.g. hypvals spd sod ...see below' '\n'...
         ' currentFullInstallationFilePath is the path to the toolbox directory e.g. D:\\spisop_toolbox_beta2.3' '\n'...
@@ -185,6 +192,10 @@ sprintf(['USAGE: spisop(.exe) functionName currentFullInstallationFilePath input
         'OPTIONAL PARAMETERS as \"[parameter]=[value]\" pairs: ' '\n'...
         ' prefixExtentionName=[value] give a prefix extention string attached to outputfiles to the standard prefix' '\n'...
         ' parallelComputation=[integer >0 and < 13] give number of workers for parallel processing to initiate' '\n'...
-        ]);
+        ];
+end
+
+function printUsage()
+sprintf(getUsageString());
     error('try again!')
 end
