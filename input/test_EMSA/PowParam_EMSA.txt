@@ -12,3 +12,5 @@ ft_power_cfg_tapsmofrq,0.1,taper smoothing frequency for spectral smoothing trou
 FrqOfSmplWished,200,Frequency to analyse per second/Hz note data will be downsampled after filtering to this Frequency.
 DataSetsWhich,all,Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
 DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset
+## NEW,,
+WindowProportion,1,The proportion of hanning window (only) that is applied. e.g. 1 means 100% of hanning window applied and 0.5 means 50% of hanning window with symmetrically 25% of each segment tail (left and right) given a hanning shape. default 1

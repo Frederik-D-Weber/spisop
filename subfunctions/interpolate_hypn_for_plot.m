@@ -7,6 +7,7 @@ function [hypn_plot_interpol hypn_plot_interpol_MA] = interpolate_hypn_for_plot(
         hypn_plot(:,1) = hypn_plot(:,1)*-1;
         hypn_plot_MA = hypn_plot(:,2) ;
         hypn_plot_MA = hypn_plot_MA*0.5;
+        hypn_plot_MA(hypn_plot_MA > 1) = 1.35;
         hypn_plot = hypn_plot(:,1) ;
         hypn_plot_interpol = [];
         hypn_plot_interpol_MA = [];

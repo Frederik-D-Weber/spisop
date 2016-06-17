@@ -1,6 +1,6 @@
 ## REQUIRED,,
 ChannelsOfInterestFileName,ChannelsOfInterest_all_short.txt,Filename of file containing comma seperated channel names for analysis per line for respective dataset
-ReadInHypnogram,yes,either yes or no default no
+ReadInHypnogram,no,either yes or no default no
 DoSleepScoring,yes,either yes or no default yes
 FrqOfSmplWishedPreRedefine,200,Frequency to analyse per second/Hz before applying montage and rereference only note that no prefilter is applied before downsampling here.
 FrqOfSmplWished,100,Frequency to analyse per second/Hz note data will be downsampled after filtering to this Frequency. but if montage or rereference is used then it will be downsampled to FrqOfSmplWishedPreRedefine even before filtering.

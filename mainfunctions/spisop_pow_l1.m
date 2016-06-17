@@ -193,15 +193,23 @@ end
 AggregationOfDatasetOutputsOfDetections = getParam('AggregationOfDatasetOutputsOfDetections',listOfCoreParameters);%If the aggregation of datasetOutputfiles should be skipped either full or fast or no default full
 
 
+
+WindowProportion = 1; %default
+try
+    WindowProportion = str2num(getParam('WindowProportion',listOfParameters));%The proportion of hanning window that is applied. e.g. 1 means 100% of hanning window applied and 0.5 means 50% of hanning window with symmetrically 25% of each segment tail (left and right) given a hanning shape 
+catch err
+    
+end
+
 core_cfg = [];
 UseFTfiltfilt = getParam('UseFTfiltfilt',listOfCoreParameters);
 core_cfg.use_ft_filtfilt = strcmp(UseFTfiltfilt,'yes');
 
 core_cfg.feedback = getParam('ft_cfg_feedback',listOfCoreParameters);
-core_cfg.precision     = getParam('ft_cfg_precision',listOfCoreParameters);
+core_cfg.precision = getParam('ft_cfg_precision',listOfCoreParameters);
 
-core_cfg.dftfilter     = getParam('ft_cfg_dftfilter',listOfCoreParameters);
-core_cfg.dftfreq       = str2num(getParam('ft_cfg_dftfreq',listOfCoreParameters));
+core_cfg.dftfilter = getParam('ft_cfg_dftfilter',listOfCoreParameters);
+core_cfg.dftfreq = str2num(getParam('ft_cfg_dftfreq',listOfCoreParameters));
 
 
 
@@ -376,7 +384,7 @@ if ~(strcmp(ft_power_cfg_taper,'hanning') || strcmp(ft_power_cfg_taper,'dpss'))
 end
 
 NENBW = [];
-NENBW.hanning = 1.5;
+%NENBW.hanning = 1.5;
 %NENBW.hamming = 1.3628;
 
 tic
@@ -673,34 +681,32 @@ parfor conseciData = conseciDatas
     freqResolutionCalculation = (FrqOfSmpl/NSamplesPerSegment);
     ENBW = NaN;
     if strcmp(ft_power_cfg_taper,'hanning')
-        ENBW = NENBW.hanning * freqResolutionCalculation;
+        %ENBW = NENBW.hanning * freqResolutionCalculation;
         %     elseif strcmp(ft_power_cfg_taper,'hamming')
         %        ENBW = NENBW.hamming * freqResolutionCalculation;
+        %ft_power_cfg_taper = 'hamming'
+        
+        windowFunction = ft_power_cfg_taper;
+        %windowFunctionValues =  window(windowFunction, NSamplesPerSegment);
+        %plot(windowFunctionValues);
+        %windowFunctionValues = windowFunctionValues ./ norm(windowFunctionValues);
         
         
+        temp_windowFunctionValues = window(windowFunction, floor(WindowProportion*NSamplesPerSegment));
+        %plot(temp_windowFunctionValues);
+
+        windowFunctionValuesLeft = temp_windowFunctionValues(1:floor(end/2));
+        windowFunctionValuesRight = temp_windowFunctionValues(floor(end/2)+1:end);
+        windowFunctionValues = ones(NSamplesPerSegment,1);
+        windowFunctionValues(1:length(windowFunctionValuesLeft)) = windowFunctionValuesLeft;
+        windowFunctionValues(end-length(windowFunctionValuesRight)+1:end) = windowFunctionValuesRight;
         
-%         NSamplesPerSegment = 1000;
-%         FrqOfSmpl = 100;
-%         freqResolutionCalculation = (FrqOfSmpl/NSamplesPerSegment);
-%         windowFunction = 'hanning';
-%         windowFunctionValues =  window(windowFunction, NSamplesPerSegment);
-%         plot(windowFunctionValues);
-%         
-%         %windowFunctionValues = windowFunctionValues ./ norm(windowFunctionValues);
-%         
-%         windowFunctionFactor = 0.1
-%         temp_windowFunctionValues = window(windowFunction, floor(2*windowFunctionFactor*NSamplesPerSegment));
-%         
-%         windowFunctionValuesLeft = temp_windowFunctionValues(1:floor(end/2))
-%         windowFunctionValuesRight = temp_windowFunctionValues(floor(end/2)+1:end)
-%         windowFunctionValues = ones(NSamplesPerSegment,1);
-%         windowFunctionValues(1:length(windowFunctionValuesLeft)) = windowFunctionValuesLeft;
-%         windowFunctionValues(end-length(windowFunctionValuesRight)+1:end) = windowFunctionValuesRight;
-%         
-%         plot(windowFunctionValues);
-%         S1 = sum(windowFunctionValues);
-%         S2 = sum(windowFunctionValues.^2);
-%         ENBW = NSamplesPerSegment*(S2/(S1^2))* freqResolutionCalculation;
+        %plot(windowFunctionValues);
+        S1 = sum(windowFunctionValues);
+        S2 = sum(windowFunctionValues.^2);
+        
+        NENBW = NSamplesPerSegment*(S2/(S1^2));
+        ENBW = NENBW * freqResolutionCalculation;
         
     end
     
@@ -712,8 +718,11 @@ parfor conseciData = conseciDatas
     %cfg.pad = 'maxperlen';
     cfg.foilim  = [minBandFreq maxBandFreq];
     %cfg.foi  = [minFreq:FreqStepSize:maxFreq];
-    cfg.taper = ft_power_cfg_taper;%'hanning';
-    
+    cfg.taper = ft_power_cfg_taper;%'hanning'
+    if strcmp(cfg.taper,'hanning') %%&& (WindowProportion ~= 1)
+        cfg.taper = 'hanning_proportion';
+        cfg.tapervalues = windowFunctionValues;
+    end
     %if (~(strcmp(ft_power_cfg_taper,'hanning') || strcmp(ft_power_cfg_taper,'hamming')) && strcmp(ft_power_cfg_taper,'dpss'))
     if (~strcmp(ft_power_cfg_taper,'hanning')) && strcmp(ft_power_cfg_taper,'dpss')
         cfg.tapsmofrq = ft_power_cfg_tapsmofrq;%0.1;

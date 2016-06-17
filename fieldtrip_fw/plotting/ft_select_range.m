@@ -135,7 +135,10 @@ if ~isempty(contextmenu)
   if ~exist('hcmenu','var')
     hcmenu = get(handle,'uicontextmenu');
   end
-  set(findobj(handle,'hittest','on'), 'uicontextmenu',hcmenu);
+  try
+    set(findobj(handle,'hittest','on'), 'uicontextmenu',hcmenu);
+  catch e
+  end
   % to be used if above is too slow
   % associations only done once. this might be an issue in some cases, cause when a redraw is performed in the original figure (e.g. databrowser), a specific assocations are lost (lines/patches/text)
   %   set(get(handle,'children'),'uicontextmenu',hcmenu);

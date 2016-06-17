@@ -771,8 +771,12 @@ parfor conseciData = conseciDatas
     ch_detectedTroughsSamples  = [];
     ch_detectedMaxSlopes  = [];
     ch_detectedMaxSlopesSamples  = [];
+    ch_detectedMaxDownSlopes  = [];
+    ch_detectedMaxDownSlopesSamples  = [];
     ch_detectedTroughToZeroCrossingSlopes = [];
     ch_detectedTroughToZeroCrossingSlopesSamples = [];
+    ch_detectedZeroCrossingToTroughSlopes = [];
+    %ch_detectedZeroCrossingToTroughSlopesSamples = [];
     ch_detectedSDofFilteredSignal = [];
     ch_nDetected = [];
     ch_densityPerEpoch = [];
@@ -800,8 +804,12 @@ parfor conseciData = conseciDatas
         trl_detectedTroughsSamples  = [];
         trl_detectedMaxSlopes  = [];
         trl_detectedMaxSlopesSamples  = [];
+        trl_detectedMaxDownSlopes  = [];
+        trl_detectedMaxDownSlopesSamples  = [];
         trl_detectedTroughToZeroCrossingSlopes = [];
         trl_detectedTroughToZeroCrossingSlopesSamples = [];
+        trl_detectedZeroCrossingToTroughSlopes = [];
+        %trl_detectedZeroCrossingToTroughSlopesSamples = [];
         trl_detectedSDofFilteredSignal = [];
         trl_nDetected = 0;
         
@@ -854,8 +862,13 @@ parfor conseciData = conseciDatas
                 detectedTroughsSamples  = zeros(1,nDetected);
                 detectedMaxSlopes  = zeros(1,nDetected);
                 detectedMaxSlopesSamples  = zeros(1,nDetected);
+                detectedMaxDownSlopes  = zeros(1,nDetected);
+                detectedMaxDownSlopesSamples  = zeros(1,nDetected);
                 detectedTroughToZeroCrossingSlopes = zeros(1,nDetected);
                 detectedTroughToZeroCrossingSlopesSamples = zeros(1,nDetected);
+                detectedZeroCrossingToTroughSlopes  = zeros(1,nDetected);
+                %detectedZeroCrossingToTroughSlopesSamples  = zeros(1,nDetected);
+                
                 detectedSDofFilteredSignal = zeros(1,nDetected);
                 
                 fprintf('dataset %i: channel %s, subpart %i, annotate events\n',iData,data.label{iChan},iTr);
@@ -881,6 +894,21 @@ parfor conseciData = conseciDatas
                     
                     candSignalMaxSlopeSample =  currentRawDataSampleOffset + candSignalMaxSlopeSample;
                     
+                    
+                    
+                    candSignalMaxDownSlope = min(diff(candSignal(1:tempCandSignalminSample)))*FrqOfSmpl;% in potential/s
+                    if isempty(candSignalMaxDownSlope)
+                        candSignalMaxDownSlope = NaN;
+                        candSignalMaxDownSlopeSample = NaN;
+                    else
+                        candSignalMaxDownSlopeSample = find(diff(candSignal)*FrqOfSmpl == candSignalMaxDownSlope);
+                        candSignalMaxDownSlopeSample = intersect(candSignalMaxDownSlopeSample,1:tempCandSignalminSample);
+                        candSignalMaxDownSlopeSample = candSignalMaxDownSlopeSample(find(abs(candSignal(candSignalMaxDownSlopeSample)) == min(abs(0-(candSignal(candSignalMaxDownSlopeSample)))),1,'first'));
+                        candSignalMaxDownSlopeSample =  currentRawDataSampleOffset + candSignalMaxDownSlopeSample;
+                    end
+                    
+                    
+                    
                     candSignalmin = candSignal(tempCandSignalminSample);
                     candSignalmax = candSignal(tempCandSignalmaxSample);
                     candPeak2Peak = candSignalmax - candSignalmin;
@@ -888,6 +916,11 @@ parfor conseciData = conseciDatas
                     tempCandSignalMinMaxZeroCrossingSample = tempCandSignalminSample + find( abs(0-candSignal(tempCandSignalminSample:tempCandSignalmaxSample)) == min( abs(0-candSignal(tempCandSignalminSample:tempCandSignalmaxSample)) ),1,'first' ) - 1;
                     candSignalMinMaxZeroCrossingSample = currentRawDataSampleOffset + tempCandSignalMinMaxZeroCrossingSample;
                     candSignalTroughToZeroCrossingSlope = abs(candSignalmin)/((tempCandSignalMinMaxZeroCrossingSample - tempCandSignalminSample)/FrqOfSmpl); % in potential/s
+                    
+                    
+                    %tempCandSignalDownMinMaxZeroCrossingSample = 0 + find( abs(0-candSignal(1:tempCandSignalminSample)) == min( abs(0-candSignal(1:tempCandSignalminSample)) ),1,'first' ) - 1;
+                    %candSignalDownMinMaxZeroCrossingSample = currentRawDataSampleOffset + tempCandSignalDownMinMaxZeroCrossingSample;
+                    candSignalDownZeroCrossingToTroughSlope = -abs(candSignalmin)/((tempCandSignalminSample - 0)/FrqOfSmpl); % in potential/s
                     
                     
 %                      %inst_freq = (diff(unwrap(angle(hilbert(candSignal))))/(2*pi))*FrqOfSmpl;
@@ -926,8 +959,12 @@ parfor conseciData = conseciDatas
                     detectedTroughsSamples(iIterCand) = candSignalminSample;
                     detectedMaxSlopes(iIterCand) = candSignalMaxSlope;
                     detectedMaxSlopesSamples(iIterCand) = candSignalMaxSlopeSample;
+                    detectedMaxDownSlopes(iIterCand) = candSignalMaxDownSlope;
+                    detectedMaxDownSlopesSamples(iIterCand) = candSignalMaxDownSlopeSample;
                     detectedTroughToZeroCrossingSlopes(iIterCand) = candSignalTroughToZeroCrossingSlope;
                     detectedTroughToZeroCrossingSlopesSamples(iIterCand) = candSignalMinMaxZeroCrossingSample;
+                    detectedZeroCrossingToTroughSlopes(iIterCand) = candSignalDownZeroCrossingToTroughSlope;
+                    %detectedZeroCrossingToTroughSlopesSamples(iIterCand) = candSignalDownMinMaxZeroCrossingSample;
                     %detectedSignalTroughsSamples(iIterCand,1:nCandSignalTroughs) = candSignalTroughsSamples;
                     %detectedSignalPeaksSamples(iIterCand,1:nCandSignalPeaks) = candSignalPeaksSamples;
                     detectedSDofFilteredSignal(iIterCand) = std(candSignal);
@@ -945,8 +982,12 @@ parfor conseciData = conseciDatas
                 trl_detectedTroughsSamples  = cat(2,trl_detectedTroughsSamples,detectedTroughsSamples);
                 trl_detectedMaxSlopes = cat(2,trl_detectedMaxSlopes ,detectedMaxSlopes);
                 trl_detectedMaxSlopesSamples = cat(2,trl_detectedMaxSlopesSamples,detectedMaxSlopesSamples);
+                trl_detectedMaxDownSlopes = cat(2,trl_detectedMaxDownSlopes ,detectedMaxDownSlopes);
+                trl_detectedMaxDownSlopesSamples = cat(2,trl_detectedMaxDownSlopesSamples,detectedMaxDownSlopesSamples);
                 trl_detectedTroughToZeroCrossingSlopes = cat(2,trl_detectedTroughToZeroCrossingSlopes,detectedTroughToZeroCrossingSlopes);
                 trl_detectedTroughToZeroCrossingSlopesSamples = cat(2,trl_detectedTroughToZeroCrossingSlopesSamples,detectedTroughToZeroCrossingSlopesSamples);
+                trl_detectedZeroCrossingToTroughSlopes = cat(2,trl_detectedZeroCrossingToTroughSlopes,detectedZeroCrossingToTroughSlopes);
+                %trl_detectedZeroCrossingToTroughSlopesSamples = cat(2,trl_detectedZeroCrossingToTroughSlopesSamples,detectedZeroCrossingToTroughSlopesSamples);
                 %trl_detectedSignalTroughsSamples = cat(1,trl_detectedSignalTroughsSamples,detectedSignalTroughsSamples);
                 %trl_detectedSignalPeaksSamples = cat(1,trl_detectedSignalPeaksSamples,detectedSignalPeaksSamples);
                 trl_detectedSDofFilteredSignal = cat(2,trl_detectedSDofFilteredSignal,detectedSDofFilteredSignal);
@@ -979,8 +1020,14 @@ parfor conseciData = conseciDatas
         ch_detectedTroughsSamples{iChan}  = trl_detectedTroughsSamples(tempIndexAboveMeanThreshold);
         ch_detectedMaxSlopes{iChan} = trl_detectedMaxSlopes(tempIndexAboveMeanThreshold);
         ch_detectedMaxSlopesSamples{iChan} = trl_detectedMaxSlopesSamples(tempIndexAboveMeanThreshold);
+        ch_detectedMaxDownSlopes{iChan} = trl_detectedMaxDownSlopes(tempIndexAboveMeanThreshold);
+        ch_detectedMaxDownSlopesSamples{iChan} = trl_detectedMaxDownSlopesSamples(tempIndexAboveMeanThreshold);
+        
         ch_detectedTroughToZeroCrossingSlopes{iChan} = trl_detectedTroughToZeroCrossingSlopes(tempIndexAboveMeanThreshold);
         ch_detectedTroughToZeroCrossingSlopesSamples{iChan} = trl_detectedTroughToZeroCrossingSlopesSamples(tempIndexAboveMeanThreshold);
+        ch_detectedZeroCrossingToTroughSlopes{iChan} = trl_detectedZeroCrossingToTroughSlopes(tempIndexAboveMeanThreshold);
+        %ch_detectedZeroCrossingToTroughSlopesSamples{iChan} = trl_detectedZeroCrossingToTroughSlopesSamples(tempIndexAboveMeanThreshold);
+        
         %ch_detectedSignalTroughsSamples{iChan} = trl_detectedSignalTroughsSamples;
         %ch_detectedSignalPeaksSamples{iChan} = trl_detectedSignalPeaksSamples;
         ch_detectedSDofFilteredSignal{iChan} = trl_detectedSDofFilteredSignal(tempIndexAboveMeanThreshold);
@@ -1073,7 +1120,7 @@ parfor conseciData = conseciDatas
         case 'IIRdesigned'
             lp_f_type_detail = 'IIR_Butterworth_signal_toolbox';
     end
-    hp_f_type_detail = ''
+    hp_f_type_detail = '';
     switch core_cfg.hpfilttype
         case 'but'
             hp_f_type_detail = 'IIR_Butterworth_ml_butter';
@@ -1114,17 +1161,25 @@ parfor conseciData = conseciDatas
     %fidt = fopen([pathOutputFolder filesep 'spindle_troughs_' 'datanum_' num2str(iData) '.csv'],'wt');
     
     %write header of ouptufiles
-    fprintf(fidc,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n','datasetnum','channel','count','density_per_epoch',...
+    fprintf(fidc,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n','datasetnum','channel','count','density_per_epoch',...
         'mean_duration_seconds','mean_amplitude_peak2trough_potential',...
-        'mean_slope_max_potential_per_second','mean_slope_trough_to_zerocrossing_potential_per_second',...
+        'mean_slope_to_trough_min_potential_per_second','mean_slope_zerocrossing_to_trough_potential_per_second',...
+        'mean_slope_trough_to_up_max_potential_per_second','mean_slope_trough_to_zerocrossing_potential_per_second',...
         'mean_frequency_by_duration','mean_frequency_by_trough_to_peak_latency',...
         'epoch_length_seconds','lengths_ROI_seconds',...
         'used_meanNegPeak_potential','used_meanP2T_potential',...
         'mean_SD_of_filtered_signal','mean_negative_peak_potential','mean_positive_peak_potential');
     
-    fprintf(fide,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n',...
-        'datasetnum','channel','duration_seconds','amplitude_peak2trough_max','slope_max_potential_per_second','slope_trough_to_zerocrossing_potential_per_second','frequency_by_duration','frequency_by_trough_to_peak_latency','duration_samples','sample_begin','sample_end','sample_peak_max','sample_trough_max'...
-        ,'dataset','hypnogram','used_stages_for_detection','used_meanNegPeak','used_meanP2T','seconds_begin','seconds_end','seconds_peak_max','seconds_trough_max','id_within_channel','sample_max_slope','sample_zerocrossig_of_trough_to_zerocrossig_slope','seconds_max_slope','seconds_zerocrossig_of_trough_to_zerocrossig_slope'...
+    fprintf(fide,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n',...
+        'datasetnum','channel','duration_seconds','amplitude_peak2trough_max',...
+        'slope_to_trough_min_potential_per_second','slope_zerocrossing_to_trough_potential_per_second',...
+        'slope_trough_to_up_max_potential_per_second','slope_trough_to_zerocrossing_potential_per_second',...
+        'frequency_by_duration','frequency_by_trough_to_peak_latency','duration_samples','sample_begin','sample_end','sample_peak_max','sample_trough_max'...
+        ,'dataset','hypnogram','used_stages_for_detection','used_meanNegPeak','used_meanP2T','seconds_begin','seconds_end','seconds_peak_max','seconds_trough_max','id_within_channel',...
+        'sample_slope_to_trough_min',...
+        'sample_slope_trough_to_up_max','sample_zerocrossig_of_trough_to_zerocrossig_slope_trough_to_up_max',...
+        'seconds_slope_to_trough_min',...
+        'seconds_slope_trough_to_up_max','seconds_zerocrossig_of_trough_to_zerocrossig_slope_trough_to_up_max'...
         ,'negative_peak_potential','positive_peak_potential','stage','stage_alt','stage_alt2','SD_of_filtered_signal');
     
     
@@ -1149,6 +1204,9 @@ parfor conseciData = conseciDatas
         tempLengthMeanSeconds = mean(ch_detectedLengthSamples{iChan}'/FrqOfSmpl);
         fprintf(fidc,'%e,',tempLengthMeanSeconds);
         fprintf(fidc,'%e,',mean(ch_detectedPeak2Peaks{iChan}));
+        
+        fprintf(fidc,'%e,',mean(ch_detectedMaxDownSlopes{iChan}));
+        fprintf(fidc,'%e,',mean(ch_detectedZeroCrossingToTroughSlopes{iChan}));
         
         fprintf(fidc,'%e,',mean(ch_detectedMaxSlopes{iChan}));
         fprintf(fidc,'%e,',mean(ch_detectedTroughToZeroCrossingSlopes{iChan}));
@@ -1204,14 +1262,18 @@ parfor conseciData = conseciDatas
             output(:,22) = num2cell(ch_detectedTroughToZeroCrossingSlopesSamples{iChan}');
             output(:,23) = num2cell(ch_detectedMaxSlopesSamples{iChan}'/FrqOfSmpl);
             output(:,24) = num2cell(ch_detectedTroughToZeroCrossingSlopesSamples{iChan}'/FrqOfSmpl);
+            
             output(:,25) = num2cell(ch_detectedSignalMin{iChan}');
             output(:,26) = num2cell(ch_detectedSignalMax{iChan}');
             output(:,27) = cellstr(epochs(:,1));
             output(:,28) = cellstr(epochs(:,2));
             output(:,29) = cellstr(epochs(:,3));
             output(:,30) = num2cell(ch_detectedSDofFilteredSignal{iChan});
-            %31
-            %32
+            
+            output(:,31) = num2cell(ch_detectedMaxDownSlopes{iChan}');
+            output(:,32) = num2cell(ch_detectedZeroCrossingToTroughSlopes{iChan}');
+            output(:,33) = num2cell(ch_detectedMaxDownSlopesSamples{iChan}');
+            output(:,34) = num2cell(ch_detectedMaxDownSlopesSamples{iChan}'/FrqOfSmpl);
             
             
             
@@ -1221,6 +1283,8 @@ parfor conseciData = conseciDatas
                 tempLengthSeconds = output{iLine,13};
                 fprintf(fide,'%f,',tempLengthSeconds);
                 fprintf(fide,'%e,',output{iLine,7});
+                fprintf(fide,'%e,',output{iLine,31});
+                fprintf(fide,'%e,',output{iLine,32});
                 fprintf(fide,'%e,',output{iLine,19});
                 fprintf(fide,'%e,',output{iLine,20});
                 tempTroughPeakLength = (output{iLine,16} - output{iLine,17});
@@ -1245,10 +1309,14 @@ parfor conseciData = conseciDatas
                 fprintf(fide,'%f,',output{iLine,17});
                 fprintf(fide,'%i,',output{iLine,18});
 
+                fprintf(fide,'%i,',output{iLine,33});                
                 fprintf(fide,'%i,',output{iLine,21});
                 fprintf(fide,'%i,',output{iLine,22});
+                
+                fprintf(fide,'%f,',output{iLine,34});
                 fprintf(fide,'%f,',output{iLine,23});
                 fprintf(fide,'%f,',output{iLine,24});
+                
                 fprintf(fide,'%e,',output{iLine,25});
                 fprintf(fide,'%e,',output{iLine,26});
                 fprintf(fide,'%s,',output{iLine,27});

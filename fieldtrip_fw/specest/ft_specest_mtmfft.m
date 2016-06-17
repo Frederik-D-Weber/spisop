@@ -46,7 +46,9 @@ fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
 polyorder = ft_getopt(varargin, 'polyorder', 0);
 tapopt    = ft_getopt(varargin, 'taperopt');
-
+% FW begin
+tapervalues    = ft_getopt(varargin, 'tapervalues');
+% FW end
 
 if isempty(fbopt),
   fbopt.i = 1;
@@ -175,6 +177,11 @@ else
       tap = hanning(ndatsample)';
       tap = tap./norm(tap, 'fro');
       
+    % FW begin
+    case 'hanning_proportion'
+      tap = tapervalues';
+      tap = tap./norm(tap, 'fro');
+    % FW end
     otherwise
       % create the taper and ensure that it is normalized
       if isempty(tapopt) % some windowing functions don't support nargin>1, and window.m doesn't check it

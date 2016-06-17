@@ -1,12 +1,10 @@
 function [cfg] = ft_fw_databrowser(cfg, data)
 %TODO:autosave or reminder to save refine SO detection, artifact consideration and
-%marking, individual channel order, fft window, time-frequency underlay of
-%EEG channel
+%marking
 %movement artifact detection, artifact export
 %mark lights-offs, fix zoom capturing of key commands,
 %button for toggle automatic skipping after scoring epoch go to next even when already scored
-%stages buttons toggle or color highlight, help for key commands, Logo, Copyright and ABOUT,
-%Standalone version compiled, export data, import data, autosave
+%export data, import data, autosave
 
 % FT_DATABROWSER can be used for visual inspection of data. Artifacts that
 % were detected by artifact functions (see FT_ARTIFACT_xxx functions where
@@ -722,6 +720,11 @@ if strcmp(cfg.doSleepScoring,'yes')
     opt.zoomstatus = 'off';
     cfg.use_ruler = 'no';
     
+    
+    
+    cfg.display_power_spectrum = 'no';
+    cfg.display_time_frequency = 'no';
+    
 end
 
 setappdata(h, 'opt', opt);
@@ -835,7 +838,12 @@ if strcmp(cfg.doSleepScoring,'yes')
     %uicontrol('tag', 'scoptbuttons_focusEOG', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', ['Focus EOG: ' opt.hdr.label{cfg.score_channel_eog_number}],'position', [0.85, temp_lower_line_y+0.08/3 , 0.08, 0.08/3], 'userdata', 'alt+o','backgroundcolor', cfg.score_channel_eog_color)
     %uicontrol('tag', 'scoptbuttons_focusEMG', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', ['Focus EMG: ' opt.hdr.label{cfg.score_channel_emg_number}],'position', [0.85, temp_lower_line_y , 0.08, 0.08/3], 'userdata', 'alt+m','backgroundcolor', cfg.score_channel_emg_color)
     
-    uicontrol('tag', 'scoptbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'Thresh','position', [0.95, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'l')
+    
+    
+    uicontrol('tag', 'scoptbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'shortcuts','position', [0.9, temp_lower_line_y2 , 0.05, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'shift+h')
+
+    
+    uicontrol('tag', 'scoptbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'thresholds','position', [0.95, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'l')
 end
 
 % legend artifacts/features
@@ -986,13 +994,21 @@ selection = questdlg('Close Browser?',...
     'Yes','No','No');
 switch selection,
     case 'Yes',
-        
-        
-        
+
         cfg = getappdata(h, 'cfg');
         if isfield(cfg,'hhyp')
             if ishandle(cfg.hhyp)
                 close(cfg.hhyp);
+            end
+        end
+         if isfield(cfg,'f_ps')
+            if ishandle(cfg.f_ps)
+                close(cfg.f_ps);
+            end
+        end
+        if isfield(cfg,'f_tfr')
+            if ishandle(cfg.f_tfr)
+                close(cfg.f_tfr);
             end
         end
         opt = getappdata(h, 'opt');
@@ -1131,28 +1147,75 @@ setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function helptext = help_text()
+helptext = [ ...
+'KEYBOARD SHORTCUTS ONLY WILL WORK \n' ...
+'IF MOUSE WAS CLICKED IN DISPLAY AREA!\n\n' ...
+'Keyboard shortcuts for... \n' ...
+' Scoring:\n'...
+'  1: Stage 1 (S1) \n'...
+'  2: Stage 2 (S2) \n'...
+'  3: Stage 3 (S3) \n'...
+'  4: Stage 4 (S4) \n'...
+'  5: REM \n'...
+'  8: Movement Time (MT) \n'...
+'  9: Movement Arousal/Epoch with artifact(s) (MA, additional) \n'...
+'  D: Delete Stage \n'...
+' Control:\n'...
+'  Left-arrow: go to previous epoch \n'...
+'  Right-arrow: go to next epoch \n'...
+'  Up-arrow: decrease scaling (zoom in all channels) \n'...
+'  Down-arrow: increase scaling (zoom out all channels) \n'...
+'  Y: Vertical Y-scaling basis (equivalent to scaling factor = 1) (dialog) \n'...
+'  Shift + C: Channel settings \n' ...
+'             select, color, scaling, order, foci (EEG, EMG, EOG) \n'...
+'  Shift + Up-arrow: skip up through undisplayed channels \n'...
+'  Shift + Down-arrow: skip down through undisplayed channels \n'...
+'  Shift + Q: Quit Program \n'...
+'  X: Hide/Display menue bar \n'...
+'  T: Select epoch to jump to (dialog) \n'...
+'  L: Set Thresholds (dialog) \n'...
+'  Shift + H: Shortcut help \n'...
+' Scoring aids:\n'...
+'  M: enable/disable marking, cummulative time \n'...
+'  N: enable/disable spindle signal display (EEG filtered in spindle band) \n'...
+'  E: enable/disable display of pre-readin Events, if processed already \n'...
+'  Q: delete previously made marking \n'...
+'  R: enable/disable Ruler (aka "the Score-ship") \n'...
+'  J: enable/disable spindle marking (aka "the Score-ship") \n'...
+'  K: enable/[polartity-switch]/disable K-Complex \n'...
+'     or Slow oscillation marking (aka "the Score-ship") \n'...
+'  G: enable/disable display of the time grid \n'...
+'  Z: enable/disable zooming (double-click = return to full view) \n'...
+'     left-click: zoom in \n'...
+'     Alt + left-click zoom out \n'...
+'     double-click: fully zoom out \n'...
+'  A: switch to next artifact marking type \n'...
+'  Ctrl + 1..9 OR Alt + 1..9: skip to next artifact type 1..9 \n'...
+' Saving/Export:\n'...
+'  Shift + S: Save Session (dialog) \n'...
+'  Shift + O: Open Session (dialog) \n'...
+'  Shift + I: Import Hypnogram (dialog) \n'...
+'  Shift + E: Export Hypnogram (dialog) \n'...
+' Non-Scoring:\n'...
+'  Shift + Left-arrow: decrease epoch length\n'...
+'  Shift + Right-arrow: increase epoch length\n'...
+'  H: Horizontal scaling \n'...
+'  (S: switch highlighting/marking style, deprecated)\n'...
+];
+end
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function help_cb(h, eventdata)
 fprintf('------------------------------------------------------------------------------------\n')
-fprintf('You can use the following keyboard buttons in the databrowser\n')
-fprintf('shift 1-9          : select artifact type 1-9\n');
-%fprintf('shift 1-9          : select previous artifact of type 1-9\n');
-fprintf('                     (does not work with numpad keys)\n');
-fprintf('control 1-9        : select next artifact of type 1-9\n');
-fprintf('alt 1-9            : select next artifact of type 1-9\n');
-fprintf('arrow-left         : previous trial\n');
-fprintf('arrow-right        : next trial\n');
-fprintf('arrow-up     : increase vertical scaling\n');
-fprintf('arrow-down   : decrease vertical scaling\n');
-fprintf('shift arrow-left   : increase horizontal scaling\n');
-fprintf('shift arrow-down   : decrease horizontal scaling\n');
-fprintf('shift arrow-up     : traverse up through channels\n');
-fprintf('shift arrow-down   : traverse down through channels\n');
-fprintf('s                  : toggles between cfg.selectmode options\n');
-fprintf('g                  : enable or disable grid\n');
-fprintf('shift q                  : quit\n');
+fprintf(help_text());
 fprintf('------------------------------------------------------------------------------------\n')
 fprintf('\n')
 end
@@ -1535,7 +1598,14 @@ switch key
         if strcmp(cfg.doSleepScoring,'yes')
             
             curr_epoch = opt.trlop;
+            
+            temp_epochLengthSamples = opt.trlvis(1, 2) - opt.trlvis(1, 1) + 1;
+            nEpochs = floor(size(opt.orgdata.trial{1},2)/temp_epochLengthSamples);
+            if curr_epoch > nEpochs
+                curr_epoch = curr_epoch - 1;
+            end
             curr_hypn = cfg.hypn(curr_epoch,:);
+                     
             switch key
                 case {'0' '1' '2' '3' '4' '5' '8'}
                     h1 = str2num(key);
@@ -1797,6 +1867,8 @@ switch key
                 redraw_cb(h, eventdata);
             end
         end
+    case 'shift+h'
+          helpdlg(sprintf(help_text()),'Shortcut help');
     case 'l'
         if strcmp(cfg.doSleepScoring,'yes')
             try
@@ -1842,7 +1914,7 @@ switch key
                     redraw_cb(h, eventdata);
                 end
             catch err
-                msgbox('Setting the thresholds failed!' ,'Thresholds failed','error');
+                msgbox('Setting the thresholds failed!' ,'Thresholds failed','error','modal');
             end
         end
     case 'y'
@@ -1932,9 +2004,9 @@ switch key
                 if hyp_file_filterindex ~= 0
                     save([hyp_file_path hyp_file_name],'cfg','opt','-v7.3')
                 end
-                
+                    msgbox('Saving session successful!' ,'Saving successful','modal');
             catch err
-                msgbox('Saving session failed!' ,'Saving failed','error');
+                msgbox('Saving session failed!' ,'Saving failed','error','modal');
             end
         end
     case 'shift+o'
@@ -1975,8 +2047,9 @@ switch key
             setappdata(h, 'opt', opt);
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
+            msgbox('Opening session successful!' ,'Opening successful','modal');
             catch err
-                msgbox('Open the session failed!' ,'Open failed','error');
+                msgbox('Open the session failed!' ,'Open failed','error','modal');
             end
         end
     case 'shift+i'
@@ -2005,7 +2078,15 @@ switch key
                     
                     
                     [temp_hypn dummyhypnStages dummyhypnEpochs dummyhypnEpochsBeginsSamples dummyhypnEpochsEndsSamples] = readInSleepHypnogram(temp_hypnogramPath,temp_epochLengthSamples);
-                    cfg.hypn = temp_hypn;
+                    
+                    temp_epochLengthSamples = opt.trlvis(1, 2) - opt.trlvis(1, 1) + 1;
+                    nEpochs = floor(size(opt.orgdata.trial{1},2)/temp_epochLengthSamples);
+                    
+                    if (size(temp_hypn,1) > nEpochs)
+                        msgbox(sprintf(['Wrong Hypnogram?\n' 'It is too long!\n' ' data: ' num2str(nEpochs) ' ep\n' ' import: ' num2str(size(temp_hypn,1)) ' ep\n' 'hypnogram will be truncated to data by cutting its tail']) ,'Wrong Hypnogram imported?', 'warn','modal');
+                    end
+                    cfg.hypn = temp_hypn(1:nEpochs,:);
+                    
                     
                     [curr_ep_hypn_plot_interpol curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot(cfg.hypn,temp_epochLengthSamples,cfg.plot_MA_offset);
                     
@@ -2016,8 +2097,9 @@ switch key
                 setappdata(h, 'opt', opt);
                 setappdata(h, 'cfg', cfg);
                 redraw_cb(h, eventdata);
+                msgbox('Importing the hypnogram successful!' ,'Import successful','modal');
             catch err
-                msgbox('Importing the hypnogram failed!' ,'Import failed','error');
+                msgbox('Importing the hypnogram failed!' ,'Import failed','error','modal');
             end
         end
     case 'shift+e'
@@ -2051,9 +2133,9 @@ switch key
                     end
                     fclose(hyp_export);
                 end
-                
+                msgbox('Exporting the hypnogram successful!' ,'Export successful','modal');
             catch err
-                msgbox('Exporting the hypnogram failed!' ,'Export failed','error');
+                msgbox('Exporting the hypnogram failed!' ,'Export failed','error','modal');
             end
         end
 %     case 'alt+e'
@@ -2091,14 +2173,15 @@ switch key
 %         end
     case 's'
         % toggle between selectmode options: switch from 'markartifact', to 'markpeakevent' to 'marktroughevent' and back with on screen feedback
-        curstate = find(strcmp(cfg.selectmode, {'markartifact', 'markpeakevent', 'marktroughevent'}));
-        if curstate == 1
-            cfg.selectmode = 'markpeakevent';
-        elseif curstate == 2
-            cfg.selectmode = 'marktroughevent';
-        elseif curstate == 3
-            cfg.selectmode = 'markartifact';
-        end
+%         curstate = find(strcmp(cfg.selectmode, {'markartifact', 'markpeakevent', 'marktroughevent'}));
+%         if curstate == 1
+%             cfg.selectmode = 'markpeakevent';
+%         elseif curstate == 2
+%             cfg.selectmode = 'marktroughevent';
+%         elseif curstate == 3
+              cfg.selectmode = 'markartifact';
+%         end
+        
         fprintf('switching to selectmode = %s\n',cfg.selectmode);
         setappdata(h, 'opt', opt);
         setappdata(h, 'cfg', cfg);
@@ -2254,7 +2337,7 @@ chanindx  = match_str(opt.hdr.label, cfg.channel);
 
 
 if isfield(cfg,'plotHyp')
-    if isfield(cfg,'hhyp')
+    if isfield(cfg,'hhyp') 
         %figure(cfg.hhyp);
     else
         cfg.hhyp = figure;
@@ -2264,6 +2347,15 @@ if isfield(cfg,'plotHyp')
         cfg.hhypfigax = gca;
         %cfg.hhypfig = gcf;
     end
+    if ~ishandle(cfg.hhyp)
+        figure(cfg.hhyp)
+        set(cfg.hhyp, 'WindowButtonDownFcn',   {@select_sleep_stage_cb, 'h_main',h});
+        set(cfg.hhyp, 'NumberTitle', 'off');
+        cfg.hhypfigax = gca;
+    end
+
+    
+    
     set(cfg.hhyp,'color',[1 1 1]);
     set(cfg.hhypfigax,'Fontsize',8,'FontUnits','normalized');
     %figure(cfg.hhyp);
@@ -2276,6 +2368,15 @@ if isfield(cfg,'plotHyp')
     plot(axh,x_time_hyp,cfg.hypn_plot_interpol,'Color',[0 0 0])
     hold(axh,'on');
     plot(axh,x_time_hyp,cfg.hypn_plot_interpol_MA,'Color',[1 0 0])
+    temp_x_other_artifact = ~(cfg.hypn_plot_interpol_MA > -4.5);
+    if any(~temp_x_other_artifact)
+        temp_hypn_plot_interpol_MA = cfg.hypn_plot_interpol_MA;
+        temp_hypn_plot_interpol_MA(temp_x_other_artifact) = -4.45;
+        %temp_x_other_artifact_index = [temp_x_other_artifact; temp_x_other_artifact+1];
+        %temp_x_other_artifact_index = temp_x_other_artifact_index(1:end-1);
+        %temp_x_other_artifact_index = sort(temp_x_other_artifact_index);
+        plot(axh,x_time_hyp,temp_hypn_plot_interpol_MA,'Color',[0.75 0.75 0.75])
+    end
     xlim(axh,[0 max(x_time)]);
     ylabel(axh,'Stages');
     ylim(axh,[cfg.plot_MA_offset temp_max_y])
@@ -2461,7 +2562,7 @@ if strcmp(cfg.doSleepScoring,'yes')
             
             if buff_endsample > nSamples_data
                 cfg_eeg_redef.endsample = nSamples_data;
-                padd_samples_right = repmat(0,1,padd_samplesbuff_endsample - nSamples_data);
+                padd_samples_right = repmat(0,1,buff_endsample - nSamples_data);
             else
                 cfg_eeg_redef.endsample = buff_endsample;
             end
@@ -2470,35 +2571,190 @@ if strcmp(cfg.doSleepScoring,'yes')
             cfg_eeg_redef_channel.channel = cfg.score_channel_eeg_number;
             data_det_signal_eeg_data = ft_selectdata(cfg_eeg_redef_channel,ft_redefinetrial(cfg_eeg_redef,opt.orgdata));
             
-%             %%%%%% Time-frequncy #####
-%             
-%             minFreq = 0.5;
-%             maxFreq = 30;
-%             FreqSteps = 0.5;
-%             TimeSteps = 0.1;
-%             cfg_tfr = [];
-%             cfg_tfr.method    = 'wavelet';%single number (in unit of time, typically seconds) of the required snippets
-%             cfg_tfr.output   = 'pow';%single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
-%             cfg_tfr.foi = [minFreq:FreqSteps:maxFreq];%  
-%             cfg_tfr.width = 4;%7
-%             cfg_tfr.pad = 'maxperlen';
-%             cfg_tfr.feedback = 'no';
-%             cfg_tfr.keeptrials = 'no';
-%             cfg_tfr.toi = [0:TimeSteps:max(cellfun(@max,data_det_signal_eeg_data.time))];
-%             data_tfr = ft_freqanalysis(cfg_tfr,data_det_signal_eeg_data);
-%             
-%             data_tfr.powspctrm(isnan(data_tfr.powspctrm(:))) = 10E-12;
-%             f = figure;
-%             cfg_tfr_plot = [];
-%             cfg_tfr_plot.parameter = 'powspctrm';
-%             cfg_tfr_plot.baseline = 'yes';
-%             cfg_tfr_plot.baselinetype = 'relative';
-%             %cfg.renderer = 'painters';
-%             %cfg.masknans = 'yes'
-%             %cfg_tfr_plot.zlim = [-100 100];
-%             ft_singleplotTFR(cfg_tfr_plot,data_tfr);
-%             
-%             %%%%%% Time-frequncy end #####
+            %%%%%% Time-frequency #####
+            
+            if     isfield(cfg,'display_power_spectrum') && isfield(cfg,'display_time_frequency')
+                if strcmp(cfg.display_power_spectrum,'yes') || strcmp(cfg.display_time_frequency,'yes')
+                    
+                    
+                    data_det_signal_eeg_data_tfr = data_det_signal_eeg_data;
+                    
+                    minFreq = 0.5;
+                    maxFreq = 30;
+                    FreqSteps = 0.5;
+                    TimeSteps = 0.1;
+                    cfg_tfr = [];
+                    cfg_tfr.method    = 'wavelet';%single number (in unit of time, typically seconds) of the required snippets
+                    cfg_tfr.output   = 'pow';%single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
+                    cfg_tfr.foi = [minFreq:FreqSteps:maxFreq];%
+                    cfg_tfr.width = 4;%7
+                    cfg_tfr.pad = 'maxperlen';
+                    cfg_tfr.feedback = 'no';
+                    cfg_tfr.keeptrials = 'no';
+                    cfg_tfr.toi = [min(cellfun(@min,data_det_signal_eeg_data_tfr.time)):TimeSteps:max(cellfun(@max,data_det_signal_eeg_data_tfr.time))];
+                    data_tfr = ft_freqanalysis(cfg_tfr,data_det_signal_eeg_data_tfr);
+                    
+                    
+                    if strcmp(cfg.display_power_spectrum,'yes')
+                        
+                        if isfield(cfg,'f_ps')
+                            figure(cfg.f_ps);
+                        else
+                            cfg.f_ps = figure;
+                            figure(cfg.f_ps)
+                            
+                        end
+                        
+                        
+                        if isfield(cfg, 'f_ps_gca')
+                            if ishandle(cfg.f_ps_gca)
+                                delete(cfg.f_ps_gca);
+                            end
+                        end
+                        powerspectrum = nanmean(squeeze(data_tfr.powspctrm),2);
+                        freq = data_tfr.freq;
+                        freq_borders = [0.5 4; 4 8; 10 15; 18 30;];
+                        freq_colors = jet(size(freq_borders,1));
+                        bars_y = 0;
+                        for iFreq =  1:size(freq_borders,1)
+                            temp_freq_border_left = freq_borders(iFreq,1);
+                            temp_freq_border_right = freq_borders(iFreq,2);
+                            temp_mean_power = 10*log10(nanmean(powerspectrum((temp_freq_border_left <= freq) & (freq <= temp_freq_border_right))));
+                            rectangle('Position',[temp_freq_border_left,bars_y,temp_freq_border_right-temp_freq_border_left,temp_mean_power],'FaceColor',freq_colors(iFreq,:),'EdgeColor','k','LineWidth',1)
+                            hold on
+                        end
+                        plot(freq,10*log10(powerspectrum),'color','k','LineWidth',2);
+                        ylabel('Power [dB]');
+                        xlabel('Frequency [Hz]');
+                        chname = data_tfr.label{1};
+                        hold off
+                        cfg.f_ps_gca = gca;
+                        title(cfg.f_ps_gca,['EEG log power Spectrum (' chname ')' ],'interpreter','none');
+                        set(cfg.f_ps, 'Name', 'Power Spectrum');
+                        
+                    end
+                    
+                    if strcmp(cfg.display_time_frequency,'yes')
+                        
+                        if isfield(cfg,'f_tfr')
+                            figure(cfg.f_tfr);
+                        else
+                            cfg.f_tfr = figure;
+                            figure(cfg.f_tfr)
+                            %set(cfg.f_tfr, 'WindowButtonDownFcn',   {@select_sleep_stage_cb, 'h_main',h});
+                            %set(cfg.f_tfr, 'NumberTitle', 'off');
+                            cfg.f_tfr_gca = gca;
+                            %cfg.hhypfig = gcf;
+                        end
+                        
+                        
+                        
+                        
+                        
+                        data_tfr.powspctrm(isnan(data_tfr.powspctrm(:))) = 10E-12;
+                        
+                        time_bins_epoch = (lengthEpochSamples/data_det_signal_eeg_data_tfr.fsample)/TimeSteps;
+                        time_bins_to_substract_left = ((cfg.nEpochsBuffer*lengthEpochSamples)/data_det_signal_eeg_data_tfr.fsample)/TimeSteps;
+                        time_bins_to_substract_right = time_bins_to_substract_left;
+                        
+                        
+                        if ~isempty(padd_samples_left)
+                            temp_index_display_tfr_time_points = 1:time_bins_epoch;
+                        else%if ~isempty(padd_samples_right)
+                            temp_index_display_tfr_time_points = (time_bins_to_substract_left+1):(time_bins_to_substract_left+time_bins_epoch);
+                            %             else
+                            %                 temp_index_display_tfr_time_points = (time_bins_to_substract_left+1):(time_bins_to_substract_left+time_bins_to_substract_right+time_bins_epoch);
+                        end
+                        
+                        temp_index_display_tfr_time_points = fix(temp_index_display_tfr_time_points);
+                        
+                        
+                        
+                        Ysteps = 10;
+                        
+                        temp_curr_tfr_channel_signal_ylim = cfg.ylim/cfg.chanscale(cfg.score_channel_eeg_number);
+                        temp_curr_tfr_channel_signal_ylim = temp_curr_tfr_channel_signal_ylim*2;
+                        
+                        
+                        Ytick1 = [minFreq 2:2:maxFreq];
+                        Ytick2 = [min(temp_curr_tfr_channel_signal_ylim):Ysteps:max(temp_curr_tfr_channel_signal_ylim)];
+                        Ztick = -6:.5:6;
+                        cfg_tfr = [];
+                        temp_time_interval_display = [min(data_tfr.time(temp_index_display_tfr_time_points)) max(data_tfr.time(temp_index_display_tfr_time_points))];
+                        cfg_tfr.baseline     = temp_time_interval_display;%normalized with reference to average power in +-0.9 s interval
+                        cfg_tfr.baselinetype = 'db'; % power in dB = 10*log_10(pwr/mean) 10*log10(data ./ meanVals);
+                        cfg_tfr.zlim         = [min(Ztick) max(Ztick)];
+                        cfg_tfr.xlim         = temp_time_interval_display;
+                        cfg_tfr.ylim         = [minFreq maxFreq];
+                        
+                        x2 = data_det_signal_eeg_data_tfr.time{:}; %(-spindle_trough_prestim_actual <= timelock.events.time & timelock.events.time <= spindle_trough_poststim_actual);
+                        cfg_tfr.x2range = temp_time_interval_display;
+                        
+                        
+                        y2 = [];
+                        y2(1,:) = data_det_signal_eeg_data_tfr.trial{1};
+                        %y2(2,:) = timelock.nonevents.avg * 1000000;
+                        
+                        cfg_tfr.y2range = [min(Ytick2) max(Ytick2)];
+                        cfg_tfr.y2label = 'signal units';
+                        cfg_tfr.y2colors = [[1 1 1]];%color for second y axis default 'b'
+                        cfg_tfr.y2linestyles = ['-'];%linestylw for second y axis default '-'
+                        cfg_tfr.y2linewidths = [1];%lable for second y axis default 1
+                        cfg_tfr.y2alphas = [0.55];%lable for second y axis default 1
+                        
+                        %       cfg_tfr.y2colors = [[1 1 1]; [.8 .8 .8]];%color for second y axis default 'b'
+                        %       cfg_tfr.y2linestyles = ['-';'-'];%linestylw for second y axis default '-'
+                        %       cfg_tfr.y2linewidths = [3 ; 1];%lable for second y axis default 1
+                        %       cfg_tfr.y2alphas = [0.55 ; 0.55];%lable for second y axis default 1
+                        
+                        cfg_tfr.colormap = jet(128);%individual_color_map_insertion(min(Ztick),max(Ztick),{stat.critval(1), stat.critval(2)},[1 1 1],jet(256)); %excludes a little bit more t-values due to imprecicion errors
+                        %cfg.colormap = cfg.colormap(end:-1:1,:);
+                        cfg_tfr.interactive = 'no';
+                        
+                        if isfield(cfg, 'f_tfr_p1gca')
+                            if ishandle(cfg.f_tfr_p1gca)
+                                delete(cfg.f_tfr_p1gca);
+                            end
+                            if ishandle(cfg.f_tfr_p2gca)
+                                
+                                delete(cfg.f_tfr_p2gca);
+                            end
+                            %delete(cfg.f_tfr_p1gccb);
+                        end
+                        
+                        [tempcfg p1gca p2gca p1gccb] = ft_fw_singleplotTFR_yy(cfg_tfr, data_tfr,x2,y2);%ft_singleplotTFR edit ft_freqbaseline
+                        
+                        cfg.f_tfr_p1gca = p1gca;
+                        cfg.f_tfr_p2gca = p2gca;
+                        cfg.f_tfr_p1gccb = p1gccb;
+                        chname = data_tfr.label{1};
+                        title(cfg.f_tfr_p1gca,['EEG log power (' chname ') normalized to average in time window' ]);
+                        xlabel(cfg.f_tfr_p1gca,'Time [sec]');
+                        ylabel(cfg.f_tfr_p1gca,'Frequency [Hz]');
+                        nticks = 11;
+                        xTick = round(linspace(temp_time_interval_display(1), temp_time_interval_display(2), nticks));
+                        temp_fontsize = 10;
+                        set(cfg.f_tfr_p1gca,'Fontsize',temp_fontsize,'FontUnits','normalized', 'TickDir', 'out', 'Xtick', xTick, 'Ytick', Ytick1);
+                        set(cfg.f_tfr_p1gccb ,'Fontsize',temp_fontsize,'FontUnits','normalized', 'TickDir','out','Ytick',Ztick);
+                        ylabel(cfg.f_tfr_p1gccb ,'Power/mean(power) [dB]');
+                        set(cfg.f_tfr_p2gca,'Fontsize',temp_fontsize,'FontUnits','normalized', 'TickDir', 'out','Ytick', Ytick2);
+                        set(cfg.f_tfr, 'Name', 'Time-frequency of EEG, normalized');
+                        
+                        %myaa(4)
+                        
+                        figure_width = 12;     % Width in inches
+                        figure_height = 5;    % Height in inches
+                        
+                        pos = get(cfg.f_tfr, 'Position');
+                        set(cfg.f_tfr, 'Position', [pos(1) pos(2) figure_width*100, figure_height*100]); %<- Set size
+                        
+                    end
+                    
+                    figure(h); % ensure that the calling figure is in the front
+                end
+            end
+            
+            %%%%%% Time-frequncy end #####
 
             
             %cfg_emg_redef_channel = [];
@@ -2911,6 +3167,12 @@ end
 
 if strcmp(cfg.doSleepScoring,'yes')
     curr_epoch = opt.trlop;
+    
+    temp_epochLengthSamples = opt.trlvis(1, 2) - opt.trlvis(1, 1) + 1;
+    nEpochs = floor(size(opt.orgdata.trial{1},2)/temp_epochLengthSamples);
+    if curr_epoch > nEpochs
+        curr_epoch = curr_epoch - 1;
+    end
     curr_hypn = cfg.hypn(curr_epoch,:);
     h1 = curr_hypn(:,1);
     h2 = curr_hypn(:,2);
@@ -3242,15 +3504,15 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
                 if strcmp(cfg.underlaySpindleSignal,'yes')
                     if isfield(cfg,'spindsignal_envelope_display')
                         
-                        ft_plot_vector(tim, cfg.spindsignal_envelope_display, 'box', false, 'color', cfg.underlaySpindleSignal_color, 'tag', 'spindle_timecourse', ...
+                        ft_plot_vector(tim(1:numel(cfg.spindsignal_envelope_display)), cfg.spindsignal_envelope_display, 'box', false, 'color', cfg.underlaySpindleSignal_color, 'tag', 'spindle_timecourse', ...
                             'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
-                        ft_plot_vector(tim, -cfg.spindsignal_envelope_display, 'box', false, 'color', cfg.underlaySpindleSignal_color, 'tag', 'spindle_timecourse', ...
+                        ft_plot_vector(tim(1:numel(cfg.spindsignal_envelope_display)), -cfg.spindsignal_envelope_display, 'box', false, 'color', cfg.underlaySpindleSignal_color, 'tag', 'spindle_timecourse', ...
                             'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
                         
                     end
                     
                     if isfield(cfg,'spindsignal_display')
-                        ft_plot_vector(tim, cfg.spindsignal_display , 'box', false, 'color', [0.75 0.75 0.75], 'tag', 'spindle_timecourse', ...
+                        ft_plot_vector(tim(1:numel(cfg.spindsignal_display)), cfg.spindsignal_display , 'box', false, 'color', [0.75 0.75 0.75], 'tag', 'spindle_timecourse', ...
                             'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
                         
                     end
@@ -3275,7 +3537,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
         yTickLabel = [];
         for i = 1:length(chanindx)
             curr_scale = cfg.chanscale(chanindx);
-            if length(chanindx)> 6
+            if length(chanindx) > 6
                 % one tick per channel
                 yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
                     opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)]);
@@ -3295,11 +3557,11 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
                     opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/2)]);
                 yTickLabel_temp = cellfun(@str2num,cellfun(@(x) num2str(x,'%1.2f'),{temp_tick(1) temp_tick(2) temp_tick(3) temp_tick(4)},'UniformOutput',false));
                 if i==1
-                    yTickLabel = [yTickLabel {'' num2str(yTickLabel_temp(2)) num2str(yTickLabel_temp(3)) num2str(yTickLabel_temp(4))}];
+                    yTickLabel = [{num2str(yTickLabel_temp(1)) num2str(yTickLabel_temp(2)) num2str(yTickLabel_temp(3)) ' '} yTickLabel];
                 elseif i == length(chanindx)
-                    yTickLabel = [yTickLabel {num2str(yTickLabel_temp(1)) num2str(yTickLabel_temp(2)) num2str(yTickLabel_temp(3)) ''}];
+                    yTickLabel = [{' ' num2str(yTickLabel_temp(2)) num2str(yTickLabel_temp(3)) num2str(yTickLabel_temp(4))} yTickLabel];
                 else
-                    yTickLabel = [yTickLabel {num2str(yTickLabel_temp(1)) num2str(yTickLabel_temp(2)) num2str(yTickLabel_temp(3)) num2str(yTickLabel_temp(4))}];
+                    yTickLabel = [{num2str(yTickLabel_temp(1)) num2str(yTickLabel_temp(2)) num2str(yTickLabel_temp(3)) num2str(yTickLabel_temp(4))} yTickLabel];
                 end
                 %yTickLabel = [yTickLabel {[.0 .25 .75 1] .* temp_factor}];
                 %FW end
@@ -3310,8 +3572,11 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
     %FW begin
     %yTickLabel = repmat(yTickLabel, 1, length(chanindx));
     set(gca, 'yTick', yTick);
-    set(gca, 'yTickLabel', flip(yTickLabel));
-    
+    if length(chanindx) > 6
+        set(gca, 'yTickLabel', flip(yTickLabel));
+    else
+        set(gca, 'yTickLabel', yTickLabel);
+    end
     %FW end
     
 else
