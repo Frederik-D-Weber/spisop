@@ -1,10 +1,12 @@
 function [cfg] = ft_fw_databrowser(cfg, data)
-%TODO:autosave or reminder to save refine SO detection, artifact consideration and
+%TODO:refine SO detection, artifact consideration and
 %marking
 %movement artifact detection, artifact export
 %mark lights-offs, fix zoom capturing of key commands,
 %button for toggle automatic skipping after scoring epoch go to next even when already scored
-%export data, import data, autosave
+%export data, import data
+%DONE: Autosave on import and export of hypnogram, extention is
+%...autosave?.txt where ? is a number that does not overwrite the old file
 
 % FT_DATABROWSER can be used for visual inspection of data. Artifacts that
 % were detected by artifact functions (see FT_ARTIFACT_xxx functions where
@@ -720,7 +722,9 @@ if strcmp(cfg.doSleepScoring,'yes')
     opt.zoomstatus = 'off';
     cfg.use_ruler = 'no';
     
-    
+    %cfg.autosave_hypnogram = 'yes';
+    cfg.autosave_hypnogram_every_number_change = 5;
+    opt.autosave_hypnogram_change_interator = 0;
     
     cfg.display_power_spectrum = 'no';
     cfg.display_time_frequency = 'no';
@@ -826,8 +830,11 @@ if strcmp(cfg.doSleepScoring,'yes')
     uicontrol('tag', 'scoptbuttons_zoom', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'zoom','position', [0.7, temp_lower_line_y+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'z')
     uicontrol('tag', 'scoptbuttons_grid', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'grid','position', [0.725, temp_lower_line_y+0.08/3+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'g')
     uicontrol('tag', 'scoptbuttons_ruler', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'ruler','position', [0.725, temp_lower_line_y+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'r')
-    uicontrol('tag', 'scoptbuttons_EvDisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'events','position', [0.7, temp_lower_line_y , 0.05, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'e')
-
+    if strcmp(cfg.displayEvents,'yes')
+        uicontrol('tag', 'scoptbuttons_EvDisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'events','position', [0.7, temp_lower_line_y , 0.05, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'e')
+    else
+        uicontrol('tag', 'scoptbuttons_EvDisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'EVENTS','position', [0.7, temp_lower_line_y , 0.05, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'e')
+    end
     uicontrol('tag', 'scoptbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'save','position', [0.75, temp_lower_line_y2 , 0.05, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'shift+s')
     uicontrol('tag', 'scoptbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'open','position', [0.75, temp_lower_line_y , 0.05, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'shift+o')
     
@@ -1153,7 +1160,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function helptext = help_text()
 helptext = [ ...
-'KEYBOARD SHORTCUTS ONLY WILL WORK \n' ...
+'\nKEYBOARD SHORTCUTS ONLY WILL WORK \n' ...
 'IF MOUSE WAS CLICKED IN DISPLAY AREA!\n\n' ...
 'Keyboard shortcuts for... \n' ...
 ' Scoring:\n'...
@@ -1496,7 +1503,9 @@ switch key
                     %    opt.zoomstatus = 'off';
                 case 'off'
                     opt.zoomstatus = 'on';
-                    opt.markingstatus = 'off';
+                    if isfield(opt,'markingstatus')
+                        opt.markingstatus = 'off';
+                    end
                 otherwise
                     opt.zoomstatus = 'off';
             end
@@ -1520,17 +1529,32 @@ switch key
             opt.markingstatus = 'on';
             opt.marks = [];
             opt.markSecondClick = 0;
+            if isfield(opt,'zoomstatus')
+                opt.zoomstatus = 'off';
+                zoom(h,opt.zoomstatus)
+            end
         else
             switch opt.markingstatus
                 case 'on'
                     opt.markingstatus = 'off';
-                    cfg.curr_displayed_marking = -1;
+                    %cfg.curr_displayed_marking = -1;
+                    %opt.marks = [];
                 case 'off'
                     opt.markingstatus = 'on';
+                    %opt.marks = [];
+                    %opt.markSecondClick = 0;
+                     if isfield(opt,'zoomstatus')
+                        opt.zoomstatus = 'off';
+                        zoom(h,opt.zoomstatus)
+                    end
                 otherwise
                     opt.markingstatus = 'off';
+                    cfg.curr_displayed_marking = -1;
+                    opt.marks = [];
             end
-            opt.marks = [];
+            if ~isfield(opt,'marks')
+                opt.marks = [];
+            end
             opt.markSecondClick = 0;
         end
         
@@ -1638,10 +1662,35 @@ switch key
                 if isfield(opt,'marks')
                     opt.marks = [];
                 end
+                cfg.curr_displayed_marking = -1;
             end
+            
+            %if strcmp(cfg.autosave_hypnogram,'yes')
+            if (cfg.autosave_hypnogram_every_number_change ~= 0)
+                
+                if isfield(cfg,'autosave_hypfilepath')
+                    opt.autosave_hypnogram_change_interator = opt.autosave_hypnogram_change_interator + 1;
+                    
+                    if mod(opt.autosave_hypnogram_change_interator, cfg.autosave_hypnogram_every_number_change) == 0
+                        opt.autosave_hypnogram_change_interator = 0;
+                        
+                        try
+                            if ~isfield(cfg,'hypnogram_delimiter_autosave')
+                                cfg.hypnogram_delimiter_autosave = '\t';
+                            end
+                            writeHypnogramFile(cfg.autosave_hypfilepath,cfg.hypn,cfg.hypnogram_delimiter_autosave);
+                        catch err
+                            
+                        end
+                    end
+                else
+                    
+                end
+            end
+            
+            
             setappdata(h, 'opt', opt);
             setappdata(h, 'cfg', cfg);
-            
             redraw_cb(h, eventdata);
         end
         
@@ -1675,6 +1724,7 @@ switch key
         if isfield(opt,'marks')
             opt.marks = [];
         end
+        cfg.curr_displayed_marking = -1;
         setappdata(h, 'opt', opt);
         setappdata(h, 'cfg', cfg);
         redraw_cb(h, eventdata);
@@ -1683,6 +1733,7 @@ switch key
         if isfield(opt,'marks')
             opt.marks = [];
         end
+        cfg.curr_displayed_marking = -1;
         setappdata(h, 'opt', opt);
         setappdata(h, 'cfg', cfg);
         redraw_cb(h, eventdata);
@@ -1851,6 +1902,10 @@ switch key
             opt.trlop = str2double(response);
             opt.trlop = min(opt.trlop, size(opt.trlvis,1)); % should not be larger than the number of trials
             opt.trlop = max(opt.trlop, 1); % should not be smaller than 1
+            if isfield(opt,'marks')
+                opt.marks = [];
+            end
+            cfg.curr_displayed_marking = -1;
             setappdata(h, 'opt', opt);
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
@@ -1877,7 +1932,8 @@ switch key
                     'Spindle min duration [s]:','Spindle max duration [s]:',...
                     'SO min Freq [Hz]:','SO max Freq [Hz]:'...
                     'SO threshold amplitude [potential]:'...
-                    'EMG threshold amplitude [potential]:'};
+                    'EMG threshold amplitude [potential]:'...
+                    'Autosave hypnogram, #changes needed to autosave (0 = disabled):'};
                 dlg_title = 'Thresholds';
                 num_lines = 1;
                 defaultans = {num2str(cfg.sp_minFreq),num2str(cfg.sp_maxFreq),...
@@ -1885,12 +1941,13 @@ switch key
                     num2str(cfg.sp_minSec),num2str(cfg.sp_maxSec),...
                     num2str(cfg.so_minFreq),num2str(cfg.so_maxFreq),...
                     num2str(cfg.so_thresholdAmplitudeForDetection),...
-                    num2str(cfg.emg_thresholdAmplitudeForDetection)};
+                    num2str(cfg.emg_thresholdAmplitudeForDetection),...
+                    num2str(cfg.autosave_hypnogram_every_number_change)};
                 response = inputdlg(prompt,dlg_title,num_lines,defaultans);
                 
                 
                 if ~isempty(response)
-                    if numel(response)==10
+                    if numel(response)==11
                         cfg.sp_minFreq = str2num(['[' response{1} ']']);
                         cfg.sp_maxFreq = str2num(['[' response{2} ']']);
                         cfg.sp_thresholdForDetectionBeginEnd = str2num(['[' response{3} ']']);
@@ -1904,8 +1961,11 @@ switch key
                         cfg.so_thresholdAmplitudeForDetection = str2num(['[' response{9} ']']);
                         
                         cfg.emg_thresholdAmplitudeForDetection = str2num(['[' response{10} ']']);
+                        
+                        cfg.autosave_hypnogram_every_number_change = str2num(['[' response{11} ']']);
+                        
                     else
-                        error('not 10 elements')
+                        error('not 11 elements')
                     end
                     
                     cfg = update_filters(cfg);
@@ -2003,8 +2063,8 @@ switch key
                     tempfilepath);
                 if hyp_file_filterindex ~= 0
                     save([hyp_file_path hyp_file_name],'cfg','opt','-v7.3')
-                end
                     msgbox('Saving session successful!' ,'Saving successful','modal');
+                end
             catch err
                 msgbox('Saving session failed!' ,'Saving failed','error','modal');
             end
@@ -2047,7 +2107,9 @@ switch key
             setappdata(h, 'opt', opt);
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
-            msgbox('Opening session successful!' ,'Opening successful','modal');
+            if hyp_file_filterindex ~= 0
+                msgbox('Opening session successful!' ,'Opening successful','modal');
+            end
             catch err
                 msgbox('Open the session failed!' ,'Open failed','error','modal');
             end
@@ -2059,7 +2121,7 @@ switch key
                 temppath = [cfg.outputfilespath];
                 
                 [hyp_file_name hyp_file_path hyp_file_filterindex] = uigetfile(...
-                    {'*.txt;*.csv','Export formats (*.txt)';...
+                    {'*.txt;*.csv','Import formats (*.txt,*.csv)';...
                     '*.txt','Text - Tab delimited (*.txt)';...
                     '*.csv','Comma Separated Values (*.csv)';...
                     % '*.m', 'program files (*.m)';...
@@ -2093,11 +2155,25 @@ switch key
                     cfg.hypn_plot_interpol = curr_ep_hypn_plot_interpol;
                     cfg.hypn_plot_interpol_MA = curr_ep_hypn_plot_interpol_MA;
                     
+                    [temp_pathstr,temp_name,temp_ext] = fileparts(temp_hypnogramPath);
+                    
+                    iAutosave = 0;
+                    cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
+                    while exist(cfg.autosave_hypfilepath) == 2
+                        iAutosave = iAutosave + 1;
+                        cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
+                    end
+                    
                 end
+                
+                
+                
                 setappdata(h, 'opt', opt);
                 setappdata(h, 'cfg', cfg);
                 redraw_cb(h, eventdata);
-                msgbox('Importing the hypnogram successful!' ,'Import successful','modal');
+                if hyp_file_filterindex ~= 0
+                    msgbox('Importing the hypnogram successful!' ,'Import successful','modal');
+                end
             catch err
                 msgbox('Importing the hypnogram failed!' ,'Import failed','error','modal');
             end
@@ -2110,7 +2186,7 @@ switch key
                 tempfilepath = [cfg.outputfilespath cfg.ouputFilesPrefixString 'hypn_export_' 'datasetnum' num2str(cfg.datasetnum) '.txt'];
                 
                 [hyp_file_name hyp_file_path hyp_file_filterindex] = uiputfile(...
-                    {'*.txt;*.csv','Export formats (*.txt)';...
+                    {'*.txt;*.csv','Export formats (*.txt,*.csv)';...
                     '*.txt','Text - Tab delimited (*.txt)';...
                     '*.csv','Comma Separated Values (*.csv)';...
                     % '*.m', 'program files (*.m)';...
@@ -2122,18 +2198,26 @@ switch key
                 if hyp_file_filterindex ~= 0
                     [dummy_pathstr,dummy_name,temp_ext] = fileparts([hyp_file_path hyp_file_name]);
                     if strcmp(temp_ext,'.csv')
-                        temp_delimiter = ',';
+                        cfg.hypnogram_delimiter_autosave = ',';
                     else
-                        temp_delimiter = '\t';
+                        cfg.hypnogram_delimiter_autosave = '\t';
                     end
                     
-                    hyp_export = fopen([hyp_file_path hyp_file_name], 'wt');
-                    for iRow = 1:size(cfg.hypn,1)
-                        fprintf(hyp_export, ['%i' temp_delimiter '%i\n'], cfg.hypn(iRow,:));
+                    temp_hypnogramPath = [hyp_file_path hyp_file_name];
+                    writeHypnogramFile(temp_hypnogramPath,cfg.hypn,cfg.hypnogram_delimiter_autosave);
+                    
+                    
+                    [temp_pathstr,temp_name,temp_ext] = fileparts(temp_hypnogramPath);                    
+                    iAutosave = 0;
+                    cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
+                    while exist(cfg.autosave_hypfilepath) == 2
+                        iAutosave = iAutosave + 1;
+                        cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
                     end
-                    fclose(hyp_export);
+                    
+                    setappdata(h, 'cfg', cfg);
+                    msgbox('Exporting the hypnogram successful!' ,'Export successful','modal');
                 end
-                msgbox('Exporting the hypnogram successful!' ,'Export successful','modal');
             catch err
                 msgbox('Exporting the hypnogram failed!' ,'Export failed','error','modal');
             end
@@ -2377,11 +2461,66 @@ if isfield(cfg,'plotHyp')
         %temp_x_other_artifact_index = sort(temp_x_other_artifact_index);
         plot(axh,x_time_hyp,temp_hypn_plot_interpol_MA,'Color',[0.75 0.75 0.75])
     end
+    
+   
+    
+    
+    
     xlim(axh,[0 max(x_time)]);
     ylabel(axh,'Stages');
     ylim(axh,[cfg.plot_MA_offset temp_max_y])
-    yTick = [1 0 -0.5 -1 -2 -3 -4 cfg.plot_MA_offset+1 cfg.plot_MA_offset+0.5];
-    yTickLabel = {'?' 'W' 'REM' 'S1' 'S2' 'S3' 'S4' 'MT' 'MA'};
+    yTick = [0 -0.5 -1 -2 -3 -4 cfg.plot_MA_offset+1 cfg.plot_MA_offset+0.5];
+    yTickLabel = {'W' 'REM' 'S1' 'S2' 'S3' 'S4' 'MT' 'MA'};
+    
+     if strcmp(cfg.displayEvents,'yes')
+
+     ev1_offset = 0.7;
+     ev2_offset = 0.4;
+     
+      if isfield(cfg,'begin_end_events2')
+         yTick = [ev2_offset yTick];
+        yTickLabel = {'Ev2' yTickLabel{:}};
+         for channelIndex = 1:length(chanindx)
+             curr_begins_ends = cfg.begin_end_events2{chanindx(channelIndex)};
+             if strcmp(cfg.viewmode, 'component')
+                 color = 'k';
+             else
+                 %color = opt.chancolors(chanindx(i),:);
+                 color = opt.chancolors(chanindx(channelIndex),:);
+             end
+             
+             temp_x = (curr_begins_ends(:,1)/opt.fsample)/60;
+             temp_y = repmat(ev2_offset,size(curr_begins_ends,1),1);
+             plot(axh,[temp_x temp_x]',[temp_y-0.05 temp_y+0.05]','Color',color)
+             %scatter(axh,(curr_begins_ends(:,1)/opt.fsample)/60,repmat(ev1_offset,1,size(curr_begins_ends,1)),'MarkerEdgeColor',color)
+         end
+     end
+     
+     if isfield(cfg,'begin_end_events')
+          yTick = [ev1_offset yTick];
+        yTickLabel = {'Ev1' yTickLabel{:}};
+         for channelIndex = 1:length(chanindx)
+             curr_begins_ends = cfg.begin_end_events{chanindx(channelIndex)};
+             if strcmp(cfg.viewmode, 'component')
+                 color = 'k';
+             else
+                 %color = opt.chancolors(chanindx(i),:);
+                 color = opt.chancolors(chanindx(channelIndex),:);
+             end
+             
+             temp_x = (curr_begins_ends(:,1)/opt.fsample)/60;
+             temp_y = repmat(ev1_offset,size(curr_begins_ends,1),1);
+             plot(axh,[temp_x temp_x]',[temp_y-0.05 temp_y+0.05]','Color',color)
+             %scatter(axh,(curr_begins_ends(:,1)/opt.fsample)/60,repmat(ev1_offset,1,size(curr_begins_ends,1)),'MarkerEdgeColor',color)
+         end
+     end
+     
+     
+     end
+    
+    yTick = [1 yTick];
+    yTickLabel = {'?' yTickLabel{:}};
+    
     set(axh, 'yTick', flip(yTick));
     set(axh, 'yTickLabel', flip(yTickLabel));
     set(axh,'TickDir','out');
@@ -4120,9 +4259,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %function [channels, scalings, order, enabled, focus_eeg, focus_emg, focus_eog] = channelDialog(channels)
 function [selected_channels,cfg,opt] = channelDialog(channels,indices_selected,cfg,opt)
-% channels = {'a','b','c','d','e'}
-% indices_selected = [1 2 4 5]
-selected_channels = channels;
+%selected_channels = channels;
+selected_channels = channels(indices_selected);
+
 
 Nchannels = numel(channels);
 titlestr = 'Channel Settings';
@@ -4282,7 +4421,17 @@ if ishandle(dlg)
             cfg.score_channel_emg_number = find(curr_chanIndexOrder == chanNum_focusEMG,1,'first');
             %ft_uilayout(h, 'tag', 'scoptbuttons_focusEMG', 'string', ['Focus EMG: ' opt.hdr.label{cfg.score_channel_emg_number}]);
 
-     index_selected_channels = [];
+            if isfield(cfg,'begin_end_events')
+                cfg.times_ind_per_channel = cfg.times_ind_per_channel(curr_chanIndexOrder);
+                cfg.begin_end_events = cfg.begin_end_events(curr_chanIndexOrder);
+            end
+            
+            if isfield(cfg,'begin_end_events2')
+                cfg.times_ind_per_channel2 = cfg.times_ind_per_channel2(curr_chanIndexOrder);
+                cfg.begin_end_events2 = cfg.begin_end_events2(curr_chanIndexOrder);
+            end
+            
+    index_selected_channels = [];
     for iCh = 1:numel(channels)
         if get(findobj(get(dlg,'children'),'tag',['enabled_chan' num2str(iCh)]),'value')
             index_selected_channels = [index_selected_channels;iCh];
@@ -4377,4 +4526,15 @@ end
 
 opt.hdr.label = opt.orgdata.label;
 data_new = {};
+end
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % SUBFUNCTION
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function writeHypnogramFile(filepath,hypn,delimiter)
+hyp_export = fopen(filepath, 'wt');
+for iRow = 1:size(hypn,1)
+    fprintf(hyp_export, ['%i' delimiter '%i\n'], hypn(iRow,:));
+end
+fclose(hyp_export);
 end

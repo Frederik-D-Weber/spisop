@@ -22,8 +22,8 @@ ScalingSettingsDefinitionsFileName,ScalingSettingsDefinitions_lindev.txt,Filenam
 ## ADVANCED,,
 ApplyEventmappingSettings,yes,either yes or no default no
 EventmappingSettingsDefinitionsFileName,EventmappingSettingsDefinitions_lindev.txt,Filename of file containing paths to event channel mapping definitions
-ApplyEventsSelection,yes,either yes or no default no
-ApplyEventsSelection2,yes,either yes or no default no
+ApplyEventsSelection,no,either yes or no default no
+ApplyEventsSelection2,no,either yes or no default no
 EventsTarget1FilePathsFileName,EventsFilePaths_SO_lindev.txt,Filename of file containing target events file paths in comma separated values format per line ( at least one )
 EventsTarget1TimePointColumn,seconds_begin,variable name for event value in target events files
 EventTarget1TimeWindowOffsetTime,0,time point offset of the time window test events can fall into with respect to target events time points in units used for EventsTarget1CompareColumns default 0
