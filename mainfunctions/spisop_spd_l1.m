@@ -57,11 +57,44 @@ if ~(strcmp(EnvelopeMethod,'hilbertEnv') || strcmp(EnvelopeMethod,'smoothedRMSwd
 end
 
 
-factorSDbeginEnd = str2num(getParam('factorSDbeginEnd',listOfParameters)); %factor in standard deviations for threshold of the signal for smoothed RMS signal
-factorSDcriterion = str2num(getParam('factorSDcriterion',listOfParameters)); %factor in standard deviations for threshold of the signal for smoothed RMS signal
+ThresholdFormationBasis = 'std'; %default
+try
+ThresholdFormationBasis = getParam('ThresholdFormationBasis',listOfParameters);% either mean or std default std
+catch e
+end
+if ~(strcmp(ThresholdFormationBasis,'mean') || strcmp(ThresholdFormationBasis,'std'))
+    error(['ThresholdFormationBasis ' ThresholdFormationBasis ' in parameters is unknown, use either mean or std, default std'])
+end
 
-if factorSDbeginEnd > factorSDcriterion
-    error(['factorSDbeginEnd ' num2str(factorSDbeginEnd) ' in parameters must be less or equal than factorSDcriterion ' num2str(factorSDcriterion)])
+
+ThresholdSignal = 'filtered_signal'; %default
+try
+ThresholdSignal = getParam('ThresholdSignal',listOfParameters);% either filtered_signal or envelope default signal
+catch e
+end
+
+if ~(strcmp(ThresholdSignal,'filtered_signal') || strcmp(ThresholdSignal,'envelope'))
+    error(['ThresholdSignal ' ThresholdSignal ' in parameters is unknown, use either filtered_signal or envelope, default filtered_signal'])
+end
+
+
+
+
+try
+factorThresholdBeginEnd = str2num(getParam('factorThresholdBeginEnd',listOfParameters)); %factor in standard deviations for threshold of the signal for smoothed RMS signal
+catch e
+factorThresholdBeginEnd = str2num(getParam('factorSDbeginEnd',listOfParameters)); %factor in standard deviations for threshold of the signal for smoothed RMS signal
+end
+
+try
+factorThresholdCriterion = str2num(getParam('factorThresholdCriterion',listOfParameters)); %factor in standard deviations for threshold of the signal for smoothed RMS signal
+catch e
+    factorThresholdCriterion = str2num(getParam('factorSDcriterion',listOfParameters)); %factor in standard deviations for threshold of the signal for smoothed RMS signal
+
+end
+
+if factorThresholdBeginEnd > factorThresholdCriterion
+    error(['factorThresholdBeginEnd ' num2str(factorThresholdBeginEnd) ' in parameters must be less or equal than factorThresholdBeginEnd ' num2str(factorThresholdCriterion)])
 end
     
 MinAbsoluteDownToUpPeakPotential = str2num(getParam('MinAbsoluteDownToUpPeakPotential',listOfParameters));
@@ -73,7 +106,11 @@ epochLength = str2num(getParam('epochLength',listOfCoreParameters)); % in second
 %sleepStagesOfInterst = {'SWS','S2'};
 sleepStagesOfInterest = strsplit(getParam('sleepStagesOfInterest',listOfParameters));
 
-SDmethod = getParam('SDmethod',listOfParameters);% 'meanoverchan' or 'valuesoverchan' or 'respectivechan'
+try
+    ThresholdAggregationMethod = getParam('ThresholdAggregationMethod',listOfParameters);% 'meanoverchan' or 'valuesoverchan' or 'respectivechan'
+catch
+    ThresholdAggregationMethod = getParam('SDmethod',listOfParameters);% 'meanoverchan' or 'valuesoverchan' or 'respectivechan'
+end
 
 UseAbsoluteEnvelopeThreshold = getParam('UseAbsoluteEnvelopeThreshold',listOfParameters);%If abosolute positive RMS potential threshold for all channels should be used either yes or no default no
 AbsoluteEnvelopeThresholdBeginEnd = str2num(getParam('AbsoluteEnvelopeThresholdBeginEnd',listOfParameters));%Abosolute positive RMS potential threshold for all channels default 4 (for microVolts potential)
@@ -124,9 +161,9 @@ if strcmp(DataSetsWhich,'subset')
 end
 
 if strcmp(UseAbsoluteEnvelopeThreshold,'yes')
-    factorSDbeginEnd = 1;
+    factorThresholdBeginEnd = 1;
     AbsoluteEnvelopeThresholdCriterionRatio = AbsoluteEnvelopeThresholdCriterion/AbsoluteEnvelopeThresholdBeginEnd;
-    factorSDcriterion = AbsoluteEnvelopeThresholdCriterionRatio;
+    factorThresholdCriterion = AbsoluteEnvelopeThresholdCriterionRatio;
 end
 
 
@@ -823,30 +860,50 @@ parfor conseciData = conseciDatas
                 tempAllDataValues = cat(2,tempAllDataValues,data.trial{iTr});
             end
         end;
-        if strcmp('meanoverchan',SDmethod)
-            SDfrqBndPssSignal = mean(std(tempAllDataValues,0,2));
-        elseif strcmp('valuesoverchan',SDmethod)
-            SDfrqBndPssSignal = std(tempAllDataValues(:));
-        elseif strcmp('respectivechan',SDmethod)
-            SDfrqBndPssSignal = std(tempAllDataValues,0,2);
+        
+        if strcmp(ThresholdSignal,'filtered_signal') 
+        elseif strcmp(ThresholdSignal,'envelope')
+            for iChan_temp = 1:size(tempAllDataValues,1)
+                tempAllDataValues(iChan_temp,:) = abs(hilbert(tempAllDataValues(iChan_temp,:)));
+            end
+        end
+
+        
+        if strcmp('meanoverchan',ThresholdAggregationMethod)
+            if strcmp(ThresholdFormationBasis,'mean')
+                SDfrqBndPssSignal = mean(mean(tempAllDataValues,2));
+            elseif strcmp(ThresholdFormationBasis,'std')
+                SDfrqBndPssSignal = mean(std(tempAllDataValues,0,2));
+            end
+        elseif strcmp('valuesoverchan',ThresholdAggregationMethod)
+            if strcmp(ThresholdFormationBasis,'mean')
+                SDfrqBndPssSignal = mean(tempAllDataValues(:));
+            elseif strcmp(ThresholdFormationBasis,'std')
+                SDfrqBndPssSignal = std(tempAllDataValues(:));
+            end
+        elseif strcmp('respectivechan',ThresholdAggregationMethod)
+            if strcmp(ThresholdFormationBasis,'mean')
+                SDfrqBndPssSignal = mean(tempAllDataValues,2);
+            elseif strcmp(ThresholdFormationBasis,'std')
+                SDfrqBndPssSignal = std(tempAllDataValues,0,2);
+            end
         else
-            error('SDmethod for calculating standard deviation over channels is unknown');
+            error('ThresholdAggregationMethod for calculating mean or standard deviation over channels is unknown');
         end
         tempAllDataValues = [];%clear
     end
-    
     
     if strcmp(OverwiteGlobalThresholdsAndUseIndividualDatasetEnvelopeTh,'yes')
         tempThBeginEnd = str2num(listOfIndividualDatasetEnvelopeThrehold{iData,1});
         tempThCriterion = str2num(listOfIndividualDatasetEnvelopeThrehold{iData,2});
         
         if ~strcmp(UseAbsoluteEnvelopeThreshold,'yes')
-            dataset_factorSDbeginEnd = tempThBeginEnd;
-            dataset_factorSDcriterion = tempThCriterion;
+            dataset_factorThresholdBeginEnd = tempThBeginEnd;
+            dataset_factorThresholdCriterion = tempThCriterion;
         end
     else
-        dataset_factorSDbeginEnd = factorSDbeginEnd;
-        dataset_factorSDcriterion = factorSDcriterion;
+        dataset_factorThresholdBeginEnd = factorThresholdBeginEnd;
+        dataset_factorThresholdCriterion = factorThresholdCriterion;
     end
 
     
@@ -889,12 +946,12 @@ parfor conseciData = conseciDatas
                     tempThBeginEnd = str2num(listOfIndividualDatasetEnvelopeThrehold{iData,1});
                     tempThCriterion = str2num(listOfIndividualDatasetEnvelopeThrehold{iData,2});
                     ch_SDfrqBndPssSignal{iChan} = tempThBeginEnd;
-                    dataset_factorSDcriterion = tempThCriterion/tempThBeginEnd;
+                    dataset_factorThresholdCriterion = tempThCriterion/tempThBeginEnd;
                 else
                     ch_SDfrqBndPssSignal{iChan} = AbsoluteEnvelopeThresholdBeginEnd;
                 end
         else
-            if strcmp('respectivechan',SDmethod)
+            if strcmp('respectivechan',ThresholdAggregationMethod)
                 ch_SDfrqBndPssSignal{iChan} = SDfrqBndPssSignal(iChan);
             else
                 ch_SDfrqBndPssSignal{iChan} = SDfrqBndPssSignal;
@@ -943,8 +1000,8 @@ parfor conseciData = conseciDatas
                    
             
             
-            thresholdForDetectionBeginEnd = ch_SDfrqBndPssSignal{iChan}*dataset_factorSDbeginEnd;
-            thresholdForDetectionCriterion = ch_SDfrqBndPssSignal{iChan}*dataset_factorSDcriterion;
+            thresholdForDetectionBeginEnd = ch_SDfrqBndPssSignal{iChan}*dataset_factorThresholdBeginEnd;
+            thresholdForDetectionCriterion = ch_SDfrqBndPssSignal{iChan}*dataset_factorThresholdCriterion;
             
                         
             
@@ -1475,11 +1532,11 @@ parfor conseciData = conseciDatas
     fidta = fopen([pathOutputFolder filesep ouputFilesPrefixString 'spindle_troughs_filtered_potential_' 'datanum_' num2str(iData) '.csv'],'wt');
     
     %write header of ouptufiles
-    fprintf(fidc,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n','datasetnum','channel','count','density_per_epoch','mean_duration_seconds','mean_amplitude_trough2peak_potential','mean_frequency_by_mean_pk_trgh_cnt_per_dur','epoch_length_seconds','merged_count','lengths_ROI_seconds','used_SD_for_threshold','used_factor_SD_for_threshold_begin_end','used_factor_SD_for_threshold_criterion','used_min_detection_pass_or_cutoff_freq','used_max_detection_pass_or_cutoff_freq','used_center_freq','mean_SD_of_filtered_signal','mean_troughs_per_event','mean_peaks_per_event','mean_linear_regression_freq_slope','mean_linear_regression_freq_offset','mean_linear_regression_freq_R_squared');
+    fprintf(fidc,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n','datasetnum','channel','count','density_per_epoch','mean_duration_seconds','mean_amplitude_trough2peak_potential','mean_frequency_by_mean_pk_trgh_cnt_per_dur','epoch_length_seconds','merged_count','lengths_ROI_seconds','used_threshold_basis','used_factor_for_threshold_basis_begin_end','used_factor_for_threshold_basis_criterion','used_min_detection_pass_or_cutoff_freq','used_max_detection_pass_or_cutoff_freq','used_center_freq','mean_SD_of_filtered_signal','mean_troughs_per_event','mean_peaks_per_event','mean_linear_regression_freq_slope','mean_linear_regression_freq_offset','mean_linear_regression_freq_R_squared');
     
     fprintf(fide,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n',...
         'datasetnum','channel','duration_seconds','amplitude_peak2trough_max','frequency_by_mean_pk_trgh_cnt_per_dur','duration_samples','sample_begin','sample_end','sample_peak_max','sample_trough_max','envelope_max'...
-        ,'dataset','hypnogram','used_stages_for_detection','used_SD_for_threshold','used_min_pass_or_cutoff_detection_freq','used_max_detection_pass_or_cutoff_freq','used_center_freq','seconds_begin','seconds_end','seconds_peak_max','seconds_trough_max','seconds_envelope_max','id_within_channel',...
+        ,'dataset','hypnogram','used_stages_for_detection','used_threshold_basis','used_min_pass_or_cutoff_detection_freq','used_max_detection_pass_or_cutoff_freq','used_center_freq','seconds_begin','seconds_end','seconds_peak_max','seconds_trough_max','seconds_envelope_max','id_within_channel',...
         'stage','stage_alt','stage_alt2',...
         'SD_of_filtered_signal','merged_count',...
         'linear_regression_freq_slope','linear_regression_freq_offset','linear_regression_freq_R_squared',...
@@ -1546,8 +1603,8 @@ parfor conseciData = conseciDatas
         fprintf(fidc,'%i,',ch_nMerged{iChan});
         fprintf(fidc,'%f,',lengthsAcrossROIsSeconds);
         fprintf(fidc,'%e,',ch_SDfrqBndPssSignal{iChan});
-        fprintf(fidc,'%f,',dataset_factorSDbeginEnd);
-        fprintf(fidc,'%f,',dataset_factorSDcriterion);
+        fprintf(fidc,'%f,',dataset_factorThresholdBeginEnd);
+        fprintf(fidc,'%f,',dataset_factorThresholdCriterion);
         fprintf(fidc,'%f,',minFreq);
         fprintf(fidc,'%f,',maxFreq);
         fprintf(fidc,'%f,',centerFreqFilter);
