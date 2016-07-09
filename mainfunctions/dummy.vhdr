@@ -1,0 +1,23 @@
+Brain Vision Data Exchange Header File Version 1.0
+; Data created by FieldTrip modified by Frederik D. Weber
+
+[Common Infos]
+DataFile=test_short_run1_sleep_score_browser_datanum_1.eeg
+DataFormat=BINARY
+DataOrientation=MULTIPLEXED
+NumberOfChannels=8
+SamplingInterval=10000
+
+[Binary Infos]
+BinaryFormat=INT_16
+UseBigEndianOrder=NO
+
+[Channel Infos]
+Ch1=EOG,,0.1,µV
+Ch2=C3:A1-A2,,0.1,µV
+Ch3=C4:A1-A2,,0.1,µV
+Ch4=EMG,,0.1,µV
+Ch5=F3:A1-A2,,0.1,µV
+Ch6=F4:A1-A2,,0.1,µV
+Ch7=P3:A1-A2,,0.1,µV
+Ch8=P4:A1-A2,,0.1,µV

@@ -30,4 +30,4 @@ addpath(pathPrefix);
 [pathInputFolder, pathOutputFolder] = spisop_init_helper(pathPrefix,datasetAndInputFolderName,datasetAndInputFolderName,parallelComputation,numParallelWorkers);
 
 cd(pathPrefix)
-mcc -mv -I ./subfunctions -I ./mainfunctions -a ./subfunctions/*.m spisop.m
+mcc -mv -I ./subfunctions -I ./mainfunctions -a ./subfunctions/*.m -a ./mainfunctions/dummy.eeg -a ./mainfunctions/dummy.vhdr -a ./mainfunctions/dummy.txt -a ./mainfunctions/dummy.vmrk  spisop.m

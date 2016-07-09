@@ -1,7 +1,11 @@
-function [ iDatas, doAsInParameterFile] = dataSetInputDialog(listOfDatasetsPaths,iDatas,selectionType)
+function [ iDatas, doAsInParameterFile, useDummyDataset] = dataSetInputDialog(listOfDatasetsPaths,iDatas,selectionType)
 doAsInParameterFile = false;
 temp_has_decided = false;
 temp_selection_items = listOfDatasetsPaths;
+useDummyDataset = false;
+if strcmp(selectionType,'single')
+    temp_selection_items = ['dummy' ; temp_selection_items ];
+end
 set(0,'units','pixels')
 %Obtains this pixel information
 temp_screensize = get(0,'screensize');
@@ -14,10 +18,10 @@ while ~temp_has_decided
         'SelectionMode',selectionType,...
         'ListString',temp_selection_items,...
         'ListSize',temp_listSize,...
-        'CancelString','Open all in as stated in Parameterfile');
+        'CancelString','Open all as stated in Parameterfile');
     if dataset_selection_ok
         if strcmp(selectionType,'single')
-            iDatas = dataset_selection(1);
+            iDatas = dataset_selection(1)-1;
         else
             iDatas = dataset_selection;
         end
@@ -36,6 +40,9 @@ while ~temp_has_decided
                 doAsInParameterFile = true;
         end
     end
+end
+if all(iDatas == 0)
+    useDummyDataset = true;
 end
 end
 

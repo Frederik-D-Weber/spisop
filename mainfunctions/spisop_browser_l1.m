@@ -81,10 +81,12 @@ else
     end
 end
 
-iDatas = 1:(length(listOfDatasetsPaths));
-[iDatas, doAsInParameterFile] = dataSetInputDialog(listOfDatasetsPaths,iDatas,'single');
 
-if doAsInParameterFile && strcmp(DataSetsWhich,'subset')
+
+iDatas = 1:(length(listOfDatasetsPaths));
+[iDatas, doAsInParameterFile, useDummyDataset] = dataSetInputDialog(listOfDatasetsPaths,iDatas,'single');
+
+if doAsInParameterFile && strcmp(DataSetsWhich,'subset') && (~useDummyDataset)
     if ~(ismember(min(DataSetsNumbers),iDatas) && ismember(max(DataSetsNumbers),iDatas))
         error('Parameter DataSetsNumbers contains numbers not matching to any line number, e.g. too less DataSetPaths in DataSetPathsFile!')
     end
@@ -98,12 +100,17 @@ end
 %     error(['Parameter epochLength ' num2str(epochLength) 's must not be greater in order to support the maximum of MinDetectionFrequency_FpassLeft of ' num2str(MinDetectionFrequency_FpassLeft) ' Hz!'])
 % end
 
+if (~useDummyDataset)
 pretestHeaderForPersistentSampleFrequencies(IgnoreDataSetHeader,iDatas,listOfDatasetHeaderPaths,listOfChannelsOfInterest,FrqOfSmplWished);
 pretestHeaderForPersistentSampleFrequencies(IgnoreDataSetHeader,iDatas,listOfDatasetHeaderPaths,listOfChannelsOfInterest,FrqOfSmplWishedPreRedefine);
 
-
+end
 
 SignalMultiplicator = getParam('SignalMultiplicator',listOfCoreParameters);%factor that signals should be muliplicated with either a number or mixed. e.g. -1 means inverted. in case of mixed DataSetSignalMultiplicatorFileName is used. default 1 (nothing)
+if (useDummyDataset)
+    SignalMultiplicator = '1';
+end
+
 DataSetSignalMultiplicatorFileName = getParam('DataSetSignalMultiplicatorFileName',listOfCoreParameters);%Filename of file containing an muliplicatoion factor (for example -1 for inversion) applied to each signal per line for respective dataset
 
 if (strcmp(SignalMultiplicator,'mixed'))
@@ -119,6 +126,9 @@ else
 end
 
 DataSetOffsetSamples = getParam('DataSetOffsetSamples',listOfCoreParameters);%offset in the data in samples of the original sampling frequency of the file either a constant for all datasets or mixed.
+if (useDummyDataset)
+    DataSetOffsetSamples = '0';
+end
 DataSetOffsetSamplesFileName = getParam('DataSetOffsetSamplesFileName',listOfCoreParameters);%Filename of file containing an offset factor (for example -1 for inversion) applied to each signal per line for respective dataset
 
 if (strcmp(DataSetOffsetSamples,'mixed'))
@@ -134,6 +144,9 @@ else
 end
 
 DoReReference = getParam('DoReReference',listOfCoreParameters);%either yes or no
+if (useDummyDataset)
+    DoReReference = 'no';
+end
 RerefDefinitionsFileName = getParam('RerefDefinitionsFileName',listOfCoreParameters);
 listOfRerefDefinitionFiles = {};
 if strcmp(DoReReference,'yes')
@@ -167,6 +180,9 @@ if strcmp(DoReReference,'yes')
 end
 
 ApplyLinearDeviationMontage = getParam('ApplyLinearDeviationMontage',listOfCoreParameters);%either yes or no
+if (useDummyDataset)
+    ApplyLinearDeviationMontage = 'no';
+end
 DelimiterLinearDeviationMontage = ',';
 LinearDeviationMontageDefinitionsFileName = getParam('LinearDeviationMontageDefinitionsFileName',listOfCoreParameters);
 listOfLinearDeviationMontageFiles = {};
@@ -195,6 +211,9 @@ end
 
 
 ApplyFilterSettings = getParam('ApplyFilterSettings',listOfParameters);%either yes or no
+if (useDummyDataset)
+    ApplyFilterSettings = 'no';
+end
 FiltersSettingsDefinitionsFileName = getParam('FiltersSettingsDefinitionsFileName',listOfParameters);
 listOfFilterSettingsFiles = {};
 if strcmp(ApplyFilterSettings,'yes')
@@ -221,6 +240,9 @@ if strcmp(ApplyFilterSettings,'yes')
 end
 
 ApplyScalingSettings = getParam('ApplyScalingSettings',listOfParameters);%either yes or no
+if (useDummyDataset)
+    ApplyScalingSettings = 'no';
+end
 ScalingSettingsDefinitionsFileName = getParam('ScalingSettingsDefinitionsFileName',listOfParameters);
 listOfScalingSettingsFiles = {};
 if strcmp(ApplyScalingSettings,'yes')
@@ -247,6 +269,9 @@ if strcmp(ApplyScalingSettings,'yes')
 end
 
 ApplyEventmappingSettings = getParam('ApplyEventmappingSettings',listOfParameters);%either yes or no
+if (useDummyDataset)
+    ApplyEventmappingSettings = 'no';
+end
 EventmappingSettingsDefinitionsFileName = getParam('EventmappingSettingsDefinitionsFileName',listOfParameters);
 listOfEventmappingSettingsFiles = {};
 if strcmp(ApplyEventmappingSettings,'yes')
@@ -273,7 +298,9 @@ if strcmp(ApplyEventmappingSettings,'yes')
 end
 
 ApplyEventsSelection = getParam('ApplyEventsSelection',listOfParameters);%either yes or no
-
+if (useDummyDataset)
+    ApplyEventsSelection = 'no';
+end
 if strcmp(ApplyEventsSelection,'yes')
     
     EventsTarget1FilePathsFileName = getParam('EventsTarget1FilePathsFileName',listOfParameters);
@@ -319,7 +346,9 @@ end
 
 
 ApplyEventsSelection2 = getParam('ApplyEventsSelection2',listOfParameters);%either yes or no
-
+if (useDummyDataset)
+    ApplyEventsSelection2 = 'no';
+end
 if strcmp(ApplyEventsSelection2,'yes')
     
     EventsTarget2FilePathsFileName = getParam('EventsTarget2FilePathsFileName',listOfParameters);
@@ -562,19 +591,34 @@ for conseciData = conseciDatas
     FrqOfSmplWishedPar = FrqOfSmplWished;
     FrqOfSmplWishedParPreRedefine = FrqOfSmplWishedPreRedefine;
     
-    datasetsPath = listOfDatasetsPaths{iData};
-    if strcmp(DoEpochData,'yes') || strcmp(ReadInHypnogram,'yes')
-        hypnogramPath = listOfHypnogramPaths{iData};
+    if useDummyDataset
+        datasetsPath = 'dummy.eeg';
+        if strcmp(DoEpochData,'yes') || strcmp(ReadInHypnogram,'yes')
+            hypnogramPath = 'dummy.txt';
+        end
+        channelsOfInterest = 'all';
+        signalMultiplicator = 1;
+        signalOffsetSamples = 0;
+        
+    else
+        datasetsPath = listOfDatasetsPaths{iData};
+        if strcmp(DoEpochData,'yes') || strcmp(ReadInHypnogram,'yes')
+            hypnogramPath = listOfHypnogramPaths{iData};
+        end
+        channelsOfInterest = listOfChannelsOfInterest(iData,:);
+        channelsOfInterest = channelsOfInterest(~(cellfun(@isempty,channelsOfInterest)));
+        signalMultiplicator = listOfDataSetSignalMultiplicator(iData);
+        signalOffsetSamples = listOfDataSetOffsetSamples(iData);
+        
     end
-    channelsOfInterest = listOfChannelsOfInterest(iData,:);
-    channelsOfInterest = channelsOfInterest(~(cellfun(@isempty,channelsOfInterest)));
-    signalMultiplicator = listOfDataSetSignalMultiplicator(iData);
-    signalOffsetSamples = listOfDataSetOffsetSamples(iData);
-    
     hdr = [];
     preDownsampleFreq = 0;
     if strcmp(IgnoreDataSetHeader,'no')
-        headerPath = listOfDatasetHeaderPaths{iData};
+        if useDummyDataset
+            headerPath = 'dummy.vhdr';
+        else
+            headerPath = listOfDatasetHeaderPaths{iData};
+        end
         hdr = ft_read_header(headerPath);
         if (FrqOfSmplWishedPar > hdr.Fs)
             warning(['dataset ' num2str(iData) ': designated frequency not supported by data, will use: ' num2str(hdr.Fs) ' Hz instead!']);
