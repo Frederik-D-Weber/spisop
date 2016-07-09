@@ -1110,82 +1110,84 @@ for conseciData = conseciDatas
             data = data_filt{:};
         end
         
-        if strcmp(DoWriteData,'yes')
-            
-            data.trial = cat(2,data.trial(:));
-            data.trial = {cat(2,data.trial{:})};
-            data.time = cat(2,data.time(:));
-            data.time = {cat(2,data.time{:})};
-            
-            hdr.nSamples = size(data.trial{1},2);%EEG.Points;
-            hdr.nSamplesPre = 0;
-            hdr.nTrials = 1;
-            % ! potential is assumed to be in microV (µV) not milliVolt(mV)
-            
-            
-            
-            hdr.Fs = data.fsample;%EEG.SamplingRate;
-            hdr.nChans = length(data.label);%EEG.ChannelNumber;
-            hdr.nTrials = 1;
-            if strcmp(IgnoreDataSetHeader,'no')
-                chantype = {};
-                chanunit = {};
-                [dummy idat ihdr] = intersect(data.label,hdr.label);
-                chantype(ismember(data.label,hdr.label)) = hdr.chantype(ihdr);
-                chantype(~ismember(data.label,hdr.label)) = {'eeg'};
-                chanunit(ismember(data.label,hdr.label)) = hdr.chanunit(ihdr);
-                chanunit(~ismember(data.label,hdr.label)) = {DefaultOutputUnit};%EEG.ChannelUnits;%Nx1 cell-array with the physical units, see FT_CHANUNIT
-                hdr.chantype = chantype';
-                hdr.chanunit = chanunit';
-            else
-                hdr.chantype = repmat({'eeg'},hdr.nChans,1);%Nx1 cell-array with the channel type, see FT_CHANTYPE
-                hdr.chanunit = repmat({DefaultOutputUnit},hdr.nChans,1);%EEG.ChannelUnits;%Nx1 cell-array with the physical units, see FT_CHANUNIT
-            end
-            hdr.label = data.label;%EEG.ChannelTitles;
-            
-            
-            if strcmp(IncludePostiveMarkerAtBeginning,'yes')
-                sigpositive_data = data.trial{1};
-                sigpositive_data(:,1:402) = repmat([((0:(1/200):1)*100) ((1:-(1/200):0)*100)],size(sigpositive_data,1),1);
-                data.trial{1} = sigpositive_data;
-            end
-            
-            switch OutputDataformat
-                case 'brainvision_eeg_int16'
-                    tempOutputDataformat = 'brainvision_eeg';
-                    hdr.brainvision_outformat = 'int16';%float32 int16 int32;
-                case 'rainvision_eeg_int32'
-                    tempOutputDataformat = 'brainvision_eeg';
-                    hdr.brainvision_outformat = 'int32';%float32 int16 int32;
-                case 'rainvision_eeg_float32'
-                    tempOutputDataformat = 'brainvision_eeg';
-                    hdr.brainvision_outformat = 'float32';%float32 int16 int32;
-                case 'edf_autoscale'
-                    tempOutputDataformat = 'edf';
-                    hdr.edf_doautoscale = true;
-                case 'edf_0.1uV_Ycuttoff'
-                    tempOutputDataformat = 'edf';
-                    hdr.edf_doautoscale = false;
-                    hdr.edf_accuracy = 0.1;
-                    hdr.edf_docutoff = true;
-                case 'edf_0.01uV_Ycuttoff'
-                    tempOutputDataformat = 'edf';
-                    hdr.edf_doautoscale = false;
-                    hdr.edf_accuracy = 0.01;
-                    hdr.edf_docutoff = true;
-                case 'edf_1uV_Ycuttoff'
-                    tempOutputDataformat = 'edf';
-                    hdr.edf_doautoscale = false;
-                    hdr.edf_accuracy = 1;
-                    hdr.edf_docutoff = true;
-            end
-            data_file_name = [pathOutputFolder filesep ouputFilesPrefixString 'browser_' 'datanum_' num2str(iData)];
-            ft_write_data([data_file_name], data.trial{:},'dataformat',tempOutputDataformat,'header',hdr);
-            
-            
+    end
+    
+    if strcmp(DoWriteData,'yes')
+        
+        data.trial = cat(2,data.trial(:));
+        data.trial = {cat(2,data.trial{:})};
+        data.time = cat(2,data.time(:));
+        data.time = {cat(2,data.time{:})};
+        
+        hdr.nSamples = size(data.trial{1},2);%EEG.Points;
+        hdr.nSamplesPre = 0;
+        hdr.nTrials = 1;
+        % ! potential is assumed to be in microV (µV) not milliVolt(mV)
+        
+        
+        
+        hdr.Fs = data.fsample;%EEG.SamplingRate;
+        hdr.nChans = length(data.label);%EEG.ChannelNumber;
+        hdr.nTrials = 1;
+        if strcmp(IgnoreDataSetHeader,'no')
+            chantype = {};
+            chanunit = {};
+            [dummy idat ihdr] = intersect(data.label,hdr.label);
+            chantype(ismember(data.label,hdr.label)) = hdr.chantype(ihdr);
+            chantype(~ismember(data.label,hdr.label)) = {'eeg'};
+            chanunit(ismember(data.label,hdr.label)) = hdr.chanunit(ihdr);
+            chanunit(~ismember(data.label,hdr.label)) = {DefaultOutputUnit};%EEG.ChannelUnits;%Nx1 cell-array with the physical units, see FT_CHANUNIT
+            hdr.chantype = chantype';
+            hdr.chanunit = chanunit';
+        else
+            hdr.chantype = repmat({'eeg'},hdr.nChans,1);%Nx1 cell-array with the channel type, see FT_CHANTYPE
+            hdr.chanunit = repmat({DefaultOutputUnit},hdr.nChans,1);%EEG.ChannelUnits;%Nx1 cell-array with the physical units, see FT_CHANUNIT
+        end
+        hdr.label = data.label;%EEG.ChannelTitles;
+        
+        
+        if strcmp(IncludePostiveMarkerAtBeginning,'yes')
+            sigpositive_data = data.trial{1};
+            sigpositive_data(:,1:402) = repmat([((0:(1/200):1)*100) ((1:-(1/200):0)*100)],size(sigpositive_data,1),1);
+            data.trial{1} = sigpositive_data;
         end
         
+        switch OutputDataformat
+            case 'brainvision_eeg_int16'
+                tempOutputDataformat = 'brainvision_eeg';
+                hdr.brainvision_outformat = 'int16';%float32 int16 int32;
+            case 'rainvision_eeg_int32'
+                tempOutputDataformat = 'brainvision_eeg';
+                hdr.brainvision_outformat = 'int32';%float32 int16 int32;
+            case 'rainvision_eeg_float32'
+                tempOutputDataformat = 'brainvision_eeg';
+                hdr.brainvision_outformat = 'float32';%float32 int16 int32;
+            case 'edf_autoscale'
+                tempOutputDataformat = 'edf';
+                hdr.edf_doautoscale = true;
+            case 'edf_0.1uV_Ycuttoff'
+                tempOutputDataformat = 'edf';
+                hdr.edf_doautoscale = false;
+                hdr.edf_accuracy = 0.1;
+                hdr.edf_docutoff = true;
+            case 'edf_0.01uV_Ycuttoff'
+                tempOutputDataformat = 'edf';
+                hdr.edf_doautoscale = false;
+                hdr.edf_accuracy = 0.01;
+                hdr.edf_docutoff = true;
+            case 'edf_1uV_Ycuttoff'
+                tempOutputDataformat = 'edf';
+                hdr.edf_doautoscale = false;
+                hdr.edf_accuracy = 1;
+                hdr.edf_docutoff = true;
+        end
+        data_file_name = [pathOutputFolder filesep ouputFilesPrefixString 'browser_' 'datanum_' num2str(iData)];
+        ft_write_data([data_file_name], data.trial{:},'dataformat',tempOutputDataformat,'header',hdr);
+        
+        
     end
+    
+    
     
     fprintf('dataset %i: print data\n',iData);
     
@@ -1360,7 +1362,7 @@ for conseciData = conseciDatas
         bp_hdm.TransitionWidth2 = NaN;
         bp_hdm.Astop2 = NaN;
         bp_hdm.Fstop1 = NaN;
-        bp_hdm.Fstop2 = NaN;        
+        bp_hdm.Fstop2 = NaN;
     end
     
     if ~exist('usedFilterOrder_lp','var')

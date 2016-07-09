@@ -47,7 +47,7 @@ FrqOfSmplWished = str2num(getParam('FrqOfSmplWished',listOfParameters));%samples
 FrqOfSmplWishedPreRedefine = str2num(getParam('FrqOfSmplWishedPreRedefine',listOfParameters));%samples per second / Hz
 
 if FrqOfSmplWishedPreRedefine < FrqOfSmplWished
-     error('FrqOfSmplWishedPreRedefine need to be same or bigger than FrqOfSmplWished')
+    error('FrqOfSmplWishedPreRedefine need to be same or bigger than FrqOfSmplWished')
 end
 
 DataSetsWhich = getParam('DataSetsWhich',listOfParameters);%Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
@@ -109,7 +109,7 @@ if (strcmp(SignalMultiplicator,'mixed'))
     if ~(all(size(listOfDataSetSignalMultiplicator) == size(listOfDatasetsPaths)))
         error('files or number of Datasetspaths and DataSetSignalMultiplicator are invalid or do not aggree')
     end
-else 
+else
     listOfDataSetSignalMultiplicator = repmat(str2num(SignalMultiplicator),length(listOfDatasetsPaths),1);
 end
 
@@ -124,7 +124,7 @@ if (strcmp(DataSetOffsetSamples,'mixed'))
     if ~(all(size(listOfDataSetOffsetSamples) == size(listOfDatasetsPaths)))
         error('files or number of Datasetspaths and DataSetOffsetSamples (in File) are invalid or do not aggree, also check for empty lines in corresponding files')
     end
-else 
+else
     listOfDataSetOffsetSamples = repmat(str2num(DataSetOffsetSamples),length(listOfDatasetsPaths),1);
 end
 
@@ -142,23 +142,23 @@ if strcmp(DoReReference,'yes')
     end
     
     for iDefFiles = 1:size(listOfRerefDefinitionFiles,1)
-            
+        
         if exist([pathInputFolder filesep listOfRerefDefinitionFiles{iDefFiles}],'file') ~= 2
             error(['The rereference definitions file listed in RerefDefinitionsFileName for dataset number ' num2str(iDefFiles)  ' does not exist'])
         end
         
         try
-           temp_table = readtable([pathInputFolder filesep listOfRerefDefinitionFiles{iDefFiles}],'FileType','text','Delimiter',',');
+            temp_table = readtable([pathInputFolder filesep listOfRerefDefinitionFiles{iDefFiles}],'FileType','text','Delimiter',',');
         catch err
-           error(['The rereference definitions file listed in RerefDefinitionsFileName for dataset number ' num2str(iDefFiles)  ' is not readable'])
+            error(['The rereference definitions file listed in RerefDefinitionsFileName for dataset number ' num2str(iDefFiles)  ' is not readable'])
         end
         if (size(temp_table,2) ~= 3) || (size(temp_table,1) <1)
             error(['The rereference definitions file listed in RerefDefinitionsFileName for dataset number ' num2str(iDefFiles)  ' is not readable'])
         end
         temp_table = [];
-
+        
     end
-            
+    
 end
 
 ApplyLinearDeviationMontage = getParam('ApplyLinearDeviationMontage',listOfCoreParameters);%either yes or no
@@ -174,15 +174,15 @@ if strcmp(ApplyLinearDeviationMontage,'yes')
         error('files or number of Datasetspaths LinearDeviationMontagePaths are invalid or do not aggree')
     end
     
-     for iDefFiles = 1:size(listOfLinearDeviationMontageFiles,1)
+    for iDefFiles = 1:size(listOfLinearDeviationMontageFiles,1)
         if exist([pathInputFolder filesep listOfLinearDeviationMontageFiles{iDefFiles}],'file') ~= 2
             error(['The linear deviations montage definitions file listed in LinearDeviationMontageDefinitions for dataset number ' num2str(iDefFiles)  ' does not exist'])
         end
         
-         try
-          readtable([pathInputFolder filesep listOfLinearDeviationMontageFiles{iDefFiles}],'FileType','text','Delimiter',',');
+        try
+            readtable([pathInputFolder filesep listOfLinearDeviationMontageFiles{iDefFiles}],'FileType','text','Delimiter',',');
         catch err
-           error(['The linear deviations montage definitions file listed in LinearDeviationMontageDefinitions for dataset number ' num2str(iDefFiles)  ' is not readable'])
+            error(['The linear deviations montage definitions file listed in LinearDeviationMontageDefinitions for dataset number ' num2str(iDefFiles)  ' is not readable'])
         end
     end
     
@@ -413,7 +413,7 @@ parfor conseciData = conseciDatas
     channelsOfInterest = channelsOfInterest(~(cellfun(@isempty,channelsOfInterest)));
     signalMultiplicator = listOfDataSetSignalMultiplicator(iData);
     signalOffsetSamples = listOfDataSetOffsetSamples(iData);
-
+    
     hdr = [];
     preDownsampleFreq = 0;
     if strcmp(IgnoreDataSetHeader,'no')
@@ -452,7 +452,7 @@ parfor conseciData = conseciDatas
         if length(roiEnds) < 1
             error(['no ROI in data left for analysis']);
         end
-    
+        
         indexLastIncludedROIinData = length(roiBegins);
         nSampleLength = -1;
         if strcmp(IgnoreDataSetHeader,'no')
@@ -484,12 +484,12 @@ parfor conseciData = conseciDatas
         roiEnds = roiEnds + signalOffsetSamples;
     end
     
-%     for second read in of hypnogramm after downsampling
-%     if (signalOffsetSamples ~= 0)
-%         signalOffsetSamples_downsampled = floor(signalOffsetSeconds*FrqOfSmpl);
-%         roiBegins = roiBegins + signalOffsetSamples_downsampled;
-%         roiEnds = roiEnds + signalOffsetSamples_downsampled;
-%     end
+    %     for second read in of hypnogramm after downsampling
+    %     if (signalOffsetSamples ~= 0)
+    %         signalOffsetSamples_downsampled = floor(signalOffsetSeconds*FrqOfSmpl);
+    %         roiBegins = roiBegins + signalOffsetSamples_downsampled;
+    %         roiEnds = roiEnds + signalOffsetSamples_downsampled;
+    %     end
     
     
     if strcmp(DoReReference,'yes') || strcmp(ApplyLinearDeviationMontage,'yes')
@@ -599,7 +599,7 @@ parfor conseciData = conseciDatas
             fprintf('dataset %i: apply linear deviation montage to data\n',iData);
             linearDeviationMontageFile = listOfLinearDeviationMontageFiles{iData};
             %linearDeviationMontagePath = 'T:\\Freddy\\temp_bva\\EEG_data\\save\\LinearDeviation_for_Schlafaus_SpiSOP.txt';
-
+            
             
             montageTable = dataset('File',[pathInputFolder filesep linearDeviationMontageFile],'Delimiter',DelimiterLinearDeviationMontage,'ReadVarNames',true,'ReadObsNames',true);
             
@@ -703,7 +703,7 @@ parfor conseciData = conseciDatas
     
     FrqOfSmpl = data.fsample;%data.hdr.Fs;%samples per second / Hz
     
-   if strcmp(ApplyFilterSettings,'yes')
+    if strcmp(ApplyFilterSettings,'yes')
         fileFilterSettings = listOfFilterSettingsFiles{iData};
         curr_channel_settings_table = readtable([pathInputFolder filesep fileFilterSettings],'Delimiter',',');
         
@@ -814,11 +814,11 @@ parfor conseciData = conseciDatas
                             curr_filterdefs_filterPos = curr_filterdefs_filterPos + 1;
                             continue;
                         otherwise
-                                error(['filter not well defined for channel ' curr_channel_label])
+                            error(['filter not well defined for channel ' curr_channel_label])
                     end
                 catch err
                     error(['filter not well defined for channel ' curr_channel_label])
-               end
+                end
                 
                 %[numeral conversion_successfull] = str2num(curr_filter);
                 %            if conversion_successfull
@@ -950,84 +950,86 @@ parfor conseciData = conseciDatas
             data = data_filt{:};
         end
         
-        if strcmp(DoWriteData,'yes')
-            
-            data.trial = cat(2,data.trial(:));
-            data.trial = {cat(2,data.trial{:})};
-            data.time = cat(2,data.time(:));
-            data.time = {cat(2,data.time{:})};
-            
-            hdr.nSamples = size(data.trial{1},2);%EEG.Points;
-            hdr.nSamplesPre = 0;
-            hdr.nTrials = 1;
-            % ! potential is assumed to be in microV (µV) not milliVolt(mV)
-            
-            
-            
-            hdr.Fs = data.fsample;%EEG.SamplingRate;
-            hdr.nChans = length(data.label);%EEG.ChannelNumber;
-            hdr.nTrials = 1;
-            if strcmp(IgnoreDataSetHeader,'no')
-                chantype = {};
-                chanunit = {};
-                [dummy idat ihdr] = intersect(data.label,hdr.label);
-                chantype(ismember(data.label,hdr.label)) = hdr.chantype(ihdr);
-                chantype(~ismember(data.label,hdr.label)) = {'eeg'};
-                chanunit(ismember(data.label,hdr.label)) = hdr.chanunit(ihdr);
-                chanunit(~ismember(data.label,hdr.label)) = {DefaultOutputUnit};%EEG.ChannelUnits;%Nx1 cell-array with the physical units, see FT_CHANUNIT
-                hdr.chantype = chantype';
-                hdr.chanunit = chanunit';
-            else
-                hdr.chantype = repmat({'eeg'},hdr.nChans,1);%Nx1 cell-array with the channel type, see FT_CHANTYPE
-                hdr.chanunit = repmat({DefaultOutputUnit},hdr.nChans,1);%EEG.ChannelUnits;%Nx1 cell-array with the physical units, see FT_CHANUNIT
-            end
-            hdr.label = data.label;%EEG.ChannelTitles;
-            
-            
-            if strcmp(IncludePostiveMarkerAtBeginning,'yes')
-                sigpositive_data = data.trial{1};
-                sigpositive_data(:,1:402) = repmat([((0:(1/200):1)*100) ((1:-(1/200):0)*100)],size(sigpositive_data,1),1);
-                data.trial{1} = sigpositive_data;
-            end
-            
-            switch OutputDataformat
-                case 'brainvision_eeg_int16'
-                    tempOutputDataformat = 'brainvision_eeg';
-                    hdr.brainvision_outformat = 'int16';%float32 int16 int32;
-                case 'rainvision_eeg_int32'
-                    tempOutputDataformat = 'brainvision_eeg';
-                    hdr.brainvision_outformat = 'int32';%float32 int16 int32;
-                case 'rainvision_eeg_float32'
-                    tempOutputDataformat = 'brainvision_eeg';
-                    hdr.brainvision_outformat = 'float32';%float32 int16 int32;
-                case 'edf_autoscale'
-                    tempOutputDataformat = 'edf';
-                            hdr.edf_doautoscale = true;
-                case 'edf_0.1uV_Ycuttoff'
-                    tempOutputDataformat = 'edf';
-                    hdr.edf_doautoscale = false;
-                    hdr.edf_accuracy = 0.1;
-                    hdr.edf_docutoff = true;
-                case 'edf_0.01uV_Ycuttoff'
-                    tempOutputDataformat = 'edf';
-                    hdr.edf_doautoscale = false;
-                    hdr.edf_accuracy = 0.01;
-                    hdr.edf_docutoff = true;
-                case 'edf_1uV_Ycuttoff'
-                    tempOutputDataformat = 'edf';
-                    hdr.edf_doautoscale = false;
-                    hdr.edf_accuracy = 1;
-                    hdr.edf_docutoff = true;
-            end
-            
-            data_file_name = [pathOutputFolder filesep ouputFilesPrefixString 'preprocout_' 'datanum_' num2str(iData)];
-            ft_write_data([data_file_name], data.trial{:},'dataformat',tempOutputDataformat,'header',hdr);
-            
-            
+    end
+    
+    if strcmp(DoWriteData,'yes')
+        
+        data.trial = cat(2,data.trial(:));
+        data.trial = {cat(2,data.trial{:})};
+        data.time = cat(2,data.time(:));
+        data.time = {cat(2,data.time{:})};
+        
+        hdr.nSamples = size(data.trial{1},2);%EEG.Points;
+        hdr.nSamplesPre = 0;
+        hdr.nTrials = 1;
+        % ! potential is assumed to be in microV (µV) not milliVolt(mV)
+        
+        
+        
+        hdr.Fs = data.fsample;%EEG.SamplingRate;
+        hdr.nChans = length(data.label);%EEG.ChannelNumber;
+        hdr.nTrials = 1;
+        if strcmp(IgnoreDataSetHeader,'no')
+            chantype = {};
+            chanunit = {};
+            [dummy idat ihdr] = intersect(data.label,hdr.label);
+            chantype(ismember(data.label,hdr.label)) = hdr.chantype(ihdr);
+            chantype(~ismember(data.label,hdr.label)) = {'eeg'};
+            chanunit(ismember(data.label,hdr.label)) = hdr.chanunit(ihdr);
+            chanunit(~ismember(data.label,hdr.label)) = {DefaultOutputUnit};%EEG.ChannelUnits;%Nx1 cell-array with the physical units, see FT_CHANUNIT
+            hdr.chantype = chantype';
+            hdr.chanunit = chanunit';
+        else
+            hdr.chantype = repmat({'eeg'},hdr.nChans,1);%Nx1 cell-array with the channel type, see FT_CHANTYPE
+            hdr.chanunit = repmat({DefaultOutputUnit},hdr.nChans,1);%EEG.ChannelUnits;%Nx1 cell-array with the physical units, see FT_CHANUNIT
+        end
+        hdr.label = data.label;%EEG.ChannelTitles;
+        
+        
+        if strcmp(IncludePostiveMarkerAtBeginning,'yes')
+            sigpositive_data = data.trial{1};
+            sigpositive_data(:,1:402) = repmat([((0:(1/200):1)*100) ((1:-(1/200):0)*100)],size(sigpositive_data,1),1);
+            data.trial{1} = sigpositive_data;
         end
         
+        switch OutputDataformat
+            case 'brainvision_eeg_int16'
+                tempOutputDataformat = 'brainvision_eeg';
+                hdr.brainvision_outformat = 'int16';%float32 int16 int32;
+            case 'rainvision_eeg_int32'
+                tempOutputDataformat = 'brainvision_eeg';
+                hdr.brainvision_outformat = 'int32';%float32 int16 int32;
+            case 'rainvision_eeg_float32'
+                tempOutputDataformat = 'brainvision_eeg';
+                hdr.brainvision_outformat = 'float32';%float32 int16 int32;
+            case 'edf_autoscale'
+                tempOutputDataformat = 'edf';
+                hdr.edf_doautoscale = true;
+            case 'edf_0.1uV_Ycuttoff'
+                tempOutputDataformat = 'edf';
+                hdr.edf_doautoscale = false;
+                hdr.edf_accuracy = 0.1;
+                hdr.edf_docutoff = true;
+            case 'edf_0.01uV_Ycuttoff'
+                tempOutputDataformat = 'edf';
+                hdr.edf_doautoscale = false;
+                hdr.edf_accuracy = 0.01;
+                hdr.edf_docutoff = true;
+            case 'edf_1uV_Ycuttoff'
+                tempOutputDataformat = 'edf';
+                hdr.edf_doautoscale = false;
+                hdr.edf_accuracy = 1;
+                hdr.edf_docutoff = true;
+        end
+        
+        data_file_name = [pathOutputFolder filesep ouputFilesPrefixString 'preprocout_' 'datanum_' num2str(iData)];
+        ft_write_data([data_file_name], data.trial{:},'dataformat',tempOutputDataformat,'header',hdr);
+        
+        
     end
-   
+    
+    
+    
     if PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff == 0
         usedFilterOrder_hp_preDS = 0;
         hp_preDS_hdm.Fs = NaN;
@@ -1075,7 +1077,7 @@ parfor conseciData = conseciDatas
     end
     
     
-   
+    
     hp_f_type_detail = '';
     switch core_cfg.hpfilttype
         case 'but'
@@ -1089,7 +1091,7 @@ parfor conseciData = conseciDatas
     end
     
     
-if ~(strcmp(core_cfg.lpfilttype,'FIRdesigned') || strcmp(core_cfg.lpfilttype,'IIRdesigned'))
+    if ~(strcmp(core_cfg.lpfilttype,'FIRdesigned') || strcmp(core_cfg.lpfilttype,'IIRdesigned'))
         
         usedFilterOrder_lp = NaN;
         lp_hdm.Fs = FrqOfSmpl;
@@ -1189,7 +1191,7 @@ if ~(strcmp(core_cfg.lpfilttype,'FIRdesigned') || strcmp(core_cfg.lpfilttype,'II
         bp_hdm.TransitionWidth2 = NaN;
         bp_hdm.Astop2 = NaN;
         bp_hdm.Fstop1 = NaN;
-        bp_hdm.Fstop2 = NaN;        
+        bp_hdm.Fstop2 = NaN;
     end
     
     if ~exist('usedFilterOrder_lp','var')
@@ -1218,8 +1220,8 @@ if ~(strcmp(core_cfg.lpfilttype,'FIRdesigned') || strcmp(core_cfg.lpfilttype,'II
         'hp_filter','hp_filter_type','hp_dir_and_passing','usedFilterOrder_hp','hp_Fs_Hz','hp_Astop_dB','hp_Fstop_Hz','hp_F6dB_Hz','hp_F3dB_Hz','hp_TransitionWidth_Hz','hp_Fpass_Hz','hp_Apass_dB',...
         'bp_filter','bp_filter_type','bp_dir_and_passing','usedFilterOrder_bp','bp_Fs_Hz','bp_Astop1_dB','bp_Fstop1_Hz','bp_TransitionWidth1_Hz','bp_F3dB1_Hz','bp_F6dB1_Hz','bp_Fpass1_Hz','bp_Apass_dB','bp_Fpass2_Hz','bp_F3dB2_Hz','bp_F6dB2_Hz','bp_TransitionWidth2_Hz','bp_Fstop2_Hz','bp_Astop2_dB',...
         'lp_filter','lp_filter_type','lp_dir_and_passing','usedFilterOrder_lp','lp_Fs_Hz','lp_Astop_dB','lp_Fstop_Hz','lp_F6dB_Hz','lp_F3dB_Hz','lp_TransitionWidth_Hz','lp_Fpass_Hz','lp_Apass_dB');
-
-
+    
+    
     
     %write content
     fprintf(fidf,['%i,%s' ',%s,%s,%s,%i,%i,%e,%f,%f,%f,%f,%f,%e'...
@@ -1231,20 +1233,20 @@ if ~(strcmp(core_cfg.lpfilttype,'FIRdesigned') || strcmp(core_cfg.lpfilttype,'II
         core_cfg.hpfilttype,hp_f_type_detail,core_cfg.hpfiltdir,usedFilterOrder_hp,hp_hdm.Fs,hp_hdm.Astop,hp_hdm.Fstop,hp_hdm.F6dB,hp_hdm.F3dB,hp_hdm.TransitionWidth,hp_hdm.Fpass,hp_hdm.Apass,...
         core_cfg.bpfilttype,bp_f_type_detail,core_cfg.bpfiltdir,usedFilterOrder_bp,bp_hdm.Fs,bp_hdm.Astop1,bp_hdm.Fstop1,bp_hdm.TransitionWidth1,bp_hdm.F3dB1,bp_hdm.F6dB1,bp_hdm.Fpass1,bp_hdm.Apass,bp_hdm.Fpass2,bp_hdm.F3dB2,bp_hdm.F6dB2,bp_hdm.TransitionWidth2,bp_hdm.Fstop2,bp_hdm.Astop2,...
         core_cfg.lpfilttype,lp_f_type_detail,core_cfg.lpfiltdir,usedFilterOrder_lp,lp_hdm.Fs,lp_hdm.Astop,lp_hdm.Fstop,lp_hdm.F6dB,lp_hdm.F3dB,lp_hdm.TransitionWidth,lp_hdm.Fpass,lp_hdm.Apass);
-
+    
     
     fclose(fidf);
     
-%     cfg_datbrow = [];
-%     cfg_datbrow.viewmode  = 'vertical';%'butterfly', 'vertical', 'component' for visualizing components e.g. from an ICA (default is 'butterfly')
-%     cfg_datbrow.blocksize = epochLength;
-%     cfg_datbrow.artfctdef.markartifact.artifact = [300 400; 600 900];
-%     cfg_datbrow.selectfeature = {'markartifact'};
-%     cfg_datbrow.selectmode = 'markartifact';
-%     cfg_datbrowres = ft_databrowser(cfg_datbrow, data);
-%     cfg_datbrowres = ft_databrowser(cfg_datbrowres, data);
-
-
+    %     cfg_datbrow = [];
+    %     cfg_datbrow.viewmode  = 'vertical';%'butterfly', 'vertical', 'component' for visualizing components e.g. from an ICA (default is 'butterfly')
+    %     cfg_datbrow.blocksize = epochLength;
+    %     cfg_datbrow.artfctdef.markartifact.artifact = [300 400; 600 900];
+    %     cfg_datbrow.selectfeature = {'markartifact'};
+    %     cfg_datbrow.selectmode = 'markartifact';
+    %     cfg_datbrowres = ft_databrowser(cfg_datbrow, data);
+    %     cfg_datbrowres = ft_databrowser(cfg_datbrowres, data);
+    
+    
     data = [];%clear
     
 end
@@ -1254,18 +1256,18 @@ fprintf('Aggregate results of all datasets\n');
 fidf_all = [];
 delimiter = ',';
 for iData = iDatas
-                         
+    
     fidf = dataset('File',[pathOutputFolder filesep ouputFilesPrefixString 'preprocout_filter_' 'datanum_' num2str(iData) '.csv'],'Delimiter',delimiter);
     
     
     if iData == iDatas(1)
         fidf_all = fidf;
-
+        
     else
-
+        
         
         fidf_all = cat(1,fidf_all,fidf);
-
+        
     end
     
 end
