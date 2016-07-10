@@ -12,7 +12,7 @@ DataSetsWhich,all,Datasets to be processed either all or subset if subset then D
 DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset
 DoEpochData,no,If data should be epoched like given in hypnograms and sleep stages of interest either yes or no default no
 DefaultOutputUnit,uV,the unit of export usually the same as the input unless multiplicated with factors. it is ignored when header info is available
-OutputDataformat,brainvision_eeg_int16, output data format either edf or gdf or brainvision_eeg_int16 brainvision_eeg_int32 brainvision_eeg_float32 or neuralynx_ncs or neuralynx_sdma or plexon_nex or riff_wave or fcdc_matbin or fcdc_mysql or fcdc_buffer or matlab default brainvision_eeg 
+OutputDataformat,brainvision_eeg_int16, output data format either edf or gdf or brainvision_eeg_int16 brainvision_eeg_int32 brainvision_eeg_float32 or neuralynx_ncs or neuralynx_sdma or plexon_nex or riff_wave or fcdc_matbin or fcdc_mysql or fcdc_buffer or matlab default brainvision_eeg_int16 
 IncludePostiveMarkerAtBeginning,yes, uses the first 402 samples to indicate a positive potential triangle of potential of 100 units either yes or no default yes
 ApplyFilterSettings,no,either yes or no default no
 FiltersSettingsDefinitionsFileName,FiltersSettingsDefinitions_sleep_scoring_simple_lindev.txt,Filename of file containing paths to filter definitions
