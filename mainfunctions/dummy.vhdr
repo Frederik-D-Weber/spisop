@@ -2,7 +2,7 @@ Brain Vision Data Exchange Header File Version 1.0
 ; Data created by FieldTrip modified by Frederik D. Weber
 
 [Common Infos]
-DataFile=test_short_run1_sleep_score_browser_datanum_1.eeg
+DataFile=dummy.eeg
 DataFormat=BINARY
 DataOrientation=MULTIPLEXED
 NumberOfChannels=8
