@@ -33,6 +33,7 @@ if (~isdeployed)
     %addpath([pathPrefix]);
     addpath([pathPrefix filesep 'mainfunctions']);
     addpath([pathPrefix filesep 'subfunctions']);
+    addpath([pathPrefix filesep 'dummy']);
     % inclulde fieldtrip in path
     addpath([pathPrefix filesep 'fieldtrip_fw']);
     % initialize fieldtrip
