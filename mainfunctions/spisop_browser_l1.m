@@ -19,8 +19,11 @@ if ~strcmp(IgnoreDataSetHeader,'yes')
         error(['DataSetHeaderPathsFileName file ' [pathInputFolder filesep DataSetHeaderPathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
     end
 end
+ReadInHypnogram = getParam('ReadInHypnogram',listOfParameters);%either yes or no
+if strcmp(ReadInHypnogram,'yes')
 if exist([pathInputFolder filesep HypnogramsFileName],'file') ~= 2
     error(['HypnogramsFileName file ' [pathInputFolder filesep HypnogramsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+end
 end
 
 if exist([pathInputFolder filesep ChannelsOfInterestFileName],'file') ~= 2
@@ -32,7 +35,6 @@ PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff = str2num(getParam('PreDownS
 
 
 DoEpochData = getParam('DoEpochData',listOfParameters);%If the data should be epoched like given in hypnograms and sleep stages of interest
-ReadInHypnogram = getParam('ReadInHypnogram',listOfParameters);%either yes or no
 DoSleepScoring = getParam('DoSleepScoring',listOfParameters);%either yes or no
 DefaultOutputUnit = getParam('DefaultOutputUnit',listOfParameters);
 OutputDataformat = getParam('OutputDataformat',listOfParameters);
