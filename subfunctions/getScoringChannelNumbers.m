@@ -1,5 +1,5 @@
 function [numberEEG numberEOG numberEMG] = getScoringChannelNumbers(datachannel)
-
+% datachannel = data.label
 eeg_channel = ft_channelselection('*C3*',datachannel);
 eog_channel = ft_channelselection('*EOG*',datachannel);
 emg_channel = ft_channelselection('*EMG*',datachannel);
@@ -13,13 +13,13 @@ end
 if ~isempty(eog_channel)
     numberEOG = find(strcmp(eog_channel(1),datachannel));
 else
-    numberEEG = 1;
+    numberEOG = 1;
 end
 
 if ~isempty(emg_channel)
     numberEMG = find(strcmp(emg_channel(1),datachannel));
 else
-    numberEEG = numel(datachannel);
+    numberEMG = numel(datachannel);
 end
 
 end
