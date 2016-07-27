@@ -1,4 +1,4 @@
-function [cfg, p1gca, p2gca, p1gccb] = ft_fw_singleplotTFR_yy(cfg, data, xdata2, ydata2)
+function [cfg, p1gca, p2gca, p1gccb, datamatrix] = ft_fw_singleplotTFR_yy(cfg, data, xdata2, ydata2)
 %FW: cfg.contour = if contour values are drawn, = 'yes' | 'no', default = 'no'
 %FW: cfg.contour_type = type of contour 'statistic' | 'threshold'
 %FW: cfg.contour_linewidth = line width of contour in pixel, default = 1.8
@@ -13,6 +13,7 @@ function [cfg, p1gca, p2gca, p1gccb] = ft_fw_singleplotTFR_yy(cfg, data, xdata2,
 %FW: cfg.y2linestyles = linestyle for second y axis default '-'
 %FW: cfg.y2linewidths = linewidth for second y axis default 1
 %FW: cfg.y2alphas = alpha value for second y axis default 1
+%
 % FT_SINGLEPLOTTFR plots the time-frequency representation of power of a
 % single channel or the average over multiple channels.
 %

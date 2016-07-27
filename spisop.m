@@ -14,11 +14,18 @@ numParallelWorkers = 2;
 if (nargin < NStandardParam) || (nargin > NMaxParam)
     if (nargin < 1)
 
-    helpdlg(sprintf(['SpiSOP is a command line tool!\n\n It does NOT run by double clicking it.\nYou need to give parameters in a command line... \n\n' ...
+    hlp = helpdlg(sprintf(['SpiSOP is a command line tool!\n\n It does NOT run by double clicking it.\nYou need to give parameters in a command line... \n\n' ...
         getUsageString()]),'It does not work like this!');
     end
-    fprintf(['Wrong number of input arguments, should be between ' num2str(NStandardParam) ' and ' num2str(NMaxParam) ' but is ' nargin '\n'])
+    uiwait(hlp);
+
+    fprintf(['Wrong number of input arguments, should be between ' num2str(NStandardParam) ' and ' num2str(NMaxParam) ' but is ' num2str(nargin) '\n'])
     printUsage();
+    if (~isdeployed)
+        error('try again!');
+    else
+        exit;
+    end
 end
 
 if nargin > 6 && ~(strcmpi(functionName,'manipulateparam')) 
@@ -127,6 +134,11 @@ switch lower(functionName)
     otherwise
         fprintf(['function with name ' functionName ' is unknown'])
         printUsage();
+        if (~isdeployed)
+            error('try again!');
+        else
+            exit;
+        end
 end
 
 
@@ -196,6 +208,6 @@ fstring = ['USAGE: spisop(.exe) functionName currentFullInstallationFilePath inp
 end
 
 function printUsage()
-sprintf(getUsageString());
-    error('try again!')
+usagestring = getUsageString();
+    disp(sprintf([ '\n' usagestring ]));
 end

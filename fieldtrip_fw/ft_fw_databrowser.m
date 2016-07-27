@@ -664,9 +664,13 @@ if strcmp(cfg.doSleepScoring,'yes')
     cfg.ylim = [-temp_eeg_span temp_eeg_span];
     
     
-    cfg.markSpindles = 'yes';
-    cfg.markSO = 'yes';
-    cfg.underlaySpindleSignal = 'yes';
+    cfg.markSpindles = 'no';
+    cfg.markSO = 'no';
+    
+    cfg.underlaySpindleSignal = 'no';
+    cfg.underlaySOSignal = 'no';
+
+    
     if isfield(cfg,'begin_end_events') || isfield(cfg,'begin_end_events') 
         cfg.displayEvents = 'yes';
     else
@@ -675,6 +679,8 @@ if strcmp(cfg.doSleepScoring,'yes')
     cfg.spindle_mark_color = [0 1 0];
     cfg.slowoscillation_mark_color = [1 0 0];
     cfg.underlaySpindleSignal_color = [150/255 192/255 150/255];
+    
+    cfg.underlaySOSignal_color = [255/255 165/255 0/255];
     
     
     cfg.curr_displayed_detected_slowosci_perc_display_ind = 0;
@@ -694,8 +700,15 @@ if strcmp(cfg.doSleepScoring,'yes')
     cfg.sp_minFreq = 12;
     cfg.sp_maxFreq = 14;
     
+    cfg.markSO_filter = 'yes';
+
+    
     cfg.so_minFreq = 0.5;
     cfg.so_maxFreq = 2;
+    
+    cfg.so_filter_minFreq = cfg.so_minFreq;
+    cfg.so_filter_maxFreq = cfg.so_maxFreq;
+    
     cfg.so_thresholdAmplitudeForDetection = 75;
     
     cfg.emg_thresholdAmplitudeForDetection = 45;
@@ -706,15 +719,27 @@ if strcmp(cfg.doSleepScoring,'yes')
     
     cfg.UseFixedFilterOrder_bp = 'no';
     cfg.FilterOrder_bp = 100;
-    
-    
     cfg.AstopLeft_bp = 100;
     cfg.Apass_bp = 0.001;
     cfg.AstopRight_bp = 100;
-    
-    
     cfg.StopToPassTransitionWidth_bp = 1.25;
     cfg.PassToStopTransitionWidth_bp = 1.25;
+    
+    cfg.UseFixedFilterOrder_hp = 'yes';
+    cfg.FilterOrder_hp = 4;
+    cfg.AstopLeft_hp = 100;
+    cfg.Apass_hp = 0.001;
+    cfg.StopToPassTransitionWidth_hp = 0.2;
+
+    
+    cfg.UseFixedFilterOrder_lp = 'no';
+    cfg.FilterOrder_lp = 100;
+    cfg.AstopRight_lp = 100;
+    cfg.Apass_lp = 0.001;
+    cfg.PassToStopTransitionWidth_lp = 1.25;
+
+    
+    
     
     cfg = update_filters(cfg);
     
@@ -727,6 +752,9 @@ if strcmp(cfg.doSleepScoring,'yes')
     opt.autosave_hypnogram_change_interator = 0;
     
     cfg.display_power_spectrum = 'no';
+    cfg.freq_borders = [0.5 4; 4 8; 8 12; 12 15; 20 30;];
+    cfg.freq_colors = jet(size(cfg.freq_borders,1));
+    
     cfg.display_time_frequency = 'no';
     
 end
@@ -821,10 +849,13 @@ if strcmp(cfg.doSleepScoring,'yes')
     uicontrol('tag', 'scbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'S4(4)','position', [0.52, temp_lower_line_y , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', '4')
     uicontrol('tag', 'scoptbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '?(D)','position', [0.56, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'd')
     
-    uicontrol('tag', 'scoptbuttons_SOdet', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '(+)_.·\_.·\_.·','Fontsize',6,'FontUnits','normalized','position', [0.62, temp_lower_line_y+0.08/3+0.08/3 , 0.05, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'k')
-    uicontrol('tag', 'scoptbuttons_SPdet', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--~~-~~--','Fontsize',6,'FontUnits','normalized', 'position', [0.62, temp_lower_line_y+0.08/3 , 0.05, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'j')
-    uicontrol('tag', 'scoptbuttons_SPdisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--(~~~)--','Fontsize',6,'FontUnits','normalized', 'position', [0.62, temp_lower_line_y , 0.05, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'n')
+    uicontrol('tag', 'scoptbuttons_SOdet', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '(+)_.·\_.·\_.·','Fontsize',6,'FontUnits','normalized','position', [0.62, temp_lower_line_y+0.08/4+0.08/4+0.08/4 , 0.05, 0.08/4],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'k')
+    uicontrol('tag', 'scoptbuttons_SOdisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--(_.·\)--','Fontsize',6,'FontUnits','normalized','position', [0.62, temp_lower_line_y+0.08/4+0.08/4 , 0.05, 0.08/4],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'o')
+    uicontrol('tag', 'scoptbuttons_SPdet', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--~~-~~--','Fontsize',6,'FontUnits','normalized', 'position', [0.62, temp_lower_line_y+0.08/4 , 0.05, 0.08/4],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'j')
+    uicontrol('tag', 'scoptbuttons_SPdisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--(~~~)--','Fontsize',6,'FontUnits','normalized', 'position', [0.62, temp_lower_line_y , 0.05, 0.08/4],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'n')
     
+    uicontrol('tag', 'scoptbuttons_pow', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'pow','position',  [0.675, temp_lower_line_y+0.08/3+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'p')
+    uicontrol('tag', 'scoptbuttons_tfr', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'tfr','position', [0.675, temp_lower_line_y+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'f')
 
     uicontrol('tag', 'scoptbuttons_mark', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'mark','position', [0.7, temp_lower_line_y+0.08/3+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'm')
     uicontrol('tag', 'scoptbuttons_zoom', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'zoom','position', [0.7, temp_lower_line_y+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'z')
@@ -844,6 +875,8 @@ if strcmp(cfg.doSleepScoring,'yes')
     %uicontrol('tag', 'scoptbuttons_focusEEG', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', ['Focus EEG: ' opt.hdr.label{cfg.score_channel_eeg_number}],'position', [0.85, temp_lower_line_y+0.08/3+0.08/3 , 0.08, 0.08/3], 'userdata', 'alt+e','backgroundcolor', cfg.score_channel_eeg_color)
     %uicontrol('tag', 'scoptbuttons_focusEOG', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', ['Focus EOG: ' opt.hdr.label{cfg.score_channel_eog_number}],'position', [0.85, temp_lower_line_y+0.08/3 , 0.08, 0.08/3], 'userdata', 'alt+o','backgroundcolor', cfg.score_channel_eog_color)
     %uicontrol('tag', 'scoptbuttons_focusEMG', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', ['Focus EMG: ' opt.hdr.label{cfg.score_channel_emg_number}],'position', [0.85, temp_lower_line_y , 0.08, 0.08/3], 'userdata', 'alt+m','backgroundcolor', cfg.score_channel_emg_color)
+    
+    
     
     
     
@@ -888,6 +921,7 @@ if strcmp(cfg.doSleepScoring,'yes');
     ft_uilayout(h, 'tag', 'scoptbuttons', 'style', 'pushbutton', 'callback', @keyboard_cb);
     
     ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'style', 'pushbutton', 'callback', @keyboard_cb);
+    ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'style', 'pushbutton', 'callback', @keyboard_cb);
     ft_uilayout(h, 'tag', 'scoptbuttons_SPdet', 'style', 'pushbutton', 'callback', @keyboard_cb);
     ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'style', 'pushbutton', 'callback', @keyboard_cb);
     ft_uilayout(h, 'tag', 'scoptbuttons_EvDisp', 'style', 'pushbutton', 'callback', @keyboard_cb);
@@ -895,6 +929,8 @@ if strcmp(cfg.doSleepScoring,'yes');
     ft_uilayout(h, 'tag', 'scoptbuttons_zoom', 'style', 'pushbutton', 'callback', @keyboard_cb);
     ft_uilayout(h, 'tag', 'scoptbuttons_grid', 'style', 'pushbutton', 'callback', @keyboard_cb);
     ft_uilayout(h, 'tag', 'scoptbuttons_ruler', 'style', 'pushbutton', 'callback', @keyboard_cb);
+    ft_uilayout(h, 'tag', 'scoptbuttons_pow', 'style', 'pushbutton', 'callback', @keyboard_cb);
+    ft_uilayout(h, 'tag', 'scoptbuttons_tfr', 'style', 'pushbutton', 'callback', @keyboard_cb);
     %ft_uilayout(h, 'tag', 'scoptbuttons_focusEEG', 'style', 'pushbutton', 'callback', @keyboard_cb);
     %ft_uilayout(h, 'tag', 'scoptbuttons_focusEOG', 'style', 'pushbutton', 'callback', @keyboard_cb);
     %ft_uilayout(h, 'tag', 'scoptbuttons_focusEMG', 'style', 'pushbutton', 'callback', @keyboard_cb);
@@ -1183,6 +1219,8 @@ helptext = [ ...
 '  Shift + Up-arrow: skip up through undisplayed channels \n'...
 '  Shift + Down-arrow: skip down through undisplayed channels \n'...
 '  Shift + Q: Quit Program \n'...
+'  P: Power spectrum of the current epoch \n'...
+'  F: Time-frequency plot of the current EEG scoring channel \n'...
 '  X: Hide/Display menue bar \n'...
 '  T: Select epoch to jump to (dialog) \n'...
 '  L: Set Thresholds (dialog) \n'...
@@ -1860,6 +1898,21 @@ switch key
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
         end
+        case 'o'
+        if strcmp(cfg.doSleepScoring,'yes')
+            if ~isfield(cfg,'underlaySOSignal')
+                cfg.underlaySOSignal = 'yes';
+            else
+                if strcmp(cfg.underlaySOSignal,'yes')
+                    cfg.underlaySOSignal = 'no';
+                else
+                    cfg.underlaySOSignal = 'yes';
+                end
+            end
+            setappdata(h, 'opt', opt);
+            setappdata(h, 'cfg', cfg);
+            redraw_cb(h, eventdata);
+        end
         case 'n'
         if strcmp(cfg.doSleepScoring,'yes')
             if ~isfield(cfg,'underlaySpindleSignal')
@@ -1884,6 +1937,37 @@ switch key
                     cfg.displayEvents = 'no';
                 else
                     cfg.displayEvents = 'yes';
+                end
+            end
+            setappdata(h, 'opt', opt);
+            setappdata(h, 'cfg', cfg);
+            redraw_cb(h, eventdata);
+        end
+        
+    case 'p'
+        if strcmp(cfg.doSleepScoring,'yes')
+            if ~isfield(cfg,'display_power_spectrum')
+                cfg.display_power_spectrum = 'yes';
+            else
+                if strcmp(cfg.display_power_spectrum,'yes')
+                    cfg.display_power_spectrum = 'no';
+                else
+                    cfg.display_power_spectrum = 'yes';
+                end
+            end
+            setappdata(h, 'opt', opt);
+            setappdata(h, 'cfg', cfg);
+            redraw_cb(h, eventdata);
+        end
+    case 'f'
+         if strcmp(cfg.doSleepScoring,'yes')
+            if ~isfield(cfg,'display_time_frequency')
+                cfg.display_time_frequency = 'yes';
+            else
+                if strcmp(cfg.display_time_frequency,'yes')
+                    cfg.display_time_frequency = 'no';
+                else
+                    cfg.display_time_frequency = 'yes';
                 end
             end
             setappdata(h, 'opt', opt);
@@ -1930,7 +2014,8 @@ switch key
                 prompt = {'Spindle min Freq [Hz]:','Spindle max Freq [Hz]:',...
                     'Spindle threshold borders [potential]:','Spindle threshold peak [potential]:',...
                     'Spindle min duration [s]:','Spindle max duration [s]:',...
-                    'SO min Freq [Hz]:','SO max Freq [Hz]:'...
+                    'SO min Freq Ruler [Hz]:','SO max Freq Ruler [Hz]:'...
+                    'SO min Freq Display [Hz]:','SO max Freq Display [Hz]:'...
                     'SO threshold amplitude [potential]:'...
                     'EMG threshold amplitude [potential]:'...
                     'Autosave hypnogram, #changes needed to autosave (0 = disabled):'};
@@ -1940,6 +2025,7 @@ switch key
                     num2str(cfg.sp_thresholdForDetectionBeginEnd),num2str(cfg.sp_thresholdForDetectionCriterion),...
                     num2str(cfg.sp_minSec),num2str(cfg.sp_maxSec),...
                     num2str(cfg.so_minFreq),num2str(cfg.so_maxFreq),...
+                    num2str(cfg.so_filter_minFreq),num2str(cfg.so_filter_maxFreq),...
                     num2str(cfg.so_thresholdAmplitudeForDetection),...
                     num2str(cfg.emg_thresholdAmplitudeForDetection),...
                     num2str(cfg.autosave_hypnogram_every_number_change)};
@@ -1947,7 +2033,7 @@ switch key
                 
                 
                 if ~isempty(response)
-                    if numel(response)==11
+                    if numel(response)==13
                         cfg.sp_minFreq = str2num(['[' response{1} ']']);
                         cfg.sp_maxFreq = str2num(['[' response{2} ']']);
                         cfg.sp_thresholdForDetectionBeginEnd = str2num(['[' response{3} ']']);
@@ -1958,14 +2044,16 @@ switch key
                         
                         cfg.so_minFreq = str2num(['[' response{7} ']']);
                         cfg.so_maxFreq = str2num(['[' response{8} ']']);
-                        cfg.so_thresholdAmplitudeForDetection = str2num(['[' response{9} ']']);
+                        cfg.so_filter_minFreq = str2num(['[' response{9} ']']);
+                        cfg.so_filter_maxFreq = str2num(['[' response{10} ']']);
+                        cfg.so_thresholdAmplitudeForDetection = str2num(['[' response{11} ']']);
                         
-                        cfg.emg_thresholdAmplitudeForDetection = str2num(['[' response{10} ']']);
+                        cfg.emg_thresholdAmplitudeForDetection = str2num(['[' response{12} ']']);
                         
-                        cfg.autosave_hypnogram_every_number_change = str2num(['[' response{11} ']']);
+                        cfg.autosave_hypnogram_every_number_change = str2num(['[' response{13} ']']);
                         
                     else
-                        error('not 11 elements')
+                        error('not 13 elements')
                     end
                     
                     cfg = update_filters(cfg);
@@ -2317,6 +2405,16 @@ else
     
 end
 
+if strcmp(cfg.underlaySOSignal,'yes')
+    ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'BackgroundColor', cfg.underlaySOSignal_color);
+    ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'FontWeight', 'bold');
+    
+else
+    ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'BackgroundColor', [0.5 0.5 0.5]);
+    ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'FontWeight', 'normal');   
+end
+
+
 if strcmp(cfg.displayEvents,'yes')
     %ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'BackgroundColor', cfg.underlaySpindleSignal_color);
     ft_uilayout(h, 'tag', 'scoptbuttons_EvDisp', 'FontWeight', 'bold');
@@ -2371,7 +2469,17 @@ else
     ft_uilayout(h, 'tag', 'scoptbuttons_grid', 'string', ['grid']);
 end
 
+if strcmp(cfg.display_power_spectrum,'yes')
+    ft_uilayout(h, 'tag', 'scoptbuttons_pow', 'string', ['POW']);
+else
+    ft_uilayout(h, 'tag', 'scoptbuttons_pow', 'string', ['pow']);
+end
 
+if strcmp(cfg.display_time_frequency,'yes')
+    ft_uilayout(h, 'tag', 'scoptbuttons_tfr', 'string', ['TFR']);
+else
+    ft_uilayout(h, 'tag', 'scoptbuttons_tfr', 'string', ['tfr']);
+end
 
 uiresume(h);
 end
@@ -2670,7 +2778,7 @@ if strcmp(cfg.doSleepScoring,'yes')
     delete(findobj(h,'tag', 'mark_slowosci'));
     
     
-    if strcmp(cfg.markSO,'yes') || strcmp(cfg.markSpindles,'yes') || strcmp(cfg.underlaySpindleSignal,'yes')
+    if strcmp(cfg.markSO,'yes') || strcmp(cfg.markSpindles,'yes') || strcmp(cfg.underlaySpindleSignal,'yes') || strcmp(cfg.underlaySpindleSignal,'yes') || strcmp(cfg.display_power_spectrum,'yes') || strcmp(cfg.display_time_frequency,'yes')
         
         temp_channel_number_in_curr_display = find(chanindx == cfg.score_channel_eeg_number);
         for iChanDisplayed = temp_channel_number_in_curr_display
@@ -2712,7 +2820,7 @@ if strcmp(cfg.doSleepScoring,'yes')
             
             %%%%%% Time-frequency #####
             
-            if     isfield(cfg,'display_power_spectrum') && isfield(cfg,'display_time_frequency')
+           % if     isfield(cfg,'display_power_spectrum') && isfield(cfg,'display_time_frequency')
                 if strcmp(cfg.display_power_spectrum,'yes') || strcmp(cfg.display_time_frequency,'yes')
                     
                     
@@ -2722,6 +2830,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                     maxFreq = 30;
                     FreqSteps = 0.5;
                     TimeSteps = 0.1;
+                    Xtick = fix(minFreq):2:fix(maxFreq);
                     cfg_tfr = [];
                     cfg_tfr.method    = 'wavelet';%single number (in unit of time, typically seconds) of the required snippets
                     cfg_tfr.output   = 'pow';%single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
@@ -2752,24 +2861,24 @@ if strcmp(cfg.doSleepScoring,'yes')
                         end
                         powerspectrum = nanmean(squeeze(data_tfr.powspctrm),2);
                         freq = data_tfr.freq;
-                        freq_borders = [0.5 4; 4 8; 10 15; 18 30;];
-                        freq_colors = jet(size(freq_borders,1));
                         bars_y = 0;
-                        for iFreq =  1:size(freq_borders,1)
-                            temp_freq_border_left = freq_borders(iFreq,1);
-                            temp_freq_border_right = freq_borders(iFreq,2);
+                        for iFreq =  1:size(cfg.freq_borders,1)
+                            temp_freq_border_left = cfg.freq_borders(iFreq,1);
+                            temp_freq_border_right = cfg.freq_borders(iFreq,2);
                             temp_mean_power = 10*log10(nanmean(powerspectrum((temp_freq_border_left <= freq) & (freq <= temp_freq_border_right))));
-                            rectangle('Position',[temp_freq_border_left,bars_y,temp_freq_border_right-temp_freq_border_left,temp_mean_power],'FaceColor',freq_colors(iFreq,:),'EdgeColor','k','LineWidth',1)
+                            rectangle('Position',[temp_freq_border_left,bars_y,temp_freq_border_right-temp_freq_border_left,temp_mean_power],'FaceColor',cfg.freq_colors(iFreq,:),'EdgeColor','k','LineWidth',1)
                             hold on
                         end
                         plot(freq,10*log10(powerspectrum),'color','k','LineWidth',2);
                         ylabel('Power [dB]');
                         xlabel('Frequency [Hz]');
                         chname = data_tfr.label{1};
-                        hold off
                         cfg.f_ps_gca = gca;
                         title(cfg.f_ps_gca,['EEG log power Spectrum (' chname ')' ],'interpreter','none');
+                        set(cfg.f_ps_gca, 'TickDir', 'out','Xtick', Xtick);
                         set(cfg.f_ps, 'Name', 'Power Spectrum');
+                        hold off
+
                         
                     end
                     
@@ -2809,15 +2918,16 @@ if strcmp(cfg.doSleepScoring,'yes')
                         
                         
                         
-                        Ysteps = 10;
+                        
                         
                         temp_curr_tfr_channel_signal_ylim = cfg.ylim/cfg.chanscale(cfg.score_channel_eeg_number);
                         temp_curr_tfr_channel_signal_ylim = temp_curr_tfr_channel_signal_ylim*2;
                         
+                        Ysteps = (max(temp_curr_tfr_channel_signal_ylim)-min(temp_curr_tfr_channel_signal_ylim))/5;
                         
-                        Ytick1 = [minFreq 2:2:maxFreq];
+                        Ytick1 = [minFreq 4:4:maxFreq];
                         Ytick2 = [min(temp_curr_tfr_channel_signal_ylim):Ysteps:max(temp_curr_tfr_channel_signal_ylim)];
-                        Ztick = -6:.5:6;
+                        Ztick = -8:4:8;
                         cfg_tfr = [];
                         temp_time_interval_display = [min(data_tfr.time(temp_index_display_tfr_time_points)) max(data_tfr.time(temp_index_display_tfr_time_points))];
                         cfg_tfr.baseline     = temp_time_interval_display;%normalized with reference to average power in +-0.9 s interval
@@ -2838,7 +2948,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                         cfg_tfr.y2label = 'signal units';
                         cfg_tfr.y2colors = [[1 1 1]];%color for second y axis default 'b'
                         cfg_tfr.y2linestyles = ['-'];%linestylw for second y axis default '-'
-                        cfg_tfr.y2linewidths = [1];%lable for second y axis default 1
+                        cfg_tfr.y2linewidths = [1.5];%lable for second y axis default 1
                         cfg_tfr.y2alphas = [0.55];%lable for second y axis default 1
                         
                         %       cfg_tfr.y2colors = [[1 1 1]; [.8 .8 .8]];%color for second y axis default 'b'
@@ -2855,13 +2965,22 @@ if strcmp(cfg.doSleepScoring,'yes')
                                 delete(cfg.f_tfr_p1gca);
                             end
                             if ishandle(cfg.f_tfr_p2gca)
-                                
                                 delete(cfg.f_tfr_p2gca);
                             end
                             %delete(cfg.f_tfr_p1gccb);
                         end
+                        figure(cfg.f_tfr)
                         
+                        %set(0,'DefaultFigureVisible','off');
+                        %cfg_tfr.colorbar = 'no';
                         [tempcfg p1gca p2gca p1gccb] = ft_fw_singleplotTFR_yy(cfg_tfr, data_tfr,x2,y2);%ft_singleplotTFR edit ft_freqbaseline
+%                         tfr_fig = gcf;
+%                         %set(0,'DefaultFigureVisible','on');
+%                         tt = figure
+%                         s1 = copyobj(p1gca,tt) 
+%                         s2 = copyobj(p2gca,tt) 
+%                         close(tfr_fig)
+
                         
                         cfg.f_tfr_p1gca = p1gca;
                         cfg.f_tfr_p2gca = p2gca;
@@ -2881,15 +3000,31 @@ if strcmp(cfg.doSleepScoring,'yes')
                         
                         %myaa(4)
                         
-                        figure_width = 12;     % Width in inches
-                        figure_height = 5;    % Height in inches
+                        %figure_width = 12;    % Width in inches
+                        %figure_height = 5;    % Height in inches
                         
-                        pos = get(cfg.f_tfr, 'Position');
-                        set(cfg.f_tfr, 'Position', [pos(1) pos(2) figure_width*100, figure_height*100]); %<- Set size
+                        %pos = get(cfg.f_tfr, 'Position');
+                        %set(cfg.f_tfr, 'Position', [pos(1) pos(2) figure_width*100, figure_height*100]); %<- Set size
                         
                     end
                     
                     figure(h); % ensure that the calling figure is in the front
+                end
+            %end
+            
+            if ~strcmp(cfg.display_power_spectrum,'yes')
+                if isfield(cfg,'f_ps')
+                    if ishandle(cfg.f_ps)
+                        close(cfg.f_ps);
+                    end
+                end
+            end
+            
+            if ~strcmp(cfg.display_time_frequency,'yes')
+                if isfield(cfg,'f_tfr')
+                    if ishandle(cfg.f_tfr)
+                        close(cfg.f_tfr);
+                    end
                 end
             end
             
@@ -3191,6 +3326,43 @@ if strcmp(cfg.doSleepScoring,'yes')
                 
             end
             
+            if strcmp(cfg.underlaySOSignal,'yes')
+
+                cfg_eeg_so = [];
+                cfg_eeg_so = cfg.core_cfg;
+                cfg_eeg_so.hpfilter = 'yes';
+                cfg_eeg_so.hpfilterdesign = cfg.so_hpfilterdesign;
+                
+                if strcmp(cfg.UseFixedFilterOrder_hp,'yes')
+                    cfg_eeg_so.hpfiltord     = cfg.FilterOrder_hp;
+                end
+                cfg_eeg_so.hpfreq        = cfg.so_filter_minFreq;%dummy values are overwritten by low level function
+                cfg_eeg_so.feedback = 'no';
+                
+                data_det_signal_eeg_so_disp1 = ft_fw_preprocessing(cfg_eeg_so,data_det_signal_eeg_data);
+                
+                
+                
+                
+                cfg_eeg_so2 = [];
+                cfg_eeg_so2 = cfg.core_cfg;
+                cfg_eeg_so2.lpfilter = 'yes';
+                cfg_eeg_so2.lpfilterdesign = cfg.so_lpfilterdesign;
+                if strcmp(cfg.UseFixedFilterOrder_lp,'yes')
+                    cfg_eeg_so2.lpfiltord     = cfg.FilterOrder_lp;
+                end
+                cfg_eeg_so2.lpfreq        = cfg.so_filter_maxFreq;%dummy values are overwritten by low level function
+                data_det_signal_eeg_so_disp2 = ft_fw_preprocessing(cfg_eeg_so2,data_det_signal_eeg_so_disp1);
+                
+                
+                
+                
+                SOdispsignal = [ padd_samples_left data_det_signal_eeg_so_disp2.trial{1} padd_samples_right];
+                
+                cfg.so_signal_display = SOdispsignal(cfg.nEpochsBuffer*lengthEpochSamples+1:(cfg.nEpochsBuffer+1)*lengthEpochSamples);
+
+            end
+            
             if strcmp(cfg.markSpindles,'yes') || strcmp(cfg.underlaySpindleSignal,'yes')
                 
                 
@@ -3336,6 +3508,9 @@ if strcmp(cfg.doSleepScoring,'yes')
         h_scorechan_eeg_middle_line = ft_plot_line([tim(1) tim(end)],[0 0], 'color', cfg.score_channel_eeg_color , 'linewidth', 1, 'tag', 'scorechan_eeg',  ...
             'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
         
+%        ft_plot_matrix([tim(1) tim(end)],[-1 1],datamatrix, 'clim',[-1,1], 'tag', 'TFR',  ...
+%             'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
+
         
         
         if ~isfield(opt,'curr_stage')
@@ -3348,6 +3523,7 @@ if strcmp(cfg.doSleepScoring,'yes')
         h_curr_stage = ft_plot_text(tim(floor(end/2)), 0, opt.curr_stage, 'tag', 'curr_stage', 'Color', [0.9 0.9 0.9], 'FontSize', 64, 'FontUnits',  'normalized', ...
             'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none');
         
+
     end
     
     
@@ -3585,6 +3761,9 @@ text(temp_xlim(end)-0.01*range(temp_xlim),temp_ylim(end)-0.005*range(temp_ylim),
 delete(findobj(h,'tag', 'timecourse'));
 delete(findobj(h,'tag', 'identify'));
 delete(findobj(h,'tag', 'spindle_timecourse'));
+delete(findobj(h,'tag', 'so_timecourse'));
+
+
 
 
 % not removing channel labels, they cause the bulk of redrawing time for the slow text function (note, interpreter = none hardly helps)
@@ -3656,6 +3835,18 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
                         
                     end
                 end
+                
+                if strcmp(cfg.underlaySOSignal,'yes')
+      
+                    if isfield(cfg,'so_signal_display')
+                        ft_plot_vector(tim(1:numel(cfg.so_signal_display)), cfg.so_signal_display , 'box', false, 'color', cfg.underlaySOSignal_color, 'tag', 'so_timecourse', ...
+                            'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+                        
+                    end
+                    
+                end
+                
+                
                 
             end
             
@@ -4219,6 +4410,53 @@ if strcmp(cfg.core_cfg.bpfilttype,'IIRdesigned') || strcmp(cfg.core_cfg.bpfiltty
     cfg.sp_bpfilterdesign = bp_hd;
     %bp_hdm = measure(bp_hd);
 end
+
+
+
+FpassLeft = cfg.so_filter_minFreq; %left pass frequency in Hz
+FstopLeft = FpassLeft - cfg.StopToPassTransitionWidth_hp; %left stop frequency in Hz
+
+%     usedFilterOrder_hp = NaN;
+%     hp_hdm = NaN;
+if strcmp(cfg.core_cfg.hpfilttype,'IIRdesigned') || strcmp(cfg.core_cfg.hpfilttype,'FIRdesigned')
+    hp_d = [];
+    hp_hd = [];
+    if strcmp(cfg.UseFixedFilterOrder_hp,'yes')
+        hp_d = fdesign.highpass('N,F3db',cfg.FilterOrder_hp,FpassLeft,cfg.FrqOfSmpl);%designmethods(hp_preDS_d); help(hp_preDS_d,'equiripple'); help(hp_preDS_d,'butter')
+    else
+        hp_d = fdesign.highpass('Fst,Fp,Ast,Ap',FstopLeft,FpassLeft,cfg.AstopLeft_hp,cfg.Apass_hp,cfg.FrqOfSmpl);%designmethods(hp_preDS_d); help(hp_preDS_d,'equiripple'); help(hp_preDS_d,'butter')
+    end
+    if strcmp(cfg.core_cfg.hpfilttype,'IIRdesigned')
+        hp_hd = design(hp_d,'butter'); %isstable(hp_hd)
+    elseif strcmp(cfg.core_cfg.hpfilttype,'FIRdesigned')
+        hp_hd = design(hp_d,'equiripple','MinOrder', 'even');
+    else
+        error(['highpass filter type of ' cfg.core_cfg.hpfilttype ' unknown or not allowed'])
+    end
+    %         usedFilterOrder_hp = hp_hd.order;
+    cfg.so_hpfilterdesign = hp_hd;
+    %         hp_hdm = measure(hp_hd);
+end
+
+FpassRight = cfg.so_filter_maxFreq; %right pass frequency in Hz
+FstopRight = FpassRight + cfg.PassToStopTransitionWidth_lp; %right stop frequency in Hz
+%     usedFilterOrder_lp = NaN;
+%     lp_hdm = NaN;
+if strcmp(cfg.core_cfg.lpfilttype,'IIRdesigned') || strcmp(cfg.core_cfg.lpfilttype,'FIRdesigned')
+    lp_d = [];
+    lp_hd = [];
+    if strcmp(cfg.UseFixedFilterOrder_lp,'yes')
+        lp_d = fdesign.lowpass('N,Fp,Fst',cfg.FilterOrder_lp,FpassRight,FstopRight,cfg.FrqOfSmpl);
+        lp_hd = design(lp_d,'equiripple');
+    else
+        lp_d = fdesign.lowpass('Fp,Fst,Ap,Ast',FpassRight,FstopRight,cfg.Apass_lp,cfg.AstopRight_lp,cfg.FrqOfSmpl);
+        lp_hd = design(lp_d,'equiripple','MinOrder', 'even');
+    end
+    %         usedFilterOrder_lp = lp_hd.order;
+    cfg.so_lpfilterdesign = lp_hd;
+    %         lp_hdm = measure(lp_hd);
+end
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
