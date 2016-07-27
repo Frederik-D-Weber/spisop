@@ -2011,13 +2011,13 @@ switch key
     case 'l'
         if strcmp(cfg.doSleepScoring,'yes')
             try
-                prompt = {'Spindle min Freq [Hz]:','Spindle max Freq [Hz]:',...
-                    'Spindle threshold borders [potential]:','Spindle threshold peak [potential]:',...
-                    'Spindle min duration [s]:','Spindle max duration [s]:',...
-                    'SO min Freq Ruler [Hz]:','SO max Freq Ruler [Hz]:'...
+                prompt = {'Spindle min Freq Ruler/Detection/Display [Hz]:','Spindle max Freq Ruler/Detection/Display[Hz]:',...
+                    'Spindle threshold borders Ruler/Detection [potential]:','Spindle threshold peak Ruler/Detection [potential]:',...
+                    'Spindle min duration Ruler/Detection [s]:','Spindle max duration Ruler/Detection [s]:',...
+                    'SO min Freq Ruler/Detection [Hz]:','SO max Freq Ruler/Detection [Hz]:'...
                     'SO min Freq Display [Hz]:','SO max Freq Display [Hz]:'...
-                    'SO threshold amplitude [potential]:'...
-                    'EMG threshold amplitude [potential]:'...
+                    'SO threshold amplitude Ruler/Detection [potential]:'...
+                    'EMG threshold amplitude Ruler [potential]:'...
                     'Autosave hypnogram, #changes needed to autosave (0 = disabled):'};
                 dlg_title = 'Thresholds';
                 num_lines = 1;
@@ -2777,6 +2777,22 @@ if strcmp(cfg.doSleepScoring,'yes')
     delete(findobj(h,'tag', 'mark_spind'));
     delete(findobj(h,'tag', 'mark_slowosci'));
     
+    if ~strcmp(cfg.display_power_spectrum,'yes')
+        if isfield(cfg,'f_ps')
+            if ishandle(cfg.f_ps)
+                close(cfg.f_ps);
+            end
+        end
+    end
+    
+    if ~strcmp(cfg.display_time_frequency,'yes')
+        if isfield(cfg,'f_tfr')
+            if ishandle(cfg.f_tfr)
+                close(cfg.f_tfr);
+            end
+        end
+    end
+    
     
     if strcmp(cfg.markSO,'yes') || strcmp(cfg.markSpindles,'yes') || strcmp(cfg.underlaySpindleSignal,'yes') || strcmp(cfg.underlaySpindleSignal,'yes') || strcmp(cfg.display_power_spectrum,'yes') || strcmp(cfg.display_time_frequency,'yes')
         
@@ -3012,22 +3028,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                 end
             %end
             
-            if ~strcmp(cfg.display_power_spectrum,'yes')
-                if isfield(cfg,'f_ps')
-                    if ishandle(cfg.f_ps)
-                        close(cfg.f_ps);
-                    end
-                end
-            end
-            
-            if ~strcmp(cfg.display_time_frequency,'yes')
-                if isfield(cfg,'f_tfr')
-                    if ishandle(cfg.f_tfr)
-                        close(cfg.f_tfr);
-                    end
-                end
-            end
-            
+           
             %%%%%% Time-frequncy end #####
 
             
