@@ -820,7 +820,7 @@ parfor conseciData = conseciDatas
             rawDataSampleOffset = trlSampleBeginsAndEnds(iTr,1) - 1;
             
             frqBndPssSignal = chData.trial{iTr};
-            frqBndPssSignal_hilbert = hilbert(frqBndPssSignal);
+            %frqBndPssSignal_hilbert = hilbert(frqBndPssSignal);
 
             
             %thresholdForDetection = ch_SDfrqBndPssSignal*factorSD;
@@ -876,7 +876,7 @@ parfor conseciData = conseciDatas
                     %iIterCand = 1
                     currentRawDataSampleOffset = rawDataSampleOffset + detectedBeginSample(iIterCand) - 1;
                     candSignal = frqBndPssSignal(detectedBeginSample(iIterCand):detectedEndSample(iIterCand));
-                    candSignal_hilbert = frqBndPssSignal_hilbert(detectedBeginSample(iIterCand):detectedEndSample(iIterCand));
+                    %candSignal_hilbert = frqBndPssSignal_hilbert(detectedBeginSample(iIterCand):detectedEndSample(iIterCand));
 
                     
                     tempCandSignalmaxSample = find(max(candSignal) == candSignal);
