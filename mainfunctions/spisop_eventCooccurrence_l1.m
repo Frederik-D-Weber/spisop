@@ -63,6 +63,16 @@ EventsTestFilterValues = strsplit(getParam('EventsTestFilterValues',listOfParame
 EventsTargetFilterValues = strsplit(getParam('EventsTargetFilterValues',listOfParameters),FilterValuesSplitString);%variable values for EventsTargetFilterForColum in test events files to apply text filter e.g. Cz
 
 
+IDColumnsSplitString = ' ';
+
+MismatchIdenticalEvents = getParam('MismatchIdenticalEvents',listOfParameters);%either yes no default no
+MismatchDuplicateTestTargetOrTargetTestMatchingEvents = getParam('MismatchDuplicateTestTargetOrTargetTestMatchingEvents',listOfParameters);%either yes no default no
+EventsTestIDColumns =  strsplit(getParam('EventsTestIDColumns',listOfParameters),IDColumnsSplitString);
+EventsTargetIDColumns = strsplit(getParam('EventsTargetIDColumns',listOfParameters),IDColumnsSplitString);
+
+ChunkBufferSize = getParam('ChunkBufferSize',listOfParameters);%size for buffer to not let datasets get to big for concatenation. this give the maximal number of lines a dataset can have for concatenation and when low can increase performance for >10000 events. default 100
+
+
 GroupByConcatString = '#%#';
 
 tic
@@ -80,7 +90,7 @@ for iData = iDatas
 end
 
 conseciDatas = 1:length(iDatas);
-parfor conseciData = conseciDatas
+for conseciData = conseciDatas
     iData = iDatas(conseciData);
     %iData = 1
     
@@ -137,10 +147,54 @@ parfor conseciData = conseciDatas
     groupByMapAllTest = containers.Map();
     groupByMapAllTarget = containers.Map();
     
-    
+    if strcmp(MismatchIdenticalEvents,'yes') || strcmp(MismatchDuplicateTestTargetOrTargetTestMatchingEvents,'yes')
+        
+        IDmergeString = '#';
+        temp_test_id = {''};
+        temp_target_id = {''};
+         for iComb = 1:numel(EventsTestIDColumns)
+            tempCompTest = EventsTestIDColumns{iComb};
+            tempCompTarget = EventsTargetIDColumns{iComb};
+            
+            %dsEventsTest.(tempCompTest)
+            %dsEventsTarget.(tempCompTarget)
+
+            if iscell(dsEventsTest.(tempCompTest))
+                temp_test_id = strcat(temp_test_id,{IDmergeString},dsEventsTest.(tempCompTest));
+            else
+                temp_test_id = strcat(temp_test_id,{IDmergeString},num2str(dsEventsTest.(tempCompTest),'%-g'));
+            end
+            
+            if iscell(dsEventsTarget.(tempCompTarget))
+                temp_target_id = strcat(temp_target_id,{IDmergeString},dsEventsTarget.(tempCompTarget));
+            else
+                temp_target_id = strcat(temp_target_id,{IDmergeString},num2str(dsEventsTarget.(tempCompTarget),'%-g'));
+            end
+         end
+         
+         dsEventsTest.duplication_id = temp_test_id;
+         dsEventsTarget.duplication_id = temp_target_id;
+         
+         temp_test_id = [];
+         temp_target_id = [];
+         
+         duplicateIDMapTest = containers.Map();
+         duplicateIDMapTarget = containers.Map();
+        
+    end
     
     overlap = [];
     nonoverlap =[];
+    
+    
+    
+    temp_overlap_collector_iterator = 1;
+    temp_overlap_collector = {};
+    temp_overlap_collector{temp_overlap_collector_iterator} = [];
+    
+    temp_nonoverlap_collector_iterator = 1;
+    temp_nonoverlap_collector = {};
+    temp_nonoverlap_collector{temp_nonoverlap_collector_iterator} = [];
     
     ft_progress('init', 'text',    ['EventTestFile ' num2str(iData) ': Please wait...']);
     
@@ -152,11 +206,16 @@ parfor conseciData = conseciDatas
         %iEvTest = 1
         
         progress_count = progress_count + 1;
-        ft_progress(progress_count/nEventsTest, ['EventTestFile ' num2str(iData) ': Processing test event %d of %d against %d targets'], progress_count, nEventsTest, nEventsTarget);  % show string, x=i/N
+        ft_progress(progress_count/nEventsTest, ['EventTestFile ' num2str(iData) ': Processing test event %d (matchchunk %d, mismatchchunk %d) of %d against %d targets'], progress_count,temp_overlap_collector_iterator, temp_nonoverlap_collector_iterator, nEventsTest, nEventsTarget);  % show string, x=i/N
         
         
         eventTest = dsEventsTest(iEvTest,:);
         matchIndicator = ones(nEventsTarget,1);
+        
+        
+        if strcmp(MismatchIdenticalEvents,'yes')
+        	matchIndicator = matchIndicator & ~(strcmp(eventTest.duplication_id,dsEventsTarget.duplication_id));
+        end
         
         
         for iComb = 1:length(EventsTestCompareColumns)
@@ -213,27 +272,87 @@ parfor conseciData = conseciDatas
 
         eventTest = set(eventTest,'VarNames',columnNamesTestNew);
 
-        if sum(matchIndicator) > 0
+        if any(matchIndicator)
             tempDsEventsTarget = dsEventsTarget(matchIndicator,:);
+            if strcmp(MismatchDuplicateTestTargetOrTargetTestMatchingEvents,'yes')
+                
+                temp_test_target_id_strings = strcat(eventTest.(['test_' 'duplication_id']),dsEventsTarget.duplication_id(matchIndicator));
+                temp_target_test_id_strings = strcat(dsEventsTarget.duplication_id(matchIndicator),eventTest.(['test_' 'duplication_id']));
+                
+                temp_already_contained_test_first = isKey(duplicateIDMapTest,temp_test_target_id_strings);
+                temp_already_contained_target_first = isKey(duplicateIDMapTarget,temp_target_test_id_strings);
+                
+                temp_add_to_overlapp_notcontainted_before_index = ~( temp_already_contained_test_first | temp_already_contained_target_first );
+
+                if any(~temp_already_contained_test_first)
+                    temp_add_to_map = temp_test_target_id_strings(~temp_already_contained_test_first);
+                    duplicateIDMapTest = [duplicateIDMapTest;containers.Map(temp_add_to_map,ones(numel(temp_add_to_map),1))];
+                end
+                if any(~temp_already_contained_target_first)
+                    temp_add_to_map = temp_target_test_id_strings(~temp_already_contained_target_first);
+                    duplicateIDMapTarget = [duplicateIDMapTarget;containers.Map(temp_add_to_map,ones(numel(temp_add_to_map),1))];
+                end
+                tempDsEventsTarget = tempDsEventsTarget(temp_add_to_overlapp_notcontainted_before_index,:);
+            end
+            
             tempDsEventsTarget = set(tempDsEventsTarget,'VarNames',columnNamesTargetNew);
             nOverlaps = size(tempDsEventsTarget,1);
             for iTarRow = 1:nOverlaps
-                if size(overlap,1) > 0
-                    overlap = cat(1,overlap,cat(2,eventTest,tempDsEventsTarget(iTarRow,:)));
+                
+                if size(temp_overlap_collector{temp_overlap_collector_iterator},1) > 0
+                %if size(overlap,1) > 0
+                    temp_overlap_collector{temp_overlap_collector_iterator}  = cat(1,temp_overlap_collector{temp_overlap_collector_iterator} ,cat(2,eventTest,tempDsEventsTarget(iTarRow,:)));
+                    %overlap = cat(1,overlap,cat(2,eventTest,tempDsEventsTarget(iTarRow,:)));
                 else
-                    overlap = cat(2,eventTest,tempDsEventsTarget(iTarRow,:));
+                    temp_overlap_collector{temp_overlap_collector_iterator} = cat(2,eventTest,tempDsEventsTarget(iTarRow,:));
+                    %overlap = cat(2,eventTest,tempDsEventsTarget(iTarRow,:));
                 end
+                if size(temp_overlap_collector{temp_overlap_collector_iterator},1) > ChunkBufferSize
+                    temp_overlap_collector_iterator = temp_overlap_collector_iterator + 1;
+                    temp_overlap_collector{temp_overlap_collector_iterator} = [];
+                end
+                
             end
             groupByMapOverlap(groupBy) = groupByMapOverlap(groupBy) + nOverlaps;
         else
-            if size(nonoverlap,1) > 0
-                nonoverlap = cat(1,nonoverlap,eventTest);
+            
+            if size(temp_nonoverlap_collector{temp_nonoverlap_collector_iterator},1) > 0
+            %if size(nonoverlap,1) > 0
+                temp_nonoverlap_collector{temp_nonoverlap_collector_iterator}  = cat(1,temp_nonoverlap_collector{temp_nonoverlap_collector_iterator} ,eventTest);
+                %nonoverlap = cat(1,nonoverlap,eventTest);
             else
-                nonoverlap = eventTest;
+                temp_nonoverlap_collector{temp_nonoverlap_collector_iterator} = eventTest;
+                %nonoverlap = eventTest;
             end
+            if size(temp_nonoverlap_collector{temp_nonoverlap_collector_iterator},1) > ChunkBufferSize
+                temp_nonoverlap_collector_iterator = temp_nonoverlap_collector_iterator + 1;
+                temp_nonoverlap_collector{temp_nonoverlap_collector_iterator} = [];
+            end
+            
             groupByMapNonOverlap(groupBy) = groupByMapNonOverlap(groupBy) + 1;
         end
     end
+    
+    for iTemp_overlap_collector_iterator = 1:numel(temp_overlap_collector)
+        if iTemp_overlap_collector_iterator == 1
+            overlap = temp_overlap_collector{iTemp_overlap_collector_iterator};
+        else
+            overlap = cat(1,overlap,temp_overlap_collector{iTemp_overlap_collector_iterator});
+        end
+    end
+    temp_overlap_collector = [];
+    
+    
+      for iTemp_nonoverlap_collector_iterator = 1:numel(temp_nonoverlap_collector)
+        if iTemp_nonoverlap_collector_iterator == 1
+            nonoverlap = temp_nonoverlap_collector{iTemp_nonoverlap_collector_iterator};
+        else
+            nonoverlap = cat(1,nonoverlap,temp_nonoverlap_collector{iTemp_nonoverlap_collector_iterator});
+        end
+    end
+    temp_nonoverlap_collector = [];
+    
+    
     
 %     if isempty(nonoverlap)
 %         for iDScol = 1:length(columnNamesTestNew)

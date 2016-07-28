@@ -19,3 +19,9 @@ EventsTestFilterForColumn,,variable name for event value in test events files to
 EventsTargetFilterForColumn,,variable name for event value in test events files to apply text filter to if nothing is entered it is not filtered e.g. channel default is no value entered
 EventsTestFilterValues,,variable values for EventsTestFilterForColum in test events files to apply text filter e.g. Cz
 EventsTargetFilterValues,,variable values for EventsTargetFilterForColum in test events files to apply text filter e.g. Cz
+## New,,
+MismatchIdenticalEvents,no,either yes no default no
+MismatchDuplicateTestTargetOrTargetTestMatchingEvents,no,either yes no default no
+EventsTestIDColumns,datasetnum channel seconds_trough_max,variable names for columns used for identifying a test events as unique separated by a space character
+EventsTargetIDColumns,datasetnum channel seconds_trough_max,variable names for columns used for identifying a target events as unique separated by a space character
+ChunkBufferSize,100,size for buffer to not let datasets get to big for concatenation. this give the maximal number of lines a dataset can have for concatenation and when low can increase performance for >10000 events. default 100
