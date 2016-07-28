@@ -90,7 +90,7 @@ for iData = iDatas
 end
 
 conseciDatas = 1:length(iDatas);
-for conseciData = conseciDatas
+parfor conseciData = conseciDatas
     iData = iDatas(conseciData);
     %iData = 1
     
