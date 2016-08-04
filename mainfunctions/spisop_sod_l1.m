@@ -783,6 +783,9 @@ parfor conseciData = conseciDatas
     ch_meanNegativePeak =  [];
     ch_meanPeak2Peak = [];
     
+    ch_contigSegment = [];
+
+    
     for iChan = 1:nChannels
         %iChan = 1;
         
@@ -812,6 +815,8 @@ parfor conseciData = conseciDatas
         %trl_detectedZeroCrossingToTroughSlopesSamples = [];
         trl_detectedSDofFilteredSignal = [];
         trl_nDetected = 0;
+        
+        trl_contigSegment = [];
         
         for iTr = 1:size(chData.trial,2)
             %iTr = 4;
@@ -993,6 +998,9 @@ parfor conseciData = conseciDatas
                 trl_detectedSDofFilteredSignal = cat(2,trl_detectedSDofFilteredSignal,detectedSDofFilteredSignal);
                 
                 trl_nDetected = trl_nDetected + nDetected;
+                
+                trl_contigSegment = cat(2,trl_contigSegment,repmat(iTr,1,nDetected));
+
             end
         end
         
@@ -1034,6 +1042,8 @@ parfor conseciData = conseciDatas
         
         ch_nDetected{iChan} = length(tempIndexAboveMeanThreshold);
         ch_densityPerEpoch{iChan} = length(tempIndexAboveMeanThreshold)/(lengthsAcrossROIsSeconds/epochLength);
+        
+        ch_contigSegment{iChan} = trl_contigSegment(tempIndexAboveMeanThreshold);
     end
     
     fprintf('dataset %i: write results\n',iData);
@@ -1170,17 +1180,20 @@ parfor conseciData = conseciDatas
         'used_meanNegPeak_potential','used_meanP2T_potential',...
         'mean_SD_of_filtered_signal','mean_negative_peak_potential','mean_positive_peak_potential');
     
-    fprintf(fide,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n',...
+    fprintf(fide,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n',...
         'datasetnum','channel','duration_seconds','amplitude_peak2trough_max',...
-        'slope_to_trough_min_potential_per_second','slope_zerocrossing_to_trough_potential_per_second',...
-        'slope_trough_to_up_max_potential_per_second','slope_trough_to_zerocrossing_potential_per_second',...
-        'frequency_by_duration','frequency_by_trough_to_peak_latency','duration_samples','sample_begin','sample_end','sample_peak_max','sample_trough_max'...
-        ,'dataset','hypnogram','used_stages_for_detection','used_meanNegPeak','used_meanP2T','seconds_begin','seconds_end','seconds_peak_max','seconds_trough_max','id_within_channel',...
+        'slope_to_trough_min_potential_per_second','slope_zeroxing_to_trough_potential_per_second',...
+        'slope_trough_to_up_max_potential_per_second','slope_trough_to_zeroxing_potential_per_second',...
+        'frequency_by_duration','frequency_by_trough_to_peak_latency','duration_samples','sample_begin','sample_end','sample_peak_max','sample_trough_max',...
+        'dataset','hypnogram','used_stages_for_detection','used_meanNegPeak','used_meanP2T','seconds_begin','seconds_end','seconds_peak_max','seconds_trough_max','id_within_channel',...
         'sample_slope_to_trough_min',...
-        'sample_slope_trough_to_up_max','sample_zerocrossig_of_trough_to_zerocrossig_slope_trough_to_up_max',...
+        'sample_slope_trough_to_up_max','sample_zeroxing_of_trough_to_zeroxing_slope_trough_to_up_max',...
         'seconds_slope_to_trough_min',...
-        'seconds_slope_trough_to_up_max','seconds_zerocrossig_of_trough_to_zerocrossig_slope_trough_to_up_max'...
-        ,'negative_peak_potential','positive_peak_potential','stage','stage_alt','stage_alt2','SD_of_filtered_signal');
+        'seconds_slope_trough_to_up_max','seconds_zeroxing_of_trough_to_zeroxing_slope_trough_to_up_max',...
+        'negative_peak_potential','positive_peak_potential',...
+        'stage','stage_alt','stage_alt2',...
+        'contig_segment',...
+        'SD_of_filtered_signal');
     
     
     for iChan = 1:nChannels
@@ -1275,7 +1288,8 @@ parfor conseciData = conseciDatas
             output(:,33) = num2cell(ch_detectedMaxDownSlopesSamples{iChan}');
             output(:,34) = num2cell(ch_detectedMaxDownSlopesSamples{iChan}'/FrqOfSmpl);
             
-            
+            output(:,34) = num2cell(ch_contigSegment{iChan});
+
             
             for iLine=1:(size(output,1))
                 fprintf(fide,'%i,',iData);
@@ -1319,9 +1333,14 @@ parfor conseciData = conseciDatas
                 
                 fprintf(fide,'%e,',output{iLine,25});
                 fprintf(fide,'%e,',output{iLine,26});
+                
                 fprintf(fide,'%s,',output{iLine,27});
                 fprintf(fide,'%s,',output{iLine,28});
                 fprintf(fide,'%s,',output{iLine,29});
+                
+                fprintf(fide,'%i,',output{iLine,34});
+
+                
                 fprintf(fide,'%e\n',output{iLine,30});
             end
         end

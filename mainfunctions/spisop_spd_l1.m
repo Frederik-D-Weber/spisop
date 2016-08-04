@@ -937,6 +937,8 @@ parfor conseciData = conseciDatas
     ch_detectedTroughsPotential = [];
     ch_detectedPeaksPotential = [];
     
+    ch_contigSegment = [];
+    
     for iChan = 1:nChannels
         %iChan = 1;
         
@@ -988,6 +990,8 @@ parfor conseciData = conseciDatas
         trl_detected_inst_freq_peaks = [];
         trl_detectedTroughsPotential = [];
         trl_detectedPeaksPotential = [];
+        
+        trl_contigSegment = [];
         
         for iTr = 1:size(chData.trial,2)
             %iTr = 4;
@@ -1348,7 +1352,10 @@ parfor conseciData = conseciDatas
                 trl_detected_inst_freq_peaks = cat(1,trl_detected_inst_freq_peaks,detected_inst_freq_peaks);
                 
                 trl_detectedTroughsPotential = cat(1,trl_detectedTroughsPotential,detectedTroughsPotential);
-                trl_detectedPeaksPotential = cat(1,trl_detectedPeaksPotential,detectedPeaksPotential);                
+                trl_detectedPeaksPotential = cat(1,trl_detectedPeaksPotential,detectedPeaksPotential);  
+                
+                trl_contigSegment = cat(2,trl_contigSegment,repmat(iTr,1,nDetected));
+
                 
             end
         end
@@ -1416,6 +1423,8 @@ parfor conseciData = conseciDatas
         
         ch_detectedTroughsPotential{iChan} = trl_detectedTroughsPotential(tempIndexWithinThresholds,:);
         ch_detectedPeaksPotential{iChan} = trl_detectedPeaksPotential(tempIndexWithinThresholds,:);
+        
+        ch_contigSegment{iChan} = trl_contigSegment(tempIndexWithinThresholds);
     end
     
     fprintf('dataset %i: write results\n',iData);
@@ -1534,10 +1543,11 @@ parfor conseciData = conseciDatas
     %write header of ouptufiles
     fprintf(fidc,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n','datasetnum','channel','count','density_per_epoch','mean_duration_seconds','mean_amplitude_trough2peak_potential','mean_frequency_by_mean_pk_trgh_cnt_per_dur','epoch_length_seconds','merged_count','lengths_ROI_seconds','used_threshold_basis','used_factor_for_threshold_basis_begin_end','used_factor_for_threshold_basis_criterion','used_min_detection_pass_or_cutoff_freq','used_max_detection_pass_or_cutoff_freq','used_center_freq','mean_SD_of_filtered_signal','mean_troughs_per_event','mean_peaks_per_event','mean_linear_regression_freq_slope','mean_linear_regression_freq_offset','mean_linear_regression_freq_R_squared');
     
-    fprintf(fide,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n',...
+    fprintf(fide,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n',...
         'datasetnum','channel','duration_seconds','amplitude_peak2trough_max','frequency_by_mean_pk_trgh_cnt_per_dur','duration_samples','sample_begin','sample_end','sample_peak_max','sample_trough_max','envelope_max'...
         ,'dataset','hypnogram','used_stages_for_detection','used_threshold_basis','used_min_pass_or_cutoff_detection_freq','used_max_detection_pass_or_cutoff_freq','used_center_freq','seconds_begin','seconds_end','seconds_peak_max','seconds_trough_max','seconds_envelope_max','id_within_channel',...
         'stage','stage_alt','stage_alt2',...
+        'contig_segment',...
         'SD_of_filtered_signal','merged_count',...
         'linear_regression_freq_slope','linear_regression_freq_offset','linear_regression_freq_R_squared',...
         'number_troughs','number_peaks');
@@ -1655,12 +1665,15 @@ parfor conseciData = conseciDatas
             output(:,23) = cellstr(epochs(:,1));
             output(:,24) = cellstr(epochs(:,2));
             output(:,25) = cellstr(epochs(:,3));
+            
             output(:,26) = num2cell(ch_detectedSDofFilteredSignal{iChan}');
             output(:,27) = num2cell(ch_detectedMergeCount{iChan}');
             
             output(:,28) = num2cell(ch_detected_linear_regression_freq_slope{iChan});
             output(:,29) = num2cell(ch_detected_linear_regression_freq_offset{iChan});
             output(:,30) = num2cell(ch_detected_linear_regression_freq_R_squared{iChan});
+            
+            output(:,31) = num2cell(ch_contigSegment{iChan});
             
             %31
             %32
@@ -1702,6 +1715,9 @@ parfor conseciData = conseciDatas
                 fprintf(fide,'%s,',output{iLine,23});
                 fprintf(fide,'%s,',output{iLine,24});
                 fprintf(fide,'%s,',output{iLine,25});
+                
+                fprintf(fide,'%i,',output{iLine,31});
+                
                 fprintf(fide,'%e,',output{iLine,26});
                 fprintf(fide,'%i,',output{iLine,27});
                 fprintf(fide,'%f,',output{iLine,28});
