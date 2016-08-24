@@ -1,5 +1,5 @@
 ## REQUIRED,,
-LightsOffsFileName,LightsOffs.txt,Filename of file containing one sample number of lights off moment marker per line for each dataset
+LightsOffsFileName,LightsOffs.txt,Filename of file containing one sample number of lights off moment marker per line for each dataset. markers are given in the unit specified by LightsOffsMomentUnit
 ## OPTIONAL,,
 DataSetsWhich,all,Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
 DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset
@@ -8,3 +8,5 @@ ExportHypnogram,no,if the hypnogram should be exported for an excerpt either no 
 ExportHypnogramStartOffset,sleeponset, the either sleeponset or eegonset or lightsoff default sleeponset
 ExportHypnogramStartTime,0,time after ExportHypnogramStartOffset to cut in minutes default 0
 ExportHypnogramEndTime,20,next time after ExportHypnogramStartOffset to cut in minutes that needs to be bigger than ExportHypnogramStartTime default 90
+## NEW,,
+LightsOffsMomentUnit,sample,the units given in the file LightsOffsFileName. either sample (of original file before) or second (giving the seconds since start of EEG recording). default sample

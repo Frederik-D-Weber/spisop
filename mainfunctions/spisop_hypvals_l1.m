@@ -9,6 +9,16 @@ IgnoreDataSetHeader = getParam('IgnoreDataSetHeader',listOfCoreParameters);
 HypnogramsFileName = getParam('HypnogramsFileName',listOfCoreParameters);
 LightsOffsFileName = getParam('LightsOffsFileName',listOfParameters);
 
+LightsOffsMomentUnit = 'sample';
+try
+LightsOffsMomentUnit = getParam('LightsOffsMomentUnit',listOfParameters);
+
+if ~(strcmp(LightsOffsMomentUnit,'sample') || strcmp(LightsOffsMomentUnit,'second'))
+        error(['LightsOffsMomentUnit parameter must either be sample or second but given was ' LightsOffsMomentUnit ''])
+end
+catch e
+end
+
 if exist([pathInputFolder filesep DataSetPathsFileName],'file') ~= 2
     error(['DataSetPathsFileName file ' [pathInputFolder filesep DataSetPathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
 end
@@ -86,7 +96,8 @@ for iData = iDatas
     datasetsPath = listOfDatasetsPaths{iData};
     hypnogramPath = listOfHypnogramPaths{iData};
     
-    lightsOffSample = listOfLightsOffs(iData);
+    lightsOffMoment = listOfLightsOffs(iData);
+   
     
     hdr = [];
     preDownsampleFreq = 0;
@@ -113,6 +124,14 @@ for iData = iDatas
     end
     
     fprintf('dataset %i: process ROI from hypnogram info\n',iData);
+    
+    
+    if strcmp(LightsOffsMomentUnit,'second')
+        lightsOffSample = round(lightsOffMoment*preDownsampleFreq);
+    else
+        lightsOffSample = lightsOffMoment;
+    end
+    
     
     sampleFreq = preDownsampleFreq;
     epochLengthSamples = epochLength * preDownsampleFreq;

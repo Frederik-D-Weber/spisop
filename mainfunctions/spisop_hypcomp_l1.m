@@ -16,7 +16,7 @@ listOfHypnogramLinksFileName = read_mixed_csv([pathInputFolder filesep Hypnogram
 
 for iHypFiles = 1:size(listOfHypnogramLinksFileName,1)
     if exist([listOfHypnogramLinksFileName{iHypFiles}],'file') ~= 2
-        error(['The linear deviations montage definitions file listed in LinearDeviationMontageDefinitions for dataset number ' num2str(iHypFiles)  ' does not exist'])
+        error(['The hypnogram links file given in HypnogramLinksFileName for dataset number ' num2str(iHypFiles)  ' does not exist'])
     end
     
     try
