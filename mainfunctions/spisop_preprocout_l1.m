@@ -721,7 +721,10 @@ parfor conseciData = conseciDatas
         
         fprintf('dataset %i: apply filtering to data\n',iData);
         
-        
+        %init the filter order variables
+        usedFilterOrder_lp = -1;
+        usedFilterOrder_hp = -1;
+        usedFilterOrder_bp = -1;
         
         data_filt = {};
         iChanCount = 1;
@@ -1164,7 +1167,7 @@ parfor conseciData = conseciDatas
     end
     
     
-    if ~exist('usedFilterOrder_hp','var')
+    if (usedFilterOrder_hp  == -1)%~exist('usedFilterOrder_hp','var')
         usedFilterOrder_hp = NaN;
         hp_hdm.Fs = FrqOfSmpl;
         hp_hdm.Astop = NaN;
@@ -1176,7 +1179,7 @@ parfor conseciData = conseciDatas
         hp_hdm.Apass = NaN;
     end
     
-    if ~exist('usedFilterOrder_bp','var')
+    if (usedFilterOrder_bp  == -1)%~exist('usedFilterOrder_bp','var')
         usedFilterOrder_bp = NaN;
         bp_hdm.Fs = FrqOfSmpl;
         bp_hdm.Astop1 = NaN;
@@ -1194,7 +1197,7 @@ parfor conseciData = conseciDatas
         bp_hdm.Fstop2 = NaN;
     end
     
-    if ~exist('usedFilterOrder_lp','var')
+    if (usedFilterOrder_lp == -1)%~exist('usedFilterOrder_lp','var')
         usedFilterOrder_lp = NaN;
         lp_hdm.Fs = FrqOfSmpl;
         lp_hdm.Astop = NaN;
