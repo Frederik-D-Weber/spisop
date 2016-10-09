@@ -908,6 +908,10 @@ for conseciData = conseciDatas
     
     FrqOfSmpl = data.fsample;%data.hdr.Fs;%samples per second / Hz
     
+    %init the filter order variables
+    usedFilterOrder_lp = -1;
+    usedFilterOrder_hp = -1;
+    usedFilterOrder_bp = -1;
     
     if strcmp(ApplyFilterSettings,'yes')
         fileFilterSettings = listOfFilterSettingsFiles{iData};
@@ -927,10 +931,7 @@ for conseciData = conseciDatas
         
         fprintf('dataset %i: apply filtering to data\n',iData);
         
-        %init the filter order variables
-        usedFilterOrder_lp = -1;
-        usedFilterOrder_hp = -1;
-        usedFilterOrder_bp = -1;
+     
         
         data_filt = {};
         iChanCount = 1;
