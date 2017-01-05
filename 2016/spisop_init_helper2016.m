@@ -10,12 +10,20 @@ if poolsize > 0 % checking to see if my pool is already open
      delete(poolobj)
 end
 if strcmp(parallelComputation,'yes') && (poolsize == 0) % checking to see if my pool is already open
-     parpool('local',numParallelWorkers)
+     if numParallelWorkers > 12
+         tempLocalCluster = parcluster('local');
+         tempLocalCluster.NumWorkers = numParallelWorkers;
+         saveProfile(tempLocalCluster);
+         parpool('local')
+         
+     else
+         parpool('local',numParallelWorkers)
+     end
      %parpool(2)
-     fprintf('parallel computing enabled and initialized\n');
+     fprintf(['parallel computing enabled and initialized for ' num2str(numParallelWorkers) ' parallel workers\n']);
 end
 catch err
-    warning('parallel computing seems not working, possibly no Parallel Computing Toolbox installed ...who needs this anyway ?! Just continue with next section and don''t bother!');
+    warning('parallel computing seems not working, possibly no Parallel Computing Toolbox installed ...who needs this anyway ?!\n Just continue with next section and don''t bother!');
 end
 
 fprintf('computing parameters are set, check if warnings indicates parallel computing might not work\n');

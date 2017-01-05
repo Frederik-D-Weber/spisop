@@ -87,10 +87,98 @@ end
 core_cfg = [];
 core_cfg.feedback = getParam('ft_cfg_feedback',listOfCoreParameters);
 
+tempExportPostfix = '_';
+
+if strcmp(ExportHypnogram,'yes')
+        if strcmp(ExportHypnogramStartOffset,'sleeponset')
+            tempExportPostfix = [tempExportPostfix 'sleeponset'];
+        elseif strcmp(ExportHypnogramStartOffset,'eegonset')
+            tempExportPostfix = [tempExportPostfix 'eegonset'];
+        elseif strcmp(ExportHypnogramStartOffset,'lightsoff')
+            tempExportPostfix = [tempExportPostfix 'lightsoff'];            
+        else
+            error(['wrong parameter for ExportHypnogramStartOffset either sleeponset or eegonset but set is ' ExportHypnogramStartOffset] );
+        end
+end
+
+tempExportPostfix = [tempExportPostfix '_' num2str(ExportHypnogramStartTime) '_to_' num2str(ExportHypnogramEndTime) '_min'];
+
+
+
+sleepOnsetTime = cell(1,numel(iDatas));
+
+S1OnsetTime = cell(1,numel(iDatas));
+S2OnsetTime = cell(1,numel(iDatas));
+
+SWSonsetTime = cell(1,numel(iDatas));
+S4onsetTime = cell(1,numel(iDatas));
+REMonsetTime = cell(1,numel(iDatas));
+
+
+totalSleepTime = cell(1,numel(iDatas));
+
+S1Time = cell(1,numel(iDatas));
+S2Time = cell(1,numel(iDatas));
+S3Time = cell(1,numel(iDatas));
+S4Time = cell(1,numel(iDatas));
+REMtime = cell(1,numel(iDatas));
+WakeTime = cell(1,numel(iDatas));
+MovementTime = cell(1,numel(iDatas));
+SWStime = cell(1,numel(iDatas));
+NonREMtime = cell(1,numel(iDatas));
+
+
+S1TimePreOnset = cell(1,numel(iDatas));
+S2TimePreOnset = cell(1,numel(iDatas));
+S3TimePreOnset = cell(1,numel(iDatas));
+S4TimePreOnset = cell(1,numel(iDatas));
+REMtimePreOnset = cell(1,numel(iDatas));
+WakeTimePreOnset = cell(1,numel(iDatas));
+MovementTimePreOnset = cell(1,numel(iDatas));
+SWStimePreOnset = cell(1,numel(iDatas));
+NonREMtimePreOnset = cell(1,numel(iDatas));
+
+S1Time_WithoutMA = cell(1,numel(iDatas));
+S2Time_WithoutMA = cell(1,numel(iDatas));
+S3Time_WithoutMA = cell(1,numel(iDatas));
+S4Time_WithoutMA = cell(1,numel(iDatas));
+REMtime_WithoutMA = cell(1,numel(iDatas));
+WakeTime_WithoutMA = cell(1,numel(iDatas));
+MovementTime_WithoutMA = cell(1,numel(iDatas));
+SWStime_WithoutMA = cell(1,numel(iDatas));
+NonREMtime_WithoutMA = cell(1,numel(iDatas));
+
+
+totalSleepTime_export = cell(1,numel(iDatas));
+
+S1Time_export = cell(1,numel(iDatas));
+S2Time_export = cell(1,numel(iDatas));
+S3Time_export = cell(1,numel(iDatas));
+S4Time_export = cell(1,numel(iDatas));
+REMtime_export = cell(1,numel(iDatas));
+WakeTime_export = cell(1,numel(iDatas));
+MovementTime_export = cell(1,numel(iDatas));
+SWStime_export = cell(1,numel(iDatas));
+NonREMtime_export = cell(1,numel(iDatas));
+
+
+S1Time_WithoutMA_export = cell(1,numel(iDatas));
+S2Time_WithoutMA_export = cell(1,numel(iDatas));
+S3Time_WithoutMA_export = cell(1,numel(iDatas));
+S4Time_WithoutMA_export = cell(1,numel(iDatas));
+REMtime_WithoutMA_export = cell(1,numel(iDatas));
+WakeTime_WithoutMA_export = cell(1,numel(iDatas));
+MovementTime_WithoutMA_export = cell(1,numel(iDatas));
+SWStime_WithoutMA_export = cell(1,numel(iDatas));
+NonREMtime_WithoutMA_export = cell(1,numel(iDatas));
+
+
+
+
 tic
 memtic
 fprintf('HypVals function initialized\n');
-for iData = iDatas
+parfor iData = iDatas
     %iData = 11
     
     datasetsPath = listOfDatasetsPaths{iData};
@@ -118,7 +206,7 @@ for iData = iDatas
         cfg.feedback = core_cfg.feedback;
         tempdata = ft_preprocessing(cfg);
         preDownsampleFreq = tempdata.fsample;
-        clear tempdata;
+        tempdata = [];
     else
         error('wrong parameter for IgnoreDataSetHeader either yes or no');
     end
@@ -263,22 +351,18 @@ for iData = iDatas
     
     
     if strcmp(ExportHypnogram,'yes')
+        tempExportHypnogramStart = NaN;
         tempExpochFactor = 60/epochLength;
-        tempExportPostfix = '_';
         if strcmp(ExportHypnogramStartOffset,'sleeponset')
-            tempExportPostfix = [tempExportPostfix 'sleeponset'];
             tempExportHypnogramStart = onsetCandidate;
         elseif strcmp(ExportHypnogramStartOffset,'eegonset')
-            tempExportPostfix = [tempExportPostfix 'eegonset'];
             tempExportHypnogramStart = 1;
         elseif strcmp(ExportHypnogramStartOffset,'lightsoff')
-            tempExportPostfix = [tempExportPostfix 'lightsoff'];
             tempExportHypnogramStart = find(hypnEpochsEndsSamples <= lightsOffSample,1,'last')-1;
             
         else
             error(['wrong parameter for ExportHypnogramStartOffset either sleeponset or eegonset but set is ' ExportHypnogramStartOffset] );
         end
-        tempExportPostfix = [tempExportPostfix '_' num2str(ExportHypnogramStartTime) '_to_' num2str(ExportHypnogramEndTime) '_min'];
         
         
         

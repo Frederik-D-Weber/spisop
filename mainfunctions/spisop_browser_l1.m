@@ -909,9 +909,9 @@ for conseciData = conseciDatas
     FrqOfSmpl = data.fsample;%data.hdr.Fs;%samples per second / Hz
     
     %init the filter order variables
-    usedFilterOrder_lp = -1;
-    usedFilterOrder_hp = -1;
-    usedFilterOrder_bp = -1;
+    %usedFilterOrder_lp = -1;
+    %usedFilterOrder_hp = -1;
+    %usedFilterOrder_bp = -1;
     
     if strcmp(ApplyFilterSettings,'yes')
         fileFilterSettings = listOfFilterSettingsFiles{iData};
@@ -1385,7 +1385,7 @@ for conseciData = conseciDatas
     
     
     
-    if (usedFilterOrder_hp  == -1)%~exist('usedFilterOrder_hp','var')
+    if ~exist('usedFilterOrder_hp','var')%(usedFilterOrder_hp  == -1)
         usedFilterOrder_hp = NaN;
         hp_hdm.Fs = FrqOfSmpl;
         hp_hdm.Astop = NaN;
@@ -1397,7 +1397,7 @@ for conseciData = conseciDatas
         hp_hdm.Apass = NaN;
     end
     
-    if (usedFilterOrder_bp  == -1)%~exist('usedFilterOrder_bp','var')
+    if ~exist('usedFilterOrder_bp','var')%(usedFilterOrder_bp  == -1)
         usedFilterOrder_bp = NaN;
         bp_hdm.Fs = FrqOfSmpl;
         bp_hdm.Astop1 = NaN;
@@ -1415,7 +1415,7 @@ for conseciData = conseciDatas
         bp_hdm.Fstop2 = NaN;
     end
     
-    if (usedFilterOrder_lp  == -1)%~exist('usedFilterOrder_lp','var')
+    if ~exist('usedFilterOrder_lp','var')%(usedFilterOrder_lp  == -1)
         usedFilterOrder_lp = NaN;
         lp_hdm.Fs = FrqOfSmpl;
         lp_hdm.Astop = NaN;

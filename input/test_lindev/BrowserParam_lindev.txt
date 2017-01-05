@@ -12,7 +12,7 @@ DataSetsWhich,subset,Datasets to be processed either all or subset if subset the
 DataSetsNumbers,1,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset
 DoEpochData,no,If the data should be epoched like given in hypnograms and sleep stages of interest either yes or no default no
 DefaultOutputUnit,uV,the unit of export usually the same as the input unless multiplicated with factors. it is ignored when header info is available
-OutputDataformat,brainvision_eeg_int16, the output data format either edf or gdf or brainvision_eeg_int16 brainvision_eeg_int32 brainvision_eeg_float32 or neuralynx_ncs (only single channel) or neuralynx_sdma or plexon_nex (only single channel) or riff_wave or fcdc_matbin or fcdc_mysql or fcdc_buffer or matlab or edf_autoscale or edf_0.1uV or_Ycuttoff or edf_0.01uV or_Ycuttoff or edf_1uV_Ycuttoff default brainvision_eeg_int16
+OutputDataformat,brainvision_eeg_int16, the output data format either edf or gdf or brainvision_eeg_int16 brainvision_eeg_int32 brainvision_eeg_float32 or neuralynx_ncs (only single channel) or neuralynx_sdma or plexon_nex (only single channel) or riff_wave or fcdc_matbin or fcdc_mysql or fcdc_buffer or matlab or edf_autoscale or edf_0.1uV_Ycutoff or edf_0.01uV or_Ycutoff or edf_1uV_Ycutoff default brainvision_eeg_int16
 IncludePostiveMarkerAtBeginning,yes, uses the first 402 samples to indicate a positive potential triangle of potential of 100 units either yes or no default yes
 ApplyFilterSettings,yes,either yes or no default no
 FiltersSettingsDefinitionsFileName,FiltersSettingsDefinitions_sleep_scoring_simple_lindev.txt,Filename of file containing paths to filter definitions
@@ -22,8 +22,8 @@ ScalingSettingsDefinitionsFileName,ScalingSettingsDefinitions_lindev.txt,Filenam
 ## ADVANCED,,
 ApplyEventmappingSettings,yes,either yes or no default no
 EventmappingSettingsDefinitionsFileName,EventmappingSettingsDefinitions_lindev.txt,Filename of file containing paths to event channel mapping definitions
-ApplyEventsSelection,no,either yes or no default no
-ApplyEventsSelection2,no,either yes or no default no
+ApplyEventsSelection,yes,either yes or no default no
+ApplyEventsSelection2,yes,either yes or no default no
 EventsTarget1FilePathsFileName,EventsFilePaths_SO_lindev.txt,Filename of file containing target events file paths in comma separated values format per line ( at least one )
 EventsTarget1TimePointColumn,seconds_begin,variable name for event value in target events files
 EventTarget1TimeWindowOffsetTime,0,time point offset of the time window test events can fall into with respect to target events time points in units used for EventsTarget1CompareColumns default 0

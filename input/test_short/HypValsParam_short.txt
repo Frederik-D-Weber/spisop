@@ -8,3 +8,6 @@ ExportHypnogram,no,if the hypnogram should be exported for an excerpt either no 
 ExportHypnogramStartOffset,sleeponset, the either sleeponset or eegonset or lightsoff default sleeponset
 ExportHypnogramStartTime,0,time after ExportHypnogramStartOffset to cut in minutes default 0
 ExportHypnogramEndTime,20,next time after ExportHypnogramStartOffset to cut in minutes that needs to be bigger than ExportHypnogramStartTime default 90
+## NEW,,
+LightsOffsMomentUnit,sample,the units given in the file LightsOffsFileName. either sample (of original file before) or second (giving the seconds since start of EEG recording). default sample
+GoBySamplingRateOfData,yes,If yes the sampling rate is determined by reading in the data (which might not be always correct). if no the sampling rate is ignored and the LightsOffsMomentUnits are interpreted as seconds and the LightsOffsMomentUnit must be set to seconds too..either yes or no default yes
