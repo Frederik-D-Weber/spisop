@@ -94,6 +94,7 @@ parfor conseciData = conseciDatas
     iData = iDatas(conseciData);
     %iData = 1
     
+    timeStartPar = toc;
     
     eventsTestPath = listOfEventsTestPaths{iData};
     eventsTargetPath = listOfEventsTargetPaths{iData};
@@ -206,7 +207,9 @@ parfor conseciData = conseciDatas
         %iEvTest = 1
         
         progress_count = progress_count + 1;
-        ft_progress(progress_count/nEventsTest, ['EventTestFile ' num2str(iData) ': Processing test event %d (matchchunk %d, mismatchchunk %d) of %d against %d targets'], progress_count,temp_overlap_collector_iterator, temp_nonoverlap_collector_iterator, nEventsTest, nEventsTarget);  % show string, x=i/N
+        tempTimerNow = toc;
+        time_left_min = (nEventsTest-progress_count)*(((tempTimerNow - timeStartPar)/60)/progress_count); 
+        ft_progress(progress_count/nEventsTest, ['EventTestFile ' num2str(iData) ': Processing test event %d (%d percent, matchchunk %d, mismatchchunk %d) of %d against %d targets %d:%02d min'], progress_count, fix(100*progress_count/nEventsTest), temp_overlap_collector_iterator, temp_nonoverlap_collector_iterator, nEventsTest, nEventsTarget, fix(time_left_min),fix((time_left_min-fix(time_left_min))*60) );  % show string, x=i/N
         
         
         eventTest = dsEventsTest(iEvTest,:);
@@ -437,13 +440,21 @@ parfor conseciData = conseciDatas
     summary = cat(2,summary,dataset(values(groupByMapAllTest)','VarNames',{'number_test_events'}));
     summary = cat(2,summary,dataset(values(groupByMapAllTarget)','VarNames',{'number_matching_target_events'}));
     summary = cat(2,summary,dataset(((cell2mat(summary.number_match) + cell2mat(summary.number_mismatch)) - cell2mat(summary.number_test_events)),'VarNames',{'number_test_matches_target_more_than_once'}));
-    summary = cat(2,summary,dataset(repmat({tempEventsTestCompareColumns},size(summary,1),1),'VarNames',{'test_compare_columns'}));
-    summary = cat(2,summary,dataset(repmat({tempEventsTargetCompareColumns},size(summary,1),1),'VarNames',{'target_compare_columns'}));
-    summary = cat(2,summary,dataset(repmat({tempEventsTestGroupSummaryByColumns},size(summary,1),1),'VarNames',{'test_group_by_columns'}));
-    summary = cat(2,summary,dataset(repmat({EventsTestFilterForColumn},size(summary,1),1),'VarNames',{'test_filter_column'}));
-    summary = cat(2,summary,dataset(repmat({EventsTargetFilterForColumn},size(summary,1),1),'VarNames',{'target_filter_column'}));
-    summary = cat(2,summary,dataset(repmat({EventsTestFilterValues},size(summary,1),1),'VarNames',{'test_filter_value'}));
-    summary = cat(2,summary,dataset(repmat({EventsTargetFilterValues},size(summary,1),1),'VarNames',{'target_filter_value'}));
+    summary = cat(2,summary,dataset(repmat(tempEventsTestCompareColumns,size(summary,1),1),'VarNames',{'test_compare_columns'}));
+    summary = cat(2,summary,dataset(repmat(tempEventsTargetCompareColumns,size(summary,1),1),'VarNames',{'target_compare_columns'}));
+    summary = cat(2,summary,dataset(repmat(tempEventsTestGroupSummaryByColumns,size(summary,1),1),'VarNames',{'test_group_by_columns'}));
+    EventsTestFilterForColumn_temp = EventsTestFilterForColumn;
+    if isempty(EventsTestFilterForColumn)
+        EventsTestFilterForColumn_temp = {''};
+    end
+    summary = cat(2,summary,dataset(repmat(EventsTestFilterForColumn_temp,size(summary,1),1),'VarNames',{'test_filter_column'}));
+        EventsTargetFilterForColumn_temp = EventsTargetFilterForColumn;
+    if isempty(EventsTargetFilterForColumn)
+        EventsTargetFilterForColumn_temp = {''};
+    end
+    summary = cat(2,summary,dataset(repmat(EventsTargetFilterForColumn_temp,size(summary,1),1),'VarNames',{'target_filter_column'}));
+    summary = cat(2,summary,dataset(repmat(EventsTestFilterValues,size(summary,1),1),'VarNames',{'test_filter_value'}));
+    summary = cat(2,summary,dataset(repmat(EventsTargetFilterValues,size(summary,1),1),'VarNames',{'target_filter_value'}));
 
     for iGroupKey = 1:size(groups,2)
         groupsSplits = strsplit(groups{iGroupKey},GroupByConcatString);
