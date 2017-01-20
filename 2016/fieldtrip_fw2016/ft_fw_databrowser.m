@@ -2556,6 +2556,7 @@ if isfield(cfg,'plotHyp')
     x_time = opt.orgdata.time{1,1};
     x_time = x_time/60;
     x_time_hyp = x_time(1:length(cfg.hypn_plot_interpol));
+    %x_time_hyp = x_time(1:min(length(x_time),length(cfg.hypn_plot_interpol)));
     axh = cfg.hhypfigax;
     plot(axh,x_time_hyp,cfg.hypn_plot_interpol,'Color',[0 0 0])
     hold(axh,'on');
