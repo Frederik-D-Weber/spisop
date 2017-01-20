@@ -183,6 +183,10 @@ if ~isfield(cfg, 'feedback'),
   end
 end
 
+
+% FW BEGIN
+if isfield(cfg, 'channel'),    ori_channel = cfg.channel;     end
+% FW END
 if ~isfield(cfg, 'precision'),    cfg.precision = 'double';     end
 if ~isfield(cfg, 'padding'),      cfg.padding = 0;              end % padding is only done when filtering
 if ~isfield(cfg, 'paddir'),       cfg.paddir  = 'both';         end
@@ -536,8 +540,67 @@ else
         offset     = cfg.trl(i,3) - begpadding;
       end
 
+      % FW BEGIN
       % read the raw data with padding on both sides of the trial - this
       % includes datapadding
+      if strcmp(cfg.dataformat,'edf')
+          %           hdr.orig.Label
+          %           hdr.orig.SampleRate
+          %           ori_channel = {'EEG', 'EEG(sec)'}
+          
+          % this should be a cell array
+          if ~iscell(ori_channel) && ischar(ori_channel)
+              ori_channel = {ori_channel};
+          end
+          
+          
+          % translate the channel groups (like 'all' and 'MEG') into real labels
+          ori_channel = ft_channelselection(ori_channel, cellstr(hdr.orig.Label));
+          
+          rawindx_candidate = match_str(cellstr(hdr.orig.Label),ori_channel);
+          
+          %take the biggest subset of channels having consistent sampling rate
+          [a, b, c] = unique(hdr.orig.SampleRate(rawindx_candidate));
+          for iFsType=1:length(a)
+              chancount(iFsType) = sum(c==iFsType);
+          end
+          [dum, indx] = max(chancount);
+          chansel = find(hdr.orig.SampleRate(rawindx_candidate) == a(indx));
+          
+          
+          
+          rawindx = rawindx_candidate(chansel);
+          channels_selected = cellstr(hdr.orig.Label);
+          channels_selected = channels_selected(rawindx);
+          
+          temphdr = hdr;
+          
+%           hdr.Fs =  hdr.orig.SampleRate(rawindx(1));
+%           hdr.nChans = numel(rawindx);
+%           hdr.nSamples = round(hdr.nSamples*(hdr.Fs/temphdr.Fs));
+%           hdr.label = channels_selected;
+%           hdr.chantype = cellstr(repmat('unknown',hdr.nChans,1));
+%           hdr.chanunit = cellstr(repmat('unknown',hdr.nChans,1));
+          
+%           hdr.Fs =  hdr.orig.SampleRate(rawindx(1));
+%           hdr.nChans = numel(rawindx);
+%           hdr.nSamples = round(hdr.nSamples*(hdr.Fs/temphdr.Fs));
+%           hdr.label = channels_selected;
+%           hdr.chantype = cellstr(repmat('unknown',hdr.nChans,1));
+%           hdr.chanunit = cellstr(repmat('unknown',hdr.nChans,1));
+%           hdr.orig.chansel = rawindx;
+%           rawindx = 1:numel(rawindx);
+          
+          hdr.Fs =  hdr.orig.SampleRate(rawindx(1));
+          hdr.nChans = numel(cellstr(hdr.orig.Label));
+          hdr.nSamples = round(hdr.nSamples*(hdr.Fs/temphdr.Fs));
+          hdr.label = cellstr(hdr.orig.Label);
+          hdr.chantype = cellstr(repmat('unknown',hdr.nChans,1));
+          hdr.chanunit = cellstr(repmat('unknown',hdr.nChans,1));
+          hdr.orig.chansel = 1:numel(cellstr(hdr.orig.Label));
+          
+      end
+      %FW END
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
       
       % convert the data to another numeric precision, i.e. double, single or int32
