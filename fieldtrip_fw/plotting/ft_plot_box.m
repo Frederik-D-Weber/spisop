@@ -60,6 +60,9 @@ facecolor   = ft_getopt(varargin, 'facecolor', 'none');
 edgecolor   = ft_getopt(varargin, 'edgecolor', 'k');
 tag         = ft_getopt(varargin, 'tag',       '');
 parent        = ft_getopt(varargin, 'parent', []);
+% fw begin
+ax          = ft_getopt(varargin, 'axis');
+% fw end
 
 % convert the two cornerpoints into something that the patch function understands
 % the box position is represented just like the argument to the AXIS function
@@ -76,7 +79,13 @@ if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(h
   
 else
   % use the full implementation
-  abc = axis;
+  % fw begin
+  if isempty(ax)
+    abc = axis;
+  else
+    abc = ax;
+  end
+  % fw end
   
   if isempty(hlim)
     hlim = abc([1 2]);

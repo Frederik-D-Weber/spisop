@@ -59,6 +59,9 @@ rotation            = ft_getopt(varargin, 'rotation', 0);
 VerticalAlignment   = ft_getopt(varargin, 'VerticalAlignment', 'middle');
 tag                 = ft_getopt(varargin, 'tag', '');
 interpreter         = ft_getopt(varargin, 'interpreter', 'tex');
+% fw begin
+ax          = ft_getopt(varargin, 'axis');
+% fw end
 
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine
@@ -66,7 +69,14 @@ if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(h
   
 else
   % use the full implementation
-  abc = axis;
+  % fw begin
+  if isempty(ax)
+    abc = axis;
+  else
+    abc = ax;
+  end
+  % fw end
+  
   if isempty(hlim)
     hlim = abc([1 2]);
   end

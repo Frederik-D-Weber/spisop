@@ -126,6 +126,8 @@ function [cfg] = ft_fw_databrowser(cfg, data)
 
 revision = '$Id: ft_databrowser.m 8271 2013-06-16 11:38:09Z roevdmei $';
 
+%set(0, 'DefaultFigureRenderer', 'OpenGL');
+
 % do the general setup of the function
 ft_defaults
 ft_preamble init
@@ -713,7 +715,7 @@ if strcmp(cfg.doSleepScoring,'yes')
     
     cfg.emg_thresholdAmplitudeForDetection = 45;
     
-    cfg.nEpochsBuffer = 1;
+    cfg.nEpochsBuffer = 0.34;
     
     cfg.FrqOfSmpl = opt.orgdata.fsample;
     
@@ -756,6 +758,9 @@ if strcmp(cfg.doSleepScoring,'yes')
     cfg.freq_colors = jet(size(cfg.freq_borders,1));
     
     cfg.display_time_frequency = 'no';
+    
+    
+    cfg.artifact_export_delimiter = ',';
     
 end
 
@@ -891,7 +896,7 @@ for iArt = 1:length(artlabel)
     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', artlabel{iArt}, 'userdata', num2str(iArt), 'position', [0.91, 0.9 - ((iArt-1)*0.09), 0.08, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.91, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.96, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
-    uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'artifacts', 'userdata', 'a', 'position', [0.01, temp_lower_line_y2 - ((iArt-1)*0.09), 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
+    uicontrol('tag', 'artifactui_button', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', ['artifact(' opt.artdata.label{opt.ftsel} ')'], 'userdata', 'a', 'position', [0.01, temp_lower_line_y2 - ((iArt-1)*0.09), 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
     uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.01, temp_lower_line_y - ((iArt-1)*0.09), 0.02, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
     uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.03, temp_lower_line_y - ((iArt-1)*0.09), 0.02, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
     
@@ -900,7 +905,7 @@ end
 
 if strcmp(cfg.viewmode, 'butterfly')
     % button to find label of nearest channel to datapoint
-    uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, temp_lower_line_y2, 0.08, 0.05], 'backgroundcolor', [1 1 1])
+    uicontrol('tag', 'artifactui_button', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, temp_lower_line_y2, 0.08, 0.05], 'backgroundcolor', [1 1 1])
 end
 
 % 'edit preproc'-button
@@ -916,6 +921,8 @@ uicontrol('tag', 'preproccfg', 'parent', h, 'units', 'normalized', 'style', 'pus
 ft_uilayout(h, 'tag', 'labels',     'style', 'pushbutton', 'callback', @keyboard_cb);
 ft_uilayout(h, 'tag', 'buttons',    'style', 'pushbutton', 'callback', @keyboard_cb);
 ft_uilayout(h, 'tag', 'artifactui', 'style', 'pushbutton', 'callback', @keyboard_cb);
+ft_uilayout(h, 'tag', 'artifactui_button', 'style', 'pushbutton', 'callback', @keyboard_cb);
+
 if strcmp(cfg.doSleepScoring,'yes');
     ft_uilayout(h, 'tag', 'scbuttons', 'style', 'pushbutton', 'callback', @keyboard_cb);
     ft_uilayout(h, 'tag', 'scoptbuttons', 'style', 'pushbutton', 'callback', @keyboard_cb);
@@ -1618,7 +1625,7 @@ switch key
     case 'a'
         % switch to another artifact type
         opt.ftsel = opt.ftsel + 1;
-        if opt.ftsel > 3
+        if opt.ftsel > numel(opt.artdata.label)
             opt.ftsel = 1;
         end
         %opt.ftsel = str2double(strrep(key, 'shift+', ''));
@@ -1633,30 +1640,31 @@ switch key
         end
         %FW begin
     case {'shift+1' 'shift+2' 'shift+3' 'shift+4' 'shift+5' 'shift+6' 'shift+7' 'shift+8' 'shift+9'}
-        %     % go to previous artifact
-        %     opt.ftsel = str2double(key(end));
-        %     numart = size(opt.artdata.trial{1}, 1);
-        %     if opt.ftsel > numart
-        %       fprintf('data has no artifact type %i \n', opt.ftsel)
-        %     else
-        %       cursam = opt.trlvis(opt.trlop,1);
-        %       artsam = find(opt.artdata.trial{1}(opt.ftsel,1:cursam-1), 1, 'last');
-        %       if isempty(artsam)
-        %         fprintf('no earlier "%s" artifact found\n', opt.artdata.label{opt.ftsel});
-        %       else
-        %         fprintf('going to previous "%s" artifact\n', opt.artdata.label{opt.ftsel});
-        %         if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
-        %           arttrl = nearest(opt.trlvis(:,1),artsam);
-        %         else
-        %           arttrl = nearest(opt.trlvis(:,1),artsam)-1;
-        %         end
-        %         opt.trlop = arttrl;
-        %         setappdata(h, 'opt', opt);
-        %         setappdata(h, 'cfg', cfg);
-        %         redraw_cb(h, eventdata);
-        %       end
-        %     end
+            % go to previous artifact
+            %opt.ftsel = str2double(key(end));
+            numart = size(opt.artdata.trial{1}, 1);
+            if opt.ftsel > numart
+              fprintf('data has no artifact type %i \n', opt.ftsel)
+            else
+              cursam = opt.trlvis(opt.trlop,1);
+              artsam = find(opt.artdata.trial{1}(opt.ftsel,1:cursam-1), 1, 'last');
+              if isempty(artsam)
+                fprintf('no earlier "%s" artifact found\n', opt.artdata.label{opt.ftsel});
+              else
+                fprintf('going to previous "%s" artifact\n', opt.artdata.label{opt.ftsel});
+                if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
+                  arttrl = nearest(opt.trlvis(:,1),artsam);
+                else
+                  arttrl = nearest(opt.trlvis(:,1),artsam)-1;
+                end
+                opt.trlop = arttrl;
+                setappdata(h, 'opt', opt);
+                setappdata(h, 'cfg', cfg);
+                redraw_cb(h, eventdata);
+              end
+            end
     case {'0' '1' '2' '3' '4' '5' '8' '9' 'd'}
+        %profile on
         if strcmp(cfg.doSleepScoring,'yes')
             
             curr_epoch = opt.trlop;
@@ -1688,12 +1696,15 @@ switch key
             opt.curr_stage = stagestring;
             
             cfg.hypn(curr_epoch,:) = [h1 h2];
-            begsample = opt.trlvis(opt.trlop,1);
-            endsample = opt.trlvis(opt.trlop,2);
-            [curr_ep_hypn_plot_interpol curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot([h1 h2],length(begsample:endsample),cfg.plot_MA_offset);
             
-            cfg.hypn_plot_interpol(begsample:endsample) = curr_ep_hypn_plot_interpol;
-            cfg.hypn_plot_interpol_MA(begsample:endsample) = curr_ep_hypn_plot_interpol_MA;
+            
+            
+            hyp_begsample = cfg.hyp_epochLengthSamples*(curr_epoch-1)+1; % opt.trlvis(opt.trlop,1);
+            hyp_endsample = cfg.hyp_epochLengthSamples*(curr_epoch);% opt.trlvis(opt.trlop,2);
+            [curr_ep_hypn_plot_interpol curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot([h1 h2],length(hyp_begsample:hyp_endsample),cfg.plot_MA_offset);
+            
+            cfg.hypn_plot_interpol(hyp_begsample:hyp_endsample) = curr_ep_hypn_plot_interpol;
+            cfg.hypn_plot_interpol_MA(hyp_begsample:hyp_endsample) = curr_ep_hypn_plot_interpol_MA;
             
             if temp_skip_to_next_epoch
                 opt.trlop = min(opt.trlop + 1, size(opt.trlvis,1)); % should not be larger than the number of trials
@@ -1717,6 +1728,10 @@ switch key
                                 cfg.hypnogram_delimiter_autosave = '\t';
                             end
                             writeHypnogramFile(cfg.autosave_hypfilepath,cfg.hypn,cfg.hypnogram_delimiter_autosave);
+                            
+                            temp_ArtifactPath = [cfg.autosave_hypfilepath '.artifacts.csv'];
+                            writeArtifactFile(temp_ArtifactPath,opt,cfg.artifact_export_delimiter);
+                            
                         catch err
                             
                         end
@@ -1730,12 +1745,14 @@ switch key
             setappdata(h, 'opt', opt);
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
+            
         end
         
+        %profile viewer
         % FW end
     case {'control+1' 'control+2' 'control+3' 'control+4' 'control+5' 'control+6' 'control+7' 'control+8' 'control+9' 'alt+1' 'alt+2' 'alt+3' 'alt+4' 'alt+5' 'alt+6' 'alt+7' 'alt+8' 'alt+9'}
         % go to next artifact
-        opt.ftsel = str2double(key(end));
+        %opt.ftsel = str2double(key(end));
         numart = size(opt.artdata.trial{1}, 1);
         if opt.ftsel > numart
             fprintf('data has no artifact type %i \n', opt.ftsel)
@@ -2142,7 +2159,7 @@ switch key
         if strcmp(cfg.doSleepScoring,'yes')
             
             try
-                tempfilepath = [cfg.outputfilespath cfg.ouputFilesPrefixString 'hypn_export_' 'datasetnum' num2str(cfg.datasetnum) '.mat'];
+                tempfilepath = [cfg.outputfilespath cfg.ouputFilesPrefixString 'session_saved_' 'datasetnum' num2str(cfg.datasetnum) '.mat'];
                 
                 [hyp_file_name hyp_file_path hyp_file_filterindex] = uiputfile(...
                     {'*.mat','MAT-files (*.mat)';...
@@ -2238,10 +2255,21 @@ switch key
                     cfg.hypn = temp_hypn(1:nEpochs,:);
                     
                     
-                    [curr_ep_hypn_plot_interpol curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot(cfg.hypn,temp_epochLengthSamples,cfg.plot_MA_offset);
+                    [curr_ep_hypn_plot_interpol curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot(cfg.hypn,cfg.hyp_epochLengthSamples,cfg.plot_MA_offset);
                     
                     cfg.hypn_plot_interpol = curr_ep_hypn_plot_interpol;
                     cfg.hypn_plot_interpol_MA = curr_ep_hypn_plot_interpol_MA;
+                    
+                    opt.hyp_figure_reload = true;
+                    
+                    temp_ArtifactPath = [temp_hypnogramPath '.artifacts.csv'];
+                    if exist(temp_ArtifactPath) == 2
+                        [o, c] = readArtifactFile(temp_ArtifactPath,opt,cfg,cfg.artifact_export_delimiter);
+                        opt = o;
+                        cfg = c;
+                        c = [];
+                        o = [];
+                    end
                     
                     [temp_pathstr,temp_name,temp_ext] = fileparts(temp_hypnogramPath);
                     
@@ -2294,6 +2322,9 @@ switch key
                     temp_hypnogramPath = [hyp_file_path hyp_file_name];
                     writeHypnogramFile(temp_hypnogramPath,cfg.hypn,cfg.hypnogram_delimiter_autosave);
                     
+                    temp_ArtifactPath = [hyp_file_path hyp_file_name '.artifacts.csv'];
+                    writeArtifactFile(temp_ArtifactPath,opt,cfg.artifact_export_delimiter);
+                    
                     
                     [temp_pathstr,temp_name,temp_ext] = fileparts(temp_hypnogramPath);                    
                     iAutosave = 0;
@@ -2302,6 +2333,10 @@ switch key
                         iAutosave = iAutosave + 1;
                         cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
                     end
+                    
+                    
+                    
+
                     
                     setappdata(h, 'cfg', cfg);
                     msgbox('Exporting the hypnogram successful!' ,'Export successful','modal');
@@ -2481,6 +2516,9 @@ else
     ft_uilayout(h, 'tag', 'scoptbuttons_tfr', 'string', ['tfr']);
 end
 
+
+ft_uilayout(h, 'tag', 'artifactui_button', 'string', ['artifact(' opt.artdata.label{opt.ftsel} ')']);
+
 uiresume(h);
 end
 
@@ -2517,13 +2555,13 @@ h = getparent(h);
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
 
-
 %fprintf('redrawing with viewmode %s\n', cfg.viewmode);
 
 begsample = opt.trlvis(opt.trlop, 1);
 endsample = opt.trlvis(opt.trlop, 2);
 offset    = opt.trlvis(opt.trlop, 3);
 chanindx  = match_str(opt.hdr.label, cfg.channel);
+
 
 % FW begin
 
@@ -2553,13 +2591,42 @@ if isfield(cfg,'plotHyp')
     %figure(cfg.hhyp);
     %h.hhyp = getparent(cfg.hhyp);
     temp_max_y = 1.25;
-    x_time = opt.orgdata.time{1,1};
-    x_time = x_time/60;
-    x_time_hyp = x_time(1:length(cfg.hypn_plot_interpol));
+    if ~(isfield(cfg,'hyp_x_time') && isfield(cfg,'hyp_x_time_hyp'))
+        opt.hyp_figure_reload = true;
+    end
+    
+    
+    curr_epoch = opt.trlop;
+    
+    temp_epochLengthSamples = opt.trlvis(1, 2) - opt.trlvis(1, 1) + 1;
+    nEpochs = floor(size(opt.orgdata.trial{1},2)/temp_epochLengthSamples);
+    if curr_epoch > nEpochs
+        curr_epoch = curr_epoch - 1;
+    end
+    
+    hyp_begsample = cfg.hyp_epochLengthSamples*(curr_epoch-1)+1; % opt.trlvis(opt.trlop,1);
+    hyp_endsample = cfg.hyp_epochLengthSamples*(curr_epoch);% opt.trlvis(opt.trlop,2);
+    
+    if opt.hyp_figure_reload
+        beg_time = opt.orgdata.time{1,1}(1);
+        end_time = opt.orgdata.time{1,1}(end);
+        cfg.hyp_x_time = linspace(beg_time,end_time,ceil((end_time-beg_time)*cfg.hyp_fample));
+        cfg.hyp_x_time = cfg.hyp_x_time/60;
+        cfg.hyp_x_time_hyp = cfg.hyp_x_time(1:length(cfg.hypn_plot_interpol));
+        %x_time_hyp = x_time(1:min(length(x_time),length(cfg.hypn_plot_interpol)));
+        opt.hyp_figure_reload = false;
+    end
     axh = cfg.hhypfigax;
-    plot(axh,x_time_hyp,cfg.hypn_plot_interpol,'Color',[0 0 0])
-    hold(axh,'on');
-    plot(axh,x_time_hyp,cfg.hypn_plot_interpol_MA,'Color',[1 0 0])
+    
+    plot(axh,cfg.hyp_x_time_hyp,cfg.hypn_plot_interpol,'Color',[0 0 0])
+    hold(axh,'all');
+    
+    xlim(axh,[0 max(cfg.hyp_x_time)]);
+    ylabel(axh,'Stages');
+    ylim(axh,[cfg.plot_MA_offset temp_max_y])
+    
+    plot(axh,cfg.hyp_x_time_hyp,cfg.hypn_plot_interpol_MA,'Color',[1 0 0])
+    
     temp_x_other_artifact = ~(cfg.hypn_plot_interpol_MA > -4.5);
     if any(~temp_x_other_artifact)
         temp_hypn_plot_interpol_MA = cfg.hypn_plot_interpol_MA;
@@ -2567,16 +2634,14 @@ if isfield(cfg,'plotHyp')
         %temp_x_other_artifact_index = [temp_x_other_artifact; temp_x_other_artifact+1];
         %temp_x_other_artifact_index = temp_x_other_artifact_index(1:end-1);
         %temp_x_other_artifact_index = sort(temp_x_other_artifact_index);
-        plot(axh,x_time_hyp,temp_hypn_plot_interpol_MA,'Color',[0.75 0.75 0.75])
+        plot(axh,cfg.hyp_x_time_hyp,temp_hypn_plot_interpol_MA,'Color',[0.75 0.75 0.75])
     end
     
    
     
     
     
-    xlim(axh,[0 max(x_time)]);
-    ylabel(axh,'Stages');
-    ylim(axh,[cfg.plot_MA_offset temp_max_y])
+
     yTick = [0 -0.5 -1 -2 -3 -4 cfg.plot_MA_offset+1 cfg.plot_MA_offset+0.5];
     yTickLabel = {'W' 'REM' 'S1' 'S2' 'S3' 'S4' 'MT' 'MA'};
     
@@ -2632,10 +2697,10 @@ if isfield(cfg,'plotHyp')
     set(axh, 'yTick', flip(yTick));
     set(axh, 'yTickLabel', flip(yTickLabel));
     set(axh,'TickDir','out');
-    xTick = [0:20:max(x_time)];
+    xTick = [0:20:max(cfg.hyp_x_time)];
     set(axh, 'xTick', xTick);
-    x_pos_begin = x_time(begsample);
-    x_pos_end = x_time(endsample);
+    x_pos_begin = cfg.hyp_x_time(hyp_begsample);
+    x_pos_end = cfg.hyp_x_time(hyp_endsample);
     x_pos = [x_pos_begin x_pos_end x_pos_end x_pos_begin];
     y_pos = [cfg.plot_MA_offset cfg.plot_MA_offset 1 1];
     pos_now = patch(x_pos,y_pos,[0.5 0.25 1],'parent',axh);
@@ -2644,12 +2709,14 @@ if isfield(cfg,'plotHyp')
     line([x_pos_begin x_pos_begin],[cfg.plot_MA_offset temp_max_y],'color',[0.25 0.125 1],'parent',axh);
     set(cfg.hhyp, 'Name', sprintf('Hypnogram datasetnum %d',cfg.datasetnum));
     set(axh, 'box', 'off');
+    
     hold(axh,'off');
 end
 
 % FW end
 
 figure(h); % ensure that the calling figure is in the front
+%hold all;
 set(h, 'Name', sprintf('Datasetnum %d: %s',cfg.datasetnum,cfg.datasetsPath));
 
 if ~isempty(opt.event) && isstruct(opt.event)
@@ -2772,6 +2839,7 @@ opt.hlim = [tim(1) tim(end)];
 opt.vlim = cfg.ylim;
 
 % FW begin
+%hold all
 if strcmp(cfg.doSleepScoring,'yes')
     
     delete(findobj(h,'tag', 'mark_spind'));
@@ -2812,8 +2880,8 @@ if strcmp(cfg.doSleepScoring,'yes')
             
             cfg_eeg_redef = [];
             lengthEpochSamples = endsample - begsample+1;
-            buff_begsample = begsample-(cfg.nEpochsBuffer*lengthEpochSamples);
-            buff_endsample = endsample+(cfg.nEpochsBuffer*lengthEpochSamples);
+            buff_begsample = begsample-fix(cfg.nEpochsBuffer*lengthEpochSamples);
+            buff_endsample = endsample+fix(cfg.nEpochsBuffer*lengthEpochSamples);
             padd_samples_left = [];
             padd_samples_right = [];
             if buff_begsample < 1
@@ -2883,7 +2951,9 @@ if strcmp(cfg.doSleepScoring,'yes')
                             temp_freq_border_right = cfg.freq_borders(iFreq,2);
                             temp_mean_power = 10*log10(nanmean(powerspectrum((temp_freq_border_left <= freq) & (freq <= temp_freq_border_right))));
                             rectangle('Position',[temp_freq_border_left,bars_y,temp_freq_border_right-temp_freq_border_left,temp_mean_power],'FaceColor',cfg.freq_colors(iFreq,:),'EdgeColor','k','LineWidth',1)
-                            hold on
+                            if iFreq == 1 && ~ishold
+                                hold all
+                            end
                         end
                         plot(freq,10*log10(powerspectrum),'color','k','LineWidth',2);
                         ylabel('Power [dB]');
@@ -2918,7 +2988,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                         data_tfr.powspctrm(isnan(data_tfr.powspctrm(:))) = 10E-12;
                         
                         time_bins_epoch = (lengthEpochSamples/data_det_signal_eeg_data_tfr.fsample)/TimeSteps;
-                        time_bins_to_substract_left = ((cfg.nEpochsBuffer*lengthEpochSamples)/data_det_signal_eeg_data_tfr.fsample)/TimeSteps;
+                        time_bins_to_substract_left = (fix(cfg.nEpochsBuffer*lengthEpochSamples)/data_det_signal_eeg_data_tfr.fsample)/TimeSteps;
                         time_bins_to_substract_right = time_bins_to_substract_left;
                         
                         
@@ -3140,8 +3210,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                 %     end
                 %     so_cand_pairsamples = so_cand_pairsamples(unique([so_candidateIndex_include1; so_candidateIndex_include2; setdiff(1:size(so_cand_pairsamples,1),so_candidateIndex_exclude)]),:);
                 
-                
-                
+                  
                 
                 iCand = 1;
                 while iCand < size(so_cand_pairsamples,1)
@@ -3271,7 +3340,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                     so_display_ind(so_cand_pairsamples(iCand,1):so_cand_pairsamples(iCand,2)) = 1;
                 end
                 
-                tmp = diff([0 so_display_ind(cfg.nEpochsBuffer*lengthEpochSamples+1:(cfg.nEpochsBuffer+1)*lengthEpochSamples) 0]);
+                tmp = diff([0 so_display_ind(fix(cfg.nEpochsBuffer*lengthEpochSamples)+1:fix((cfg.nEpochsBuffer+1)*lengthEpochSamples)) 0]);
                 evbeg = find(tmp==+1);
                 evend = find(tmp==-1) - 1;
                 
@@ -3283,25 +3352,32 @@ if strcmp(cfg.doSleepScoring,'yes')
                     temp_so_y_offset2 = -0.9;
                 end
                 
+                %init first axis
+                temp_ax = [];
+                
+                h_so_event_begin_end = temp_ax;
                 for k=1:numel(evbeg)
+                   
                     h_so_event_begin_end = ft_plot_box([tim(evbeg(k)) tim(evend(k)) temp_so_y_offset1 temp_so_y_offset2],'facealpha',0.38, 'facecolor', cfg.slowoscillation_mark_color, 'edgecolor', 'none', 'tag', 'mark_slowosci',  ...
-                        'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
+                        'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'axis', h_so_event_begin_end);
+                   
                 end
+                temp_ax = h_so_event_begin_end;
                 
                 so_points_for_display = so_cand_pairsamples(:);
-                so_points_for_display = so_points_for_display(((cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_points_for_display) & ...
-                    (so_points_for_display <= (cfg.nEpochsBuffer+1)*lengthEpochSamples)) - cfg.nEpochsBuffer*lengthEpochSamples;
+                so_points_for_display = so_points_for_display(((fix(cfg.nEpochsBuffer*lengthEpochSamples)+1) <= so_points_for_display) & ...
+                    (so_points_for_display <= fix(cfg.nEpochsBuffer+1)*lengthEpochSamples)) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
                 
                 h_so_points_begin_end = ft_plot_vector([tim(so_points_for_display)' tim(so_points_for_display)'],[repmat(temp_so_y_offset1,length(so_points_for_display),1) repmat(temp_so_y_offset2,length(so_points_for_display),1)], 'color', cfg.slowoscillation_mark_color, 'linewidth', 1, 'tag', 'mark_slowosci',  ...
                     'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
                 
                 
-                so_points_for_display_begins = so_cand_pairsamples((((cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,1)) & ...
-                    (so_cand_pairsamples(:,1) <= (cfg.nEpochsBuffer+1)*lengthEpochSamples)),:) - cfg.nEpochsBuffer*lengthEpochSamples;
-                so_points_for_display_ends = so_cand_pairsamples((((cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,2)) & ...
-                    (so_cand_pairsamples(:,2) <= (cfg.nEpochsBuffer+1)*lengthEpochSamples)),:) - cfg.nEpochsBuffer*lengthEpochSamples;
+                so_points_for_display_begins = so_cand_pairsamples(((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,1)) & ...
+                    (so_cand_pairsamples(:,1) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
+                so_points_for_display_ends = so_cand_pairsamples(((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,2)) & ...
+                    (so_cand_pairsamples(:,2) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
                 so_points_for_display_pairs = so_cand_pairsamples((((cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,1)) & ...
-                    (so_cand_pairsamples(:,2) <= (cfg.nEpochsBuffer+1)*lengthEpochSamples)),:) - cfg.nEpochsBuffer*lengthEpochSamples;
+                    (so_cand_pairsamples(:,2) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
                 
 %                 temp_prevbeg = -1;
 %                 temp_count_overlapp = 0;
@@ -3319,7 +3395,7 @@ if strcmp(cfg.doSleepScoring,'yes')
 %                 end
                 
                 temp_epochLengthSamples = endsample - begsample + 1;
-                cfg.curr_displayed_detected_slowosci_perc_display_ind = so_display_ind(cfg.nEpochsBuffer*lengthEpochSamples+1:(cfg.nEpochsBuffer+1)*lengthEpochSamples);
+                cfg.curr_displayed_detected_slowosci_perc_display_ind = so_display_ind(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples));
                 cfg.curr_displayed_detected_slowosci_perc = sum(cfg.curr_displayed_detected_slowosci_perc_display_ind )/temp_epochLengthSamples;
                 
                 
@@ -3360,7 +3436,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                 
                 SOdispsignal = [ padd_samples_left data_det_signal_eeg_so_disp2.trial{1} padd_samples_right];
                 
-                cfg.so_signal_display = SOdispsignal(cfg.nEpochsBuffer*lengthEpochSamples+1:(cfg.nEpochsBuffer+1)*lengthEpochSamples);
+                cfg.so_signal_display = SOdispsignal(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples));
 
             end
             
@@ -3383,7 +3459,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                                 
                 frqBndPssSignal = [ padd_samples_left data_det_signal_eeg_sp.trial{1} padd_samples_right];
                 
-                cfg.spindsignal_display = frqBndPssSignal(cfg.nEpochsBuffer*lengthEpochSamples+1:(cfg.nEpochsBuffer+1)*lengthEpochSamples);
+                cfg.spindsignal_display = frqBndPssSignal(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples));
                 
                 if strcmp(cfg.markSpindles,'yes') 
                     
@@ -3403,7 +3479,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                     %         end
                 end
                 
-                cfg.spindsignal_envelope_display = envelope(cfg.nEpochsBuffer*lengthEpochSamples+1:(cfg.nEpochsBuffer+1)*lengthEpochSamples);
+                cfg.spindsignal_envelope_display = envelope(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples));
                 
                 [begins, ends] = getBeginsAndCorrespondingEndsIndicesAboveThreshold(envelope,cfg.sp_thresholdForDetectionBeginEnd/2);
                 ind_valid_criterion = [];
@@ -3429,7 +3505,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                 
                 
                 
-                sp_events_for_display = sp_events(((cfg.nEpochsBuffer*lengthEpochSamples+1) <= sp_events) & (sp_events <=(cfg.nEpochsBuffer+1)*lengthEpochSamples)) - cfg.nEpochsBuffer*lengthEpochSamples;
+                sp_events_for_display = sp_events((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= sp_events) & (sp_events <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
                 
                 cfg.curr_displayed_detected_spindels_number = numel(sp_events_for_display);
                
@@ -3441,7 +3517,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                     temp_sp_y_offset2 = 1;
                 end
                 
-                
+                temp_ax = [];
                 if curr_nDetected_spindels > 0
                     sp_display_ind = zeros(1,lengthSignal);
                     for iBeg = 1:numel(begins)
@@ -3450,21 +3526,26 @@ if strcmp(cfg.doSleepScoring,'yes')
                     
                     
                     
-                    tmp = diff([0 sp_display_ind(cfg.nEpochsBuffer*lengthEpochSamples+1:(cfg.nEpochsBuffer+1)*lengthEpochSamples) 0]);
+                    tmp = diff([0 sp_display_ind(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples)) 0]);
                     evbeg = find(tmp==+1);
                     evend = find(tmp==-1) - 1;
                     
+                    h_sp_event_begin_end = temp_ax;
                     for k=1:numel(evbeg)
                         h_sp_event_begin_end = ft_plot_box([tim(evbeg(k)) tim(evend(k)) temp_sp_y_offset1 temp_sp_y_offset2],'facealpha',0.38, 'facecolor', cfg.spindle_mark_color, 'edgecolor', 'none', 'tag', 'mark_spind',  ...
-                            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
+                            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'axis',h_sp_event_begin_end);
                     end
+                    temp_ax = h_sp_event_begin_end;
                     
                 end
+                h_sp_event = temp_ax;
                 for iEv = 1:numel(sp_events_for_display)
                     h_sp_event = ft_plot_line([tim(sp_events_for_display(iEv)) tim(sp_events_for_display(iEv))], [temp_sp_y_offset1 temp_sp_y_offset2],'facealpha',0.8, 'color', cfg.spindle_mark_color, 'edgecolor', 'none', 'tag', 'mark_spind','linewidth',2,  ...
-                        'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
+                        'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', h_sp_event);
                     
                 end
+                temp_ax = h_sp_event;
+
                 end
             end
         end
@@ -3492,6 +3573,7 @@ if strcmp(cfg.doSleepScoring,'yes')
     opt.curr_stage = stagestring;
 end
 
+
 if strcmp(cfg.doSleepScoring,'yes')
     
     delete(findobj(h,'tag', 'scorechan_eeg'));
@@ -3501,14 +3583,19 @@ if strcmp(cfg.doSleepScoring,'yes')
     
     temp_channel_number_in_curr_display = find(chanindx == cfg.score_channel_eeg_number);
     
+    
+    temp_ax = [];
+    
+    
     for iChanDisplayed = temp_channel_number_in_curr_display;
         
         h_scorechan_eeg = ft_plot_box([tim(1) tim(end) -1 1],'facealpha',0.5, 'facecolor', cfg.score_channel_eeg_color , 'edgecolor', 'none', 'tag', 'scorechan_eeg',  ...
-            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
+            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', temp_ax);
+        temp_ax = h_scorechan_eeg;
         
         h_scorechan_eeg_middle_line = ft_plot_line([tim(1) tim(end)],[0 0], 'color', cfg.score_channel_eeg_color , 'linewidth', 1, 'tag', 'scorechan_eeg',  ...
-            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
-        
+            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', temp_ax);
+        temp_ax = h_scorechan_eeg_middle_line;
 %        ft_plot_matrix([tim(1) tim(end)],[-1 1],datamatrix, 'clim',[-1,1], 'tag', 'TFR',  ...
 %             'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
 
@@ -3522,8 +3609,9 @@ if strcmp(cfg.doSleepScoring,'yes')
         temp_curr_channels_displayed = numel(opt.laytime.label);
         
         h_curr_stage = ft_plot_text(tim(floor(end/2)), 0, opt.curr_stage, 'tag', 'curr_stage', 'Color', [0.9 0.9 0.9], 'FontSize', 64, 'FontUnits',  'normalized', ...
-            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none');
-        
+            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none', 'axis', temp_ax);
+        temp_ax = h_curr_stage;
+
 
     end
     
@@ -3537,8 +3625,8 @@ if strcmp(cfg.doSleepScoring,'yes')
     for iChanDisplayed = temp_channel_number_in_curr_display;
         
         h_scorechan_eog = ft_plot_box([tim(1) tim(end) -1 1],'facealpha',0.5, 'facecolor', cfg.score_channel_eog_color , 'edgecolor', 'none', 'tag', 'scorechan_eog',  ...
-            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
-        
+            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', temp_ax);
+        temp_ax = h_scorechan_eog;
         
     end
     
@@ -3550,8 +3638,8 @@ if strcmp(cfg.doSleepScoring,'yes')
     for iChanDisplayed = temp_channel_number_in_curr_display;
         
         h_scorechan_emg = ft_plot_box([tim(1) tim(end) -1 1],'facealpha',0.5, 'facecolor', cfg.score_channel_emg_color , 'edgecolor', 'none', 'tag', 'scorechan_emg',  ...
-            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
-        
+            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', temp_ax);
+        temp_ax = h_scorechan_emg;
         
     end
 end
@@ -3559,12 +3647,15 @@ end
 delete(findobj(h,'tag', 'grid'));
 
 if strcmp(cfg.drawgrid,'yes')
+    %hold all
+    h_curr_gridline = [];
     for iSec = 1:numel(cfg.drawgrid_seconds)
         for iSecLine = tim(1):cfg.drawgrid_seconds(iSec):tim(end)
             h_curr_gridline = ft_plot_line([iSecLine iSecLine], [-1 1], 'tag', 'grid', 'Color', cfg.drawgrid_colors{iSec}, 'linestyle',cfg.drawgrid_LineStyle{iSec}, ...
-                'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
+                'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1],'axis',h_curr_gridline);
         end
     end
+   % hold off
 end
 
 
@@ -4050,8 +4141,17 @@ end
 if isfield(opt,'marks')
     redraw_marks_cb(h)
 end
+
+%hold off;
+
 % possibly adds some responsiveness if the 'thing' is clogged
 drawnow
+%drawnow expose
+%drawnow update
+%drawnow expose update
+
+
+
 
 hax = get(h, 'CurrentAxes');
 opt.xlim_init = get(hax, 'xlim');
@@ -4160,8 +4260,8 @@ if strcmp(opt.markingstatus,'on')
                 tim_2 =     opt.hlim(1) + ( ( (click_x - xlim_h(1)) / range(xlim_h) ) * range(opt.hlim) );
                 pos_1 =     opt.curr_first_click_x;
                 pos_2 =     click_x;
-                ind_1 =     max(1,fix( ( (opt.curr_first_click_x - xlim_h(1)) / range(xlim_h) ) * temp_epochLengthSamples ));
-                ind_2 =     min(temp_epochLengthSamples,fix( ( (click_x - xlim_h(1)) / range(xlim_h) ) * temp_epochLengthSamples ));
+                ind_1 =     max(1, min(temp_epochLengthSamples,round( ((opt.curr_first_click_x - xlim_h(1)) / range(xlim_h) ) * temp_epochLengthSamples )));
+                ind_2 =     max(1, min(temp_epochLengthSamples,round( ((click_x - xlim_h(1))                / range(xlim_h) ) * temp_epochLengthSamples )));
                 opt.marks = [opt.marks; [tim_1 tim_2 pos_1 pos_2 ind_1 ind_2] ];
                 opt.markSecondClick = 0;
                 setappdata(h, 'opt',opt);
@@ -4210,7 +4310,11 @@ for iChanDisplayed = temp_channel_number_in_curr_display;
     for iMark = 1:size(opt.marks,1)
         ind_1 = opt.marks(iMark,5);
         ind_2 = opt.marks(iMark,6);
-        mark_display_ind(ind_1:ind_2) = 1;
+        if ind_1 > ind_2
+            mark_display_ind(ind_2:ind_1) = 1;
+        else
+            mark_display_ind(ind_1:ind_2) = 1;
+        end
     end        
                 
     cfg.curr_displayed_detected_slowosci_perc_cumulative = num2str(100*sum(cfg.curr_displayed_detected_slowosci_perc_display_ind | mark_display_ind)/temp_epochLengthSamples,3);
@@ -4776,4 +4880,89 @@ for iRow = 1:size(hypn,1)
     fprintf(hyp_export, ['%i' delimiter '%i\n'], hypn(iRow,:));
 end
 fclose(hyp_export);
+end
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % SUBFUNCTION
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function writeArtifactFile(filepath,opt,delimiter)
+art_export = fopen(filepath, 'wt');
+fprintf(art_export, ['%s' delimiter '%s' delimiter '%s\n'], 'artifact', 'begin_seconds', 'end_seconds');
+temp_cfg = [];
+for i=1:length(opt.artdata.label)
+    temp_cfg.artfctdef.(opt.artdata.label{i}).artifact = convert_event(opt.artdata.trial{1}(i,:), 'artifact');
+end
+artTypes = fieldnames(temp_cfg.artfctdef);
+for iArtType = 1:numel(artTypes)
+    artType = artTypes{iArtType};
+    
+    artifactSamples = temp_cfg.artfctdef.(artType).artifact;
+    for iArt = 1:size(artifactSamples,1)
+        beginsample = artifactSamples(iArt,1);
+        endsample = artifactSamples(iArt,2);
+    fprintf(art_export, ['%s' delimiter '%f' delimiter '%f\n'], artType, beginsample/opt.fsample, endsample/opt.fsample);
+    end
+end
+fclose(art_export);
+end
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % SUBFUNCTION
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [opt, cfg] = readArtifactFile(filepath,opt,cfg,delimiter)
+
+af = dataset('File',[filepath],'Delimiter',delimiter);
+
+%unique(af.artifact)
+af.begin_seconds = round(af.begin_seconds*opt.fsample);
+af.end_seconds = round(af.end_seconds*opt.fsample);
+
+
+
+
+
+% collect the artifacts that have been detected from cfg.artfctdef.xxx.artifact
+artlabel = unique(af.artifact);
+sel      = zeros(size(artlabel));
+artifact = cell(size(artlabel));
+
+for i=1:length(artlabel)
+    temp_idx = strcmp(artlabel(i),af.artifact);
+    artifact{i} = [af.begin_seconds(temp_idx) af.end_seconds(temp_idx)];
+    fprintf('detected %3d %s artifacts\n', size(artifact{i}, 1), artlabel{i});
+end
+
+cfg.selectfeature = artlabel(1);
+opt.ftsel       = find(strcmp(artlabel,cfg.selectfeature)); % current artifact/feature being selected
+
+if length(artlabel) > 9
+    error(['only up to 9 artifacts groups supported, but ' num2str(length(artlabel)) ' found'])
+end
+
+% make artdata representing all artifacts in a "raw data" format
+datendsample = max(opt.trlorg(:,2));
+
+artdata = [];
+artdata.trial{1}       = convert_event(artifact, 'boolvec', 'endsample', datendsample); % every artifact is a "channel"
+artdata.time{1}        = offset2time(0, opt.fsample, datendsample);
+artdata.label          = artlabel;
+artdata.fsample        = opt.fsample;
+artdata.cfg.trl        = [1 datendsample 0];
+
+
+% % legend artifacts/features
+% for iArt = 1:length(artlabel)
+%     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', artlabel{iArt}, 'userdata', num2str(iArt), 'position', [0.91, 0.9 - ((iArt-1)*0.09), 0.08, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
+%     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.91, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
+%     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.96, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
+%     uicontrol('tag', 'artifactui_button', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', ['artifact(' opt.artdata.label{opt.ftsel} ')'], 'userdata', 'a', 'position', [0.01, temp_lower_line_y2 - ((iArt-1)*0.09), 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
+%     uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.01, temp_lower_line_y - ((iArt-1)*0.09), 0.02, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
+%     uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.03, temp_lower_line_y - ((iArt-1)*0.09), 0.02, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
+%     
+% end
+
+
+
+opt.artdata = artdata;
+
 end
