@@ -292,7 +292,10 @@ elseif needdat || needevt
   end
   
   if variableFs
-    epochlength = EDF.Dur * EDF.SampleRate(EDF.chansel(1));   % in samples for the selected channel
+    % FW begin
+    %epochlength = EDF.Dur * EDF.SampleRate(EDF.chansel(1));   % in samples for the selected channel
+    epochlength = EDF.Dur * EDF.SampleRate(chanindx(1));   % in samples for the selected channel
+    % FW end
     blocksize   = sum(EDF.Dur * EDF.SampleRate);              % in samples for all channels
     chanoffset  = EDF.Dur * EDF.SampleRate;
     chanoffset  = cumsum([0; chanoffset(1:end-1)]);
