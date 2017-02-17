@@ -371,10 +371,17 @@ end
 % SUBFUNCTION for reading the 16 bit values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function buf = readLowLevel(filename, offset, numwords)
-if offset < 2*1024^2
+is_below_2GB = offset < 2*1024^2;
+read_16bit_success = true;
+if is_below_2GB
   % use the external mex file, only works for <2GB
+  try
   buf = read_16bit(filename, offset, numwords);
-else
+  catch e
+      read_16bit_success = false;
+  end
+end
+if ~is_below_2GB || ~read_16bit_success
   % use plain matlab, thanks to Philip van der Broek
   fp = fopen(filename,'r','ieee-le');
   status = fseek(fp, offset, 'bof');
