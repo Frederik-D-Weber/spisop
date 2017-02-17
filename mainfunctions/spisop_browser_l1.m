@@ -1463,9 +1463,12 @@ for conseciData = conseciDatas
     cfg_datbrow = [];
     cfg_datbrow.viewmode  = 'vertical';%'butterfly', 'vertical', 'component' for visualizing components e.g. from an ICA (default is 'butterfly')
     cfg_datbrow.blocksize = epochLength;
-    %cfg_datbrow.artfctdef.markartifact.artifact = [300 400; 600 900];
-    %cfg_datbrow.selectfeature = {'markartifact'};
-    %cfg_datbrow.selectmode = 'markartifact';
+    %cfg_datbrow.artfctdef.EEG.artifact = [300 400; 600 900];
+    %cfg_datbrow.artfctdef.EMG.artifact = [200 500; 600 950];
+    cfg_datbrow.artfctdef.EEG.artifact = [];
+    cfg_datbrow.artfctdef.EMG.artifact = [];
+    cfg_datbrow.selectfeature = 'EEG';
+    cfg_datbrow.selectmode = 'markartifact';
     
     cfg_datbrow.channel = 1:length(data.label);
     cfg_datbrow.chanscale = ones(1,length(data.label));
@@ -1677,9 +1680,12 @@ for conseciData = conseciDatas
     end
     
     
+    cfg_datbrow.hyp_fample = 1;
+    cfg_datbrow.hyp_epochLengthSamples = cfg_datbrow.hyp_fample*epochLength;
+    
     if strcmp(ReadInHypnogram,'yes') || strcmp(DoSleepScoring,'yes')
         plot_MA_offset = -5.5;
-        [hypn_plot_interpol hypn_plot_interpol_MA] = interpolate_hypn_for_plot(hypn,epochLengthSamples,plot_MA_offset);
+        [hypn_plot_interpol hypn_plot_interpol_MA] = interpolate_hypn_for_plot(hypn,cfg_datbrow.hyp_epochLengthSamples,plot_MA_offset);
         
         if (signalOffsetSamples ~= 0)
             signalOffsetSamples_downsampled = floor(signalOffsetSeconds*data.fsample);
