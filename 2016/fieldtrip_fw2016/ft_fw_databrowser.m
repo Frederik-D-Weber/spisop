@@ -762,6 +762,8 @@ if strcmp(cfg.doSleepScoring,'yes')
     
     cfg.artifact_export_delimiter = ',';
     
+    cfg.toggle_epoch_marker = 0;
+    
 end
 
 setappdata(h, 'opt', opt);
@@ -1230,6 +1232,7 @@ helptext = [ ...
 '  F: Time-frequency plot of the current EEG scoring channel \n'...
 '  X: Hide/Display menue bar \n'...
 '  T: Select epoch to jump to (dialog) \n'...
+'  Shift + T and Ctrl + T: toggle and un-toggle epoch start-marker\n'...
 '  L: Set Thresholds (dialog) \n'...
 '  Shift + H: Shortcut help \n'...
 ' Scoring aids:\n'...
@@ -1695,14 +1698,31 @@ switch key
             [stagestring h1_str h2_str] = getStageStringByHypnValue(h1,h2);
             opt.curr_stage = stagestring;
             
-            cfg.hypn(curr_epoch,:) = [h1 h2];
+            if (cfg.toggle_epoch_marker ~= 0) && (cfg.toggle_epoch_marker <= curr_epoch)
+                for iTempEpoch = cfg.toggle_epoch_marker:curr_epoch
+                    cfg.hypn(iTempEpoch,:) = [h1 h2];
+                    
+                    hyp_begsample = cfg.hyp_epochLengthSamples*(cfg.toggle_epoch_marker-1)+1; % opt.trlvis(opt.trlop,1);
+            
+                end
+                temp_hyp_part = cfg.hypn(cfg.toggle_epoch_marker:curr_epoch,:);
+            else
+                    hyp_begsample = cfg.hyp_epochLengthSamples*(curr_epoch-1)+1; % opt.trlvis(opt.trlop,1);
+                    temp_hyp_part = [h1 h2];
+                    cfg.hypn(curr_epoch,:) = temp_hyp_part;
+
+            end
             
             
             
-            hyp_begsample = cfg.hyp_epochLengthSamples*(curr_epoch-1)+1; % opt.trlvis(opt.trlop,1);
+
+            hyp_begsample_this_epoch = cfg.hyp_epochLengthSamples*(curr_epoch-1)+1; % opt.trlvis(opt.trlop,1);
             hyp_endsample = cfg.hyp_epochLengthSamples*(curr_epoch);% opt.trlvis(opt.trlop,2);
-            [curr_ep_hypn_plot_interpol curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot([h1 h2],length(hyp_begsample:hyp_endsample),cfg.plot_MA_offset);
+            [curr_ep_hypn_plot_interpol curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot(temp_hyp_part,length(hyp_begsample_this_epoch:hyp_endsample),cfg.plot_MA_offset);
             
+            cfg.toggle_epoch_marker = 0;
+
+        
             cfg.hypn_plot_interpol(hyp_begsample:hyp_endsample) = curr_ep_hypn_plot_interpol;
             cfg.hypn_plot_interpol_MA(hyp_begsample:hyp_endsample) = curr_ep_hypn_plot_interpol_MA;
             
@@ -2008,6 +2028,24 @@ switch key
             end
             cfg.curr_displayed_marking = -1;
             setappdata(h, 'opt', opt);
+            setappdata(h, 'cfg', cfg);
+            redraw_cb(h, eventdata);
+        end
+        
+    case 'shift+t'
+        if strcmp(cfg.doSleepScoring,'yes')
+            curr_epoch = opt.trlop;
+            if (curr_epoch >= cfg.toggle_epoch_marker)
+                cfg.toggle_epoch_marker = curr_epoch;
+            else
+                cfg.toggle_epoch_marker = 0;
+            end
+            setappdata(h, 'cfg', cfg);
+            redraw_cb(h, eventdata);
+        end
+    case 'control+t'
+        if strcmp(cfg.doSleepScoring,'yes')
+            cfg.toggle_epoch_marker = 0;
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
         end
@@ -2706,7 +2744,16 @@ if isfield(cfg,'plotHyp')
     pos_now = patch(x_pos,y_pos,[0.5 0.25 1],'parent',axh);
     set(pos_now,'FaceAlpha',0.4);
     set(pos_now,'EdgeColor','none');
-    line([x_pos_begin x_pos_begin],[cfg.plot_MA_offset temp_max_y],'color',[0.25 0.125 1],'parent',axh);
+    
+    if cfg.toggle_epoch_marker
+        x_pos_begin_toggle_epoch_marker = cfg.hyp_x_time(cfg.hyp_epochLengthSamples*(cfg.toggle_epoch_marker-1)+1); % opt.trlvis(opt.trlop,1);
+        line([x_pos_begin_toggle_epoch_marker x_pos_begin_toggle_epoch_marker],[cfg.plot_MA_offset temp_max_y],'color',[0.25 1 0.125],'LineWidth',2,'parent',axh);
+    end
+    
+    line([x_pos_begin x_pos_begin],[cfg.plot_MA_offset temp_max_y],'color',[0.25 0.125 1],'LineWidth',2,'parent',axh);
+    
+    
+    
     set(cfg.hhyp, 'Name', sprintf('Hypnogram datasetnum %d',cfg.datasetnum));
     set(axh, 'box', 'off');
     
@@ -3824,6 +3871,15 @@ for ievent = 1:numel(event)
 end
 
 
+delete(findobj(h,'tag', 'toggle_marker'));
+
+if strcmp(cfg.doSleepScoring,'yes')
+ if cfg.toggle_epoch_marker == opt.trlop
+   h_top = ft_plot_line([tim(1) tim(end)],[1 1], 'color', [0.25 1 0.125] , 'linewidth', 8, 'tag', 'toggle_marker',  ...
+            'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.width, 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', [-1 1]);
+ end
+end
+
 delete(findobj(h,'tag', 'title_time'));
 
 startim = tim(1);
@@ -3838,6 +3894,7 @@ if ~strcmp(opt.trialviewtype,'trialsegment')
 else
     str = sprintf('trial %d/%d: epoch: %d/%d , time from %g to %g min', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim/60, endtim/60);
 end
+
 
 %title(str,'interpreter','none');
 temp_ylim = get(gca, 'ylim');
@@ -4145,8 +4202,8 @@ end
 %hold off;
 
 % possibly adds some responsiveness if the 'thing' is clogged
-drawnow
-%drawnow expose
+%drawnow
+drawnow expose
 %drawnow update
 %drawnow expose update
 
