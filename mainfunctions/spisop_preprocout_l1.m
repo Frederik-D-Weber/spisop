@@ -19,9 +19,6 @@ if ~strcmp(IgnoreDataSetHeader,'yes')
         error(['DataSetHeaderPathsFileName file ' [pathInputFolder filesep DataSetHeaderPathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
     end
 end
-if exist([pathInputFolder filesep HypnogramsFileName],'file') ~= 2
-    error(['HypnogramsFileName file ' [pathInputFolder filesep HypnogramsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
-end
 
 if exist([pathInputFolder filesep ChannelsOfInterestFileName],'file') ~= 2
     error(['ChannelsOfInterestFileName file ' [pathInputFolder filesep ChannelsOfInterestFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
@@ -32,6 +29,11 @@ PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff = str2num(getParam('PreDownS
 
 
 DoEpochData = getParam('DoEpochData',listOfParameters);%If the data should be epoched like given in hypnograms and sleep stages of interest
+if strcmp(DoEpochData,'yes')
+    if exist([pathInputFolder filesep HypnogramsFileName],'file') ~= 2
+        error(['HypnogramsFileName file ' [pathInputFolder filesep HypnogramsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+    end
+end
 DefaultOutputUnit = getParam('DefaultOutputUnit',listOfParameters);
 OutputDataformat = getParam('OutputDataformat',listOfParameters);
 IncludePostiveMarkerAtBeginning = getParam('IncludePostiveMarkerAtBeginning',listOfParameters);
