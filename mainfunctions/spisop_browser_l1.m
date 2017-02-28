@@ -1672,7 +1672,8 @@ for conseciData = conseciDatas
         if strcmp(DoSleepScoring,'yes')
             if size(hypn,1) < nEpochs
                 missingEpochs = nEpochs - size(hypn,1);
-                hypn(end+1:end+missingEpochs,:) = [ones(1,missingEpochs,1)*-1 zeros(0,missingEpochs,1)];
+                %hypn(end+1:end+missingEpochs,:) = [ones(1,missingEpochs,1)*-1 zeros(0,missingEpochs,1)];
+                hypn = [hypn ; [ones(missingEpochs,1,1)*-1 zeros(missingEpochs,1,1)]];
             end
         end
     elseif strcmp(DoSleepScoring,'yes')
