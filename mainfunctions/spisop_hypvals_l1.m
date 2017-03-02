@@ -19,6 +19,23 @@ end
 catch e
 end
 
+
+GoBySamplingRateOfData = 'yes';
+try
+GoBySamplingRateOfData = getParam('GoBySamplingRateOfData',listOfParameters);
+
+if ~(strcmp(GoBySamplingRateOfData,'yes') || strcmp(GoBySamplingRateOfData,'no'))
+        error(['GoBySamplingRateOfData parameter must either be yes or no, given was ' GoBySamplingRateOfData ''])
+end
+
+if (strcmp(GoBySamplingRateOfData,'no')) && ~(strcmp(LightsOffsMomentUnit,'second'))
+    error(['When GoBySamplingRateOfData is no then LightsOffsMomentUnit must be set to seconds! \nPlease change the settings and the check if the respective LighsOffs file give the lights off moment in seconds'])
+end
+
+catch e
+end
+
+
 if exist([pathInputFolder filesep DataSetPathsFileName],'file') ~= 2
     error(['DataSetPathsFileName file ' [pathInputFolder filesep DataSetPathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
 end
@@ -42,8 +59,12 @@ DataSetsWhich = getParam('DataSetsWhich',listOfParameters);%Datasets to be proce
 DataSetsNumbers = str2num(getParam('DataSetsNumbers',listOfParameters));%The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset
 
 
+
 listOfDatasetsPaths = read_mixed_csv([pathInputFolder filesep DataSetPathsFileName],',');
-listOfDatasetHeaderPaths = [];
+
+iDatas = 1:(length(listOfDatasetsPaths));
+
+listOfDatasetHeaderPaths = zeros(size(iDatas));
 if strcmp(IgnoreDataSetHeader,'no')
     listOfDatasetHeaderPaths = read_mixed_csv([pathInputFolder filesep DataSetHeaderPathsFileName],',');
     if ~(all(size(listOfDatasetsPaths) == size(listOfDatasetHeaderPaths)))
@@ -74,7 +95,7 @@ if ~(all(size(listOfDatasetsPaths) == size(listOfHypnogramPaths)) && (size(listO
     error('files or number of Datasetspaths and Hypnogramsfiles and LightsOffs are invalid or do not aggree')
 end
 
-iDatas = 1:(length(listOfDatasetsPaths));
+%iDatas = 1:(length(listOfDatasetsPaths));
 
 if strcmp(DataSetsWhich,'subset')
     if ~(ismember(min(DataSetsNumbers),iDatas) && ismember(max(DataSetsNumbers),iDatas))
@@ -179,38 +200,39 @@ tic
 memtic
 fprintf('HypVals function initialized\n');
 parfor iData = iDatas
-    %iData = 11
+    %iData = 11; iData = iDatas(end)
     
     datasetsPath = listOfDatasetsPaths{iData};
     hypnogramPath = listOfHypnogramPaths{iData};
     
     lightsOffMoment = listOfLightsOffs(iData);
    
-    
-    hdr = [];
-    preDownsampleFreq = 0;
-    if strcmp(IgnoreDataSetHeader,'no')
-        headerPath = listOfDatasetHeaderPaths{iData};
-        hdr = ft_read_header(headerPath);
-        preDownsampleFreq = hdr.Fs;
-    elseif strcmp(IgnoreDataSetHeader,'yes')
-        cfg = [];
-        cfg.roiBegins = [1];
-        cfg.roiEnds = [100];
-        cfg.trialfun = 'trialfun_spd_ROIs'; %The cfg.trialfun option is a string containing the name of a function that you wrote yourself and that ft_definetrial will call.
-        cfg.feedback = core_cfg.feedback;
-        cfg = ft_definetrial(cfg);
-        cfg.continuous = 'yes'; %overwrite the trial uncontinuous data structure
-        cfg.dataset = datasetsPath;
-        cfg.channel = 1;
-        cfg.feedback = core_cfg.feedback;
-        tempdata = ft_preprocessing(cfg);
-        preDownsampleFreq = tempdata.fsample;
-        tempdata = [];
-    else
-        error('wrong parameter for IgnoreDataSetHeader either yes or no');
+    preDownsampleFreq = 1;
+    if strcmp(GoBySamplingRateOfData,'yes')
+        hdr = [];
+        preDownsampleFreq = 0;
+        if strcmp(IgnoreDataSetHeader,'no')
+            headerPath = listOfDatasetHeaderPaths{iData};
+            hdr = ft_read_header(headerPath);
+            preDownsampleFreq = hdr.Fs;
+        elseif strcmp(IgnoreDataSetHeader,'yes')
+            cfg = [];
+            cfg.roiBegins = [1];
+            cfg.roiEnds = [100];
+            cfg.trialfun = 'trialfun_spd_ROIs'; %The cfg.trialfun option is a string containing the name of a function that you wrote yourself and that ft_definetrial will call.
+            cfg.feedback = core_cfg.feedback;
+            cfg = ft_definetrial(cfg);
+            cfg.continuous = 'yes'; %overwrite the trial uncontinuous data structure
+            cfg.dataset = datasetsPath;
+            cfg.channel = 1;
+            cfg.feedback = core_cfg.feedback;
+            tempdata = ft_preprocessing(cfg);
+            preDownsampleFreq = tempdata.fsample;
+            tempdata = [];
+        else
+            error('wrong parameter for IgnoreDataSetHeader either yes or no');
+        end
     end
-    
     fprintf('dataset %i: process ROI from hypnogram info\n',iData);
     
     
