@@ -169,6 +169,9 @@ MovementTime_WithoutMA = cell(1,numel(iDatas));
 SWStime_WithoutMA = cell(1,numel(iDatas));
 NonREMtime_WithoutMA = cell(1,numel(iDatas));
 
+LongestWakeTimePeriodAfterSleepOnset = cell(1,numel(iDatas));
+LongestWakeTimePeriodAfterSleepOnset_after_so = cell(1,numel(iDatas));
+
 
 totalSleepTime_export = cell(1,numel(iDatas));
 
@@ -193,6 +196,8 @@ MovementTime_WithoutMA_export = cell(1,numel(iDatas));
 SWStime_WithoutMA_export = cell(1,numel(iDatas));
 NonREMtime_WithoutMA_export = cell(1,numel(iDatas));
 
+LongestWakeTimePeriodAfterSleepOnset_export = cell(1,numel(iDatas));
+LongestWakeTimePeriodAfterSleepOnset_after_so_export = cell(1,numel(iDatas));
 
 
 
@@ -371,6 +376,16 @@ parfor iData = iDatas
     SWStime_WithoutMA{iData} = S3Time_WithoutMA{iData} + S4Time_WithoutMA{iData};
     NonREMtime_WithoutMA{iData} = SWStime_WithoutMA{iData} + S2Time_WithoutMA{iData};
     
+    hypnStagesTST_wake_index = find(strcmp(hypnStagesTST(:,1),'Wake'));
+    if ~isempty(hypnStagesTST_wake_index)
+        [hypnStagesTST_wake_index_begins, hypnStagesTST_wake_index_ends] = consecutiveBeginsAndEnds(hypnStagesTST_wake_index,1);
+        hypnStagesTST_wake_consec_epoch_duration = hypnStagesTST_wake_index_ends - hypnStagesTST_wake_index_begins + 1;
+        LongestWakeTimePeriodAfterSleepOnset{iData} = max(hypnStagesTST_wake_consec_epoch_duration)*epochLength;
+        LongestWakeTimePeriodAfterSleepOnset_after_so{iData} = hypnStagesTST_wake_index_begins(find(hypnStagesTST_wake_consec_epoch_duration == max(hypnStagesTST_wake_consec_epoch_duration),1,'first'))*epochLength;
+    else
+        LongestWakeTimePeriodAfterSleepOnset{iData} = 0;
+        LongestWakeTimePeriodAfterSleepOnset_after_so{iData} = NaN;
+    end
     
     if strcmp(ExportHypnogram,'yes')
         tempExportHypnogramStart = NaN;
@@ -439,6 +454,18 @@ parfor iData = iDatas
         NonREMtime_WithoutMA_export{iData} = SWStime_WithoutMA_export{iData} + S2Time_WithoutMA_export{iData};
         
         
+        hypnStagesTST_wake_index_export = find(strcmp(tempExport_hypnStages_calc(:,1),'Wake'));
+        if ~isempty(hypnStagesTST_wake_index_export)
+            [hypnStagesTST_wake_index_begins_export, hypnStagesTST_wake_index_ends_export] = consecutiveBeginsAndEnds(hypnStagesTST_wake_index_export,1);
+            hypnStagesTST_wake_consec_epoch_duration_export = hypnStagesTST_wake_index_ends_export - hypnStagesTST_wake_index_begins_export + 1;
+            LongestWakeTimePeriodAfterSleepOnset_export{iData} = max(hypnStagesTST_wake_consec_epoch_duration_export)*epochLength;
+            LongestWakeTimePeriodAfterSleepOnset_after_so_export{iData} = hypnStagesTST_wake_index_begins_export(find(hypnStagesTST_wake_consec_epoch_duration_export == max(hypnStagesTST_wake_consec_epoch_duration_export),1,'first'))*epochLength;
+        else
+            LongestWakeTimePeriodAfterSleepOnset_export{iData} = 0;
+            LongestWakeTimePeriodAfterSleepOnset_after_so_export{iData} = NaN;
+        end
+        
+        
     end
     
     
@@ -459,10 +486,10 @@ end
 %write header of ouptufiles
 
 
-headerOrderSting = '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n';
+headerOrderSting = '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n';
 
 if strcmp(ExportHypnogram,'yes')
-    headerOrderSting = '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s';
+    headerOrderSting = '%s,%s,%s,%s;%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s';
 end
 
 fprintf(fidh,headerOrderSting,'datasetnum','dataset','hypnogram','epoch_length_seconds','Total_sleep_time_min','Sleep_Onset_min','S1_onset_min','S2_onset_min','SWS_onset_min','S4_onset_min','REM_onset_min'...
@@ -470,7 +497,8 @@ fprintf(fidh,headerOrderSting,'datasetnum','dataset','hypnogram','epoch_length_s
     ,'S1_percent','S2_percent','S3_percent','S4_percent','REM_percent','Wake_after_sleep_onset_percent','Movement_Time_percent','SWS_percent','NonREM_without_S1_percent'...
     ,'S1_without_MA_min','S2_without_MA_min','S3_without_MA_min','S4_without_MA_min','REM_without_MA_min','Wake_after_sleep_onset_without_MA_min','Movement_Time_without_MA_min','SWS_without_MA_min','NonREM_without_S1_without_MA_min'...
     ,'S1_without_MA_percent','S2_without_MA_percent','S3_without_MA_percent','S4_without_MA_percent','REM_without_MA_percent','Wake_after_sleep_onset_without_MA_percent','Movement_Time_without_MA_percent','SWS_without_MA_percent','NonREM_without_S1_without_MA_percent'...
-    ,'S1_before_sleep_onset_min','S2_before_sleep_onset_min','S3_before_sleep_onset_min','S4_before_sleep_onset_min','REM_before_sleep_onset_min','Wake_before_sleep_onset_min','Movement_before_sleep_onset_Time_min','SWS_before_sleep_onset_min','NonREM_before_sleep_onset_without_S1_min');
+    ,'S1_before_sleep_onset_min','S2_before_sleep_onset_min','S3_before_sleep_onset_min','S4_before_sleep_onset_min','REM_before_sleep_onset_min','Wake_before_sleep_onset_min','Movement_before_sleep_onset_Time_min','SWS_before_sleep_onset_min','NonREM_before_sleep_onset_without_S1_min'...
+    ,'longest_WASO_period_min','longest_WASO_period_after_latency_after_so_min');
 
 
 if strcmp(ExportHypnogram,'yes')
@@ -478,12 +506,14 @@ if strcmp(ExportHypnogram,'yes')
     ',%s,%s,%s,%s,%s,%s,%s,%s,%s'...
     ',%s,%s,%s,%s,%s,%s,%s,%s,%s'...
     ',%s,%s,%s,%s,%s,%s,%s,%s,%s'...
-    ',%s,%s,%s,%s,%s,%s,%s,%s,%s' '\n'],...
+    ',%s,%s,%s,%s,%s,%s,%s,%s,%s'...
+    ',%s,%s' '\n'],...
         'exported_Total_sleep_time_min'...
         ,'exported_S1_min','exported_S2_min','exported_S3_min','exported_S4_min','exported_REM_min','exported_Wake_after_sleep_onset_min','exported_Movement_Time_min','exported_SWS_min','exported_NonREM_without_S1_min'...
         ,'exported_S1_percent','exported_S2_percent','exported_S3_percent','exported_S4_percent','exported_REM_percent','exported_Wake_after_sleep_onset_percent','exported_Movement_Time_percent','exported_SWS_percent','exported_NonREM_without_S1_percent'...
         ,'exported_S1_without_MA_min','exported_S2_without_MA_min','exported_S3_without_MA_min','exported_S4_without_MA_min','exported_REM_without_MA_min','exported_Wake_after_sleep_onset_without_MA_min','exported_Movement_Time_without_MA_min','exported_SWS_without_MA_min','exported_NonREM_without_S1_without_MA_min'...
-        ,'exported_S1_without_MA_percent','exported_S2_without_MA_percent','exported_S3_without_MA_percent','exported_S4_without_MA_percent','exported_REM_without_MA_percent','exported_Wake_after_sleep_onset_without_MA_percent','exported_Movement_Time_without_MA_percent','exported_SWS_without_MA_percent','exported_NonREM_without_S1_without_MA_percent');
+        ,'exported_S1_without_MA_percent','exported_S2_without_MA_percent','exported_S3_without_MA_percent','exported_S4_without_MA_percent','exported_REM_without_MA_percent','exported_Wake_after_sleep_onset_without_MA_percent','exported_Movement_Time_without_MA_percent','exported_SWS_without_MA_percent','exported_NonREM_without_S1_without_MA_percent'...
+        ,'exported_longest_WASO_period_min','exported_longest_WASO_period_after_latency_after_so_min');
 end
 
 
@@ -552,11 +582,17 @@ for iData = iDatas
     fprintf(fidh,'%f,',WakeTimePreOnset{iData}/60);
     fprintf(fidh,'%f,',MovementTimePreOnset{iData}/60);
     fprintf(fidh,'%f,',SWStimePreOnset{iData}/60);
+    fprintf(fidh,'%f,',NonREMtimePreOnset{iData}/60);
+
+    
+    fprintf(fidh,'%f,',LongestWakeTimePeriodAfterSleepOnset{iData}/60);
+
+    
     if ~strcmp(ExportHypnogram,'yes')
-        fprintf(fidh,'%f\n',NonREMtimePreOnset{iData}/60);
-        
+        fprintf(fidh,'%f\n',LongestWakeTimePeriodAfterSleepOnset_after_so{iData}/60);
+
     else
-        fprintf(fidh,'%f,',NonREMtimePreOnset{iData}/60);
+        fprintf(fidh,'%f,',LongestWakeTimePeriodAfterSleepOnset_after_so{iData}/60);
         
         
         fprintf(fidh,'%f,',totalSleepTime_export{iData}/60);
@@ -597,8 +633,11 @@ for iData = iDatas
         fprintf(fidh,'%f,',100*WakeTime_WithoutMA_export{iData}/totalSleepTime_export{iData});
         fprintf(fidh,'%f,',100*MovementTime_WithoutMA_export{iData}/totalSleepTime_export{iData});
         fprintf(fidh,'%f,',100*SWStime_WithoutMA_export{iData}/totalSleepTime_export{iData});
-        fprintf(fidh,'%f\n',100*NonREMtime_WithoutMA_export{iData}/totalSleepTime_export{iData});
+        fprintf(fidh,'%f,',100*NonREMtime_WithoutMA_export{iData}/totalSleepTime_export{iData});
         
+        fprintf(fidh,'%f,',LongestWakeTimePeriodAfterSleepOnset_export{iData}/60);
+        fprintf(fidh,'%f\n',LongestWakeTimePeriodAfterSleepOnset_after_so_export{iData}/60);
+
     end
     
 end
