@@ -12,19 +12,20 @@ DataSetsWhich,all,Datasets to be processed either all or subset if subset then D
 DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset
 DoEpochData,no,If the data should be epoched like given in hypnograms and sleep stages of interest either yes or no default no
 DefaultOutputUnit,uV,the unit of export usually the same as the input unless multiplicated with factors. it is ignored when header info is available
-OutputDataformat,brainvision_eeg_int16, the output data format either edf or gdf or brainvision_eeg_int16 brainvision_eeg_int32 brainvision_eeg_float32 or neuralynx_ncs (only single channel) or neuralynx_sdma or plexon_nex (only single channel) or riff_wave or fcdc_matbin or fcdc_mysql or fcdc_buffer or matlab or edf_autoscale or edf_0.1uV_Ycutoff or edf_0.01uV or_Ycutoff or edf_1uV_Ycutoff default brainvision_eeg_int16
+OutputDataformat,brainvision_eeg_int16, the output data format either edf or gdf or brainvision_eeg_int16 brainvision_eeg_int32 brainvision_eeg_float32 or neuralynx_ncs (only single channel) or neuralynx_sdma or plexon_nex (only single channel) or riff_wave or fcdc_matbin or fcdc_mysql or fcdc_buffer or matlab or edf_autoscale or edf_0.1uV_Ycuttoff or edf_0.01uV_Ycuttoff or edf_1uV_Ycuttoff default brainvision_eeg_int16
 IncludePostiveMarkerAtBeginning,yes, uses the first 402 samples to indicate a positive potential triangle of potential of 100 units either yes or no default yes
 ApplyFilterSettings,no,either yes or no default no
 FiltersSettingsDefinitionsFileName,FiltersSettingsDefinitions_sleep_scoring_simple_lindev.txt,Filename of file containing paths to filter definitions
 DoWriteData,no,either yes or no default no
 ApplyScalingSettings,no,either yes or no default no
 ScalingSettingsDefinitionsFileName,ScalingSettingsDefinitions_lindev.txt,Filename of file containing paths to channel scaling definitions
+TraceBackgroundColor,white,color of the background the traces are drawn in. either white or black default white
 ## ADVANCED,,
 ApplyEventmappingSettings,no,either yes or no default no
 EventmappingSettingsDefinitionsFileName,EventmappingSettingsDefinitions_lindev.txt,Filename of file containing paths to event channel mapping definitions
-ApplyEventsSelection,yes,either yes or no default no
-ApplyEventsSelection2,yes,either yes or no default no
-EventsTarget1FilePathsFileName,EventsFilePaths_Spindles_short.txt,Filename of file containing target events file paths in comma separated values format per line ( at least one )
+ApplyEventsSelection,no,either yes or no default no
+ApplyEventsSelection2,no,either yes or no default no
+EventsTarget1FilePathsFileName,EventsFilePaths_SO_lindev.txt,Filename of file containing target events file paths in comma separated values format per line ( at least one )
 EventsTarget1TimePointColumn,seconds_begin,variable name for event value in target events files
 EventTarget1TimeWindowOffsetTime,0,time point offset of the time window test events can fall into with respect to target events time points in units used for EventsTarget1CompareColumns default 0
 EventsTarget1CompareColumns,datasetnum channel,variable names for columns used for matching target against events columns in test events files separated by a space character
@@ -37,7 +38,7 @@ EventsFilesWhich,all,Event files to be processed either all or subset if subset 
 EventsFilesNumbers,1 2,The line numbers of the events file to be processed if EventsFilesWhich parameter is set to subset
 EventsTarget1FilterForColumn,,variable name for event value in test events files to apply text filter to if nothing is entered it is not filtered e.g. channel default is no value entered
 EventsTarget1FilterValues,,variable values for EventsTarget1FilterForColum in test events files to apply text filter e.g. Cz
-EventsTarget2FilePathsFileName,EventsFilePaths_Theta_short.txt,Filename of file containing target events file paths in comma separated values format per line ( at least one )
+EventsTarget2FilePathsFileName,EventsFilePaths_Spindles_lindev.txt,Filename of file containing target events file paths in comma separated values format per line ( at least one )
 EventsTarget2TimePointColumn,seconds_begin,variable name for event value in target events files
 EventTarget2TimeWindowOffsetTime,0,time point offset of the time window test events can fall into with respect to target events time points in units used for EventsTarget2CompareColumns default 0
 EventsTarget2CompareColumns,datasetnum channel,variable names for columns used for matching target against events columns in test events files separated by a space character
@@ -50,3 +51,4 @@ EventsFilesWhich2,all,Event files to be processed either all or subset if subset
 EventsFilesNumbers2,1 2,The line numbers of the events file to be processed if EventsFilesWhich parameter is set to subset
 EventsTarget2FilterForColumn,,variable name for event value in test events files to apply text filter to if nothing is entered it is not filtered e.g. channel default is no value entered
 EventsTarget2FilterValues,,variable values for EventsTarget2FilterForColum in test events files to apply text filter e.g. Cz
+DefaultFigureRenderer,OpenGL,determines the Renderer that is used for crating the figures and images. Zbuffer and OpenGL are the fastest but Painters is good for export of figures. default OpenGL

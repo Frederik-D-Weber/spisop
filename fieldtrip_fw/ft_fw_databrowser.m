@@ -1,8 +1,8 @@
 function [cfg] = ft_fw_databrowser(cfg, data)
 %TODO:refine SO detection, artifact consideration and
 %marking
-%movement artifact detection, artifact export
-%mark lights-offs, fix zoom capturing of key commands,
+%movement artifact detection,
+%mark lights-offs,
 %button for toggle automatic skipping after scoring epoch go to next even when already scored
 %export data, import data
 %DONE: Autosave on import and export of hypnogram, extention is
@@ -647,7 +647,14 @@ else
     opt.plotLabelFlag = 0;
 end
 
+
+
+
 h = figure;
+if cfg.black_background
+    whitebg(h,'k');
+    opt.chancolors = 1-opt.chancolors;
+end
 set(h,'MenuBar','none');
 axes('Parent',h,'Position',[0.035 0.09 0.965 0.91]);
 set(h,'color',[0 0 0]);
@@ -2602,7 +2609,9 @@ chanindx  = match_str(opt.hdr.label, cfg.channel);
 
 
 % FW begin
-
+if cfg.black_background
+    whitebg(h,'k');
+end
 
 if isfield(cfg,'plotHyp')
     if isfield(cfg,'hhyp') 
@@ -2622,9 +2631,14 @@ if isfield(cfg,'plotHyp')
         cfg.hhypfigax = gca;
     end
 
+    if cfg.black_background
+        whitebg(cfg.hhyp,'k');
+        set(cfg.hhyp,'color',[0 0 0]);
+    else
+        set(cfg.hhyp,'color',[1 1 1]);
+    end
     
     
-    set(cfg.hhyp,'color',[1 1 1]);
     set(cfg.hhypfigax,'Fontsize',8,'FontUnits','normalized');
     %figure(cfg.hhyp);
     %h.hhyp = getparent(cfg.hhyp);
@@ -2656,7 +2670,13 @@ if isfield(cfg,'plotHyp')
     end
     axh = cfg.hhypfigax;
     
-    plot(axh,cfg.hyp_x_time_hyp,cfg.hypn_plot_interpol,'Color',[0 0 0])
+    if cfg.black_background
+        tempcolor = [1 1 1];
+    else
+        tempcolor = [0 0 0];
+    end
+    
+    plot(axh,cfg.hyp_x_time_hyp,cfg.hypn_plot_interpol,'Color',tempcolor)
     hold(axh,'all');
     
     xlim(axh,[0 max(cfg.hyp_x_time)]);
@@ -2758,6 +2778,7 @@ if isfield(cfg,'plotHyp')
     set(axh, 'box', 'off');
     
     hold(axh,'off');
+   
 end
 
 % FW end

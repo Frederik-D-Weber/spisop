@@ -1,6 +1,22 @@
 function [res_filters] = spisop_browser_l1(pathInputFolder, pathOutputFolder, ouputFilesPrefixString, listOfCoreParameters, listOfParameters)
-% browser for data and events
+% browser for sleep data scoring and events
 % Copyright Frederik D. Weber
+
+%set(0, 'DefaultFigureRenderer', 'OpenGL');
+try
+    DefaultFigureRenderer = getParam('DefaultFigureRenderer',listOfParameters);
+    if ~(strcmp(DefaultFigureRenderer,'Painters') || strcmp(DefaultFigureRenderer,'Zbuffer') || strcmp(DefaultFigureRenderer,'OpenGL'))
+        error(['DefaultFigureRenderer parameter must either be Painters or Zbuffer or OpenGL but given was ' DefaultFigureRenderer ''])
+    end
+    set(0, 'DefaultFigureRenderer', DefaultFigureRenderer);
+catch e
+end
+
+TraceBackgroundColor = 'white';
+try
+    TraceBackgroundColor = getParam('TraceBackgroundColor',TraceBackgroundColor);
+catch e
+end
 
 
 
@@ -1735,6 +1751,9 @@ for conseciData = conseciDatas
     cfg_datbrow.ouputFilesPrefixString = ouputFilesPrefixString;
     cfg_datbrow.datasetnum = iData;
     cfg_datbrow.datasetsPath = datasetsPath;
+    
+    cfg_datbrow.black_background = strcmp(TraceBackgroundColor,'black');
+
     
     
     cfg_datbrowres = ft_fw_databrowser(cfg_datbrow, data);
