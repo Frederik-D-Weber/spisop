@@ -1003,10 +1003,10 @@ parfor conseciData = conseciDatas
             case 'brainvision_eeg_int16'
                 tempOutputDataformat = 'brainvision_eeg';
                 hdr.brainvision_outformat = 'int16';%float32 int16 int32;
-            case 'rainvision_eeg_int32'
+            case 'brainvision_eeg_int32'
                 tempOutputDataformat = 'brainvision_eeg';
                 hdr.brainvision_outformat = 'int32';%float32 int16 int32;
-            case 'rainvision_eeg_float32'
+            case 'brainvision_eeg_float32'
                 tempOutputDataformat = 'brainvision_eeg';
                 hdr.brainvision_outformat = 'float32';%float32 int16 int32;
             case 'edf_autoscale'

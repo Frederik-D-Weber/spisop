@@ -652,6 +652,12 @@ for conseciData = conseciDatas
         cfg.feedback = core_cfg.feedback;
         cfg = ft_definetrial(cfg);
         cfg.continuous = 'yes'; %overwrite the trial uncontinuous data structure
+        
+%         [temppath tempname tempending] = fileparts(datasetsPath);
+%         if strcmp(tempending,'.mat')
+%             cfg.inputfile = datasetsPath;
+%         end
+        
         cfg.dataset = datasetsPath;
         cfg.channel = 1;
         cfg.feedback = core_cfg.feedback;
@@ -724,6 +730,12 @@ for conseciData = conseciDatas
             cfg = ft_definetrial(cfg);
         end
         cfg.continuous = 'yes'; %overwrite the trial uncontinuous data structure
+        
+%         [temppath tempname tempending] = fileparts(datasetsPath);
+%         if strcmp(tempending,'.mat')
+%             cfg.inputfile = datasetsPath;
+%         end
+        
         cfg.dataset = datasetsPath;
         cfg.channel = 'all';
         %TODO
@@ -897,6 +909,10 @@ for conseciData = conseciDatas
             cfg = ft_definetrial(cfg);
         end
         cfg.continuous = 'yes'; %overwrite the trial uncontinuous data structure
+%         [temppath tempname tempending] = fileparts(datasetsPath);
+%         if strcmp(tempending,'.mat')
+%             cfg.inputfile = datasetsPath;
+%         end
         cfg.dataset = datasetsPath;
         data = ft_fw_preprocessing(cfg);
     end
@@ -1222,10 +1238,10 @@ for conseciData = conseciDatas
             case 'brainvision_eeg_int16'
                 tempOutputDataformat = 'brainvision_eeg';
                 hdr.brainvision_outformat = 'int16';%float32 int16 int32;
-            case 'rainvision_eeg_int32'
+            case 'brainvision_eeg_int32'
                 tempOutputDataformat = 'brainvision_eeg';
                 hdr.brainvision_outformat = 'int32';%float32 int16 int32;
-            case 'rainvision_eeg_float32'
+            case 'brainvision_eeg_float32'
                 tempOutputDataformat = 'brainvision_eeg';
                 hdr.brainvision_outformat = 'float32';%float32 int16 int32;
             case 'edf_autoscale'

@@ -664,6 +664,11 @@ set(gca, 'YColor', [0.5 0.5 0.5]);
 % set(b,  'YColor', [0.3 0.3 0.3], 'XTickLabel', [], 'YTickLabel', [])
 set(gca,'Fontsize',5,'FontUnits','normalized');
 
+if isfield(cfg,'begin_end_events') || isfield(cfg,'begin_end_events')
+    cfg.displayEvents = 'yes';
+else
+    cfg.displayEvents = 'no';
+end
 
 if strcmp(cfg.doSleepScoring,'yes')
     
@@ -680,11 +685,7 @@ if strcmp(cfg.doSleepScoring,'yes')
     cfg.underlaySOSignal = 'no';
 
     
-    if isfield(cfg,'begin_end_events') || isfield(cfg,'begin_end_events') 
-        cfg.displayEvents = 'yes';
-    else
-        cfg.displayEvents = 'no';
-    end
+    
     cfg.spindle_mark_color = [0 1 0];
     cfg.slowoscillation_mark_color = [1 0 0];
     cfg.underlaySpindleSignal_color = [150/255 192/255 150/255];
@@ -2450,7 +2451,7 @@ switch key
         help_cb(h);
 end
 
-
+if strcmp(cfg.doSleepScoring,'yes')
 if strcmp(cfg.markSO,'yes')
     ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'BackgroundColor',  cfg.slowoscillation_mark_color);
     ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'FontWeight', 'bold');
@@ -2562,8 +2563,10 @@ else
 end
 
 
+
 ft_uilayout(h, 'tag', 'artifactui_button', 'string', ['artifact(' opt.artdata.label{opt.ftsel} ')']);
 
+end
 uiresume(h);
 end
 
@@ -2613,6 +2616,7 @@ if cfg.black_background
     whitebg(h,'k');
 end
 
+if strcmp(cfg.doSleepScoring,'yes')
 if isfield(cfg,'plotHyp')
     if isfield(cfg,'hhyp') 
         %figure(cfg.hhyp);
@@ -2780,7 +2784,7 @@ if isfield(cfg,'plotHyp')
     hold(axh,'off');
    
 end
-
+end
 % FW end
 
 figure(h); % ensure that the calling figure is in the front
@@ -3987,6 +3991,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
                 end
             end
             
+            if strcmp(cfg.doSleepScoring,'yes')
             if laysel == find(chanindx == cfg.score_channel_eeg_number);
                 
                 if strcmp(cfg.underlaySpindleSignal,'yes')
@@ -4018,6 +4023,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
                 
                 
                 
+            end
             end
             
             %the time course of channels
@@ -4990,7 +4996,7 @@ end
 function [opt, cfg] = readArtifactFile(filepath,opt,cfg,delimiter)
 
 af = dataset('File',[filepath],'Delimiter',delimiter);
-
+if ~isempty(af)
 %unique(af.artifact)
 af.begin_seconds = round(af.begin_seconds*opt.fsample);
 af.end_seconds = round(af.end_seconds*opt.fsample);
@@ -5042,5 +5048,6 @@ artdata.cfg.trl        = [1 datendsample 0];
 
 
 opt.artdata = artdata;
+end
 
 end
