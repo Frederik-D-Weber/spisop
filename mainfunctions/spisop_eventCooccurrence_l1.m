@@ -75,7 +75,8 @@ ChunkBufferSize = getParam('ChunkBufferSize',listOfParameters);%size for buffer 
 
 GroupByConcatString = '#%#';
 
-tic
+ttic = tic;
+
 memtic
 
 fprintf('EventCooccurrence function initialized\n');
@@ -94,7 +95,7 @@ parfor conseciData = conseciDatas
     iData = iDatas(conseciData);
     %iData = 1
     
-    timeStartPar = toc;
+    timeStartPar = toc(ttic);
     
     eventsTestPath = listOfEventsTestPaths{iData};
     eventsTargetPath = listOfEventsTargetPaths{iData};
@@ -207,7 +208,7 @@ parfor conseciData = conseciDatas
         %iEvTest = 1
         
         progress_count = progress_count + 1;
-        tempTimerNow = toc;
+        tempTimerNow = toc(ttic);
         time_left_min = (nEventsTest-progress_count)*(((tempTimerNow - timeStartPar)/60)/progress_count); 
         ft_progress(progress_count/nEventsTest, ['EventTestFile ' num2str(iData) ': Processing test event %d (%d percent, matchchunk %d, mismatchchunk %d) of %d against %d targets %d:%02d min'], progress_count, fix(100*progress_count/nEventsTest), temp_overlap_collector_iterator, temp_nonoverlap_collector_iterator, nEventsTest, nEventsTarget, fix(time_left_min),fix((time_left_min-fix(time_left_min))*60) );  % show string, x=i/N
         
@@ -523,6 +524,6 @@ res_summary = full_summary;
 
 
 fprintf('EventCooccurrence function finished\n');
-toc
+toc(ttic)
 memtoc
 end

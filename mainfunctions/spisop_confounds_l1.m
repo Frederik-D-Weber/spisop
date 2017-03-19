@@ -828,16 +828,17 @@ for conseciData = conseciDatas
     fclose(fidc);
 
     T = table(hypnNew);
-    writetable(T,[pathOutputFolder filesep ouputFilesPrefixString 'confounded_hypn_full_' 'datanum_' num2str(iData) '.txt'],'Delimiter','\t','WriteVariableNames',false);
+    writetable(T,[pathOutputFolder filesep ouputFilesPrefixString 'confounds_hypn_full_' 'datanum_' num2str(iData) '.txt'],'Delimiter','\t','WriteVariableNames',false);
    
     T = table(hypnNew(:,[1 3]));
-    writetable(T,[pathOutputFolder filesep ouputFilesPrefixString 'confounded_hypn_new_' 'datanum_' num2str(iData) '.txt'],'Delimiter','\t','WriteVariableNames',false);
-
+    writetable(T,[pathOutputFolder filesep ouputFilesPrefixString 'confounds_hypn_new_' 'datanum_' num2str(iData) '.txt'],'Delimiter','\t','WriteVariableNames',false);
+    
+    
     temp_ind_art = (hypnNew(:,2) > 0) | (hypnNew(:,3) > 0);
     hypnNew_consens = hypnNew(:,2);
     hypnNew_consens(temp_ind_art) = max(hypnNew(temp_ind_art,2:3),[],2);
     T = table([hypnNew(:,1),hypnNew_consens]);
-    writetable(T,[pathOutputFolder filesep ouputFilesPrefixString 'confounded_hypn_new_conserv_' 'datanum_' num2str(iData) '.txt'],'Delimiter','\t','WriteVariableNames',false);
+    writetable(T,[pathOutputFolder filesep ouputFilesPrefixString 'confounds_hypn_new_conserv_' 'datanum_' num2str(iData) '.txt'],'Delimiter','\t','WriteVariableNames',false);
 
 
 end
