@@ -69,6 +69,12 @@ GenerateHypnogramFiguresFormatFontSize = str2num(getParam('GenerateHypnogramFigu
 referenceOption = getParam('referenceOption',listOfParameters);%which hypnogram should be chosen as a reference for comparison. either firstInList or consensushypnogram default firstInList
 statisticsAlphaLevel = str2num(getParam('statisticsAlphaLevel',listOfParameters));%the alpha level for the statistics default 0.05
 
+AlignToSleepOnset = 'no';
+try
+    AlignToSleepOnset = getParam('AlignToSleepOnset',listOfParameters);%choose if the hypnograms should be aligned (cut) to the sleep onset either yes or no default no
+catch e
+    
+end
 
 core_cfg = [];
 core_cfg.feedback = getParam('ft_cfg_feedback',listOfCoreParameters);
@@ -105,11 +111,76 @@ for iData = iDatas
         hypnogramPath = hypnogramListPaths{iHyp};
         
         [hypn hypnStages hypnEpochs hypnEpochsBeginsSamples hypnEpochsEndsSamples] = readInSleepHypnogram(hypnogramPath,epochLengthSamples);
+        
+        
+        if strcmp(AlignToSleepOnset,'yes')
+            
+            
+            if strcmp(SleepOnsetDefinition,'NonREM')
+                onsetCandidate = -1;
+                
+                for iOnset = 1:(size(hypnStages,1))
+                    if strcmp(hypnStages(iOnset,3),'NonREM') && (hypnEpochsBeginsSamples(iOnset) >= lightsOffSample)
+                        onsetCandidate = iOnset;
+                        break;
+                    end
+                end
+                
+            elseif strcmp(SleepOnsetDefinition,'XREM')
+                onsetCandidate = -1;
+                
+                for iOnset = 1:(size(hypnStages,1))
+                    if (strcmp(hypnStages(iOnset,3),'NonREM') ||  strcmp(hypnStages(iOnset,3),'REM')) && (hypnEpochsBeginsSamples(iOnset) >= lightsOffSample)
+                        onsetCandidate = iOnset;
+                        break;
+                    end
+                end
+                
+            elseif strcmp(SleepOnsetDefinition,'S1') || strcmp(SleepOnsetDefinition,'S1_NonREM') || strcmp(SleepOnsetDefinition,'S1_XREM')
+                
+                onsetCandidate = -1;
+                consecS1 = 0;
+                hasS1 = logical(0);
+                for iOnset = 1:(size(hypnStages,1))
+                    if strcmp(hypnStages(iOnset,1),'S1') && (hypnEpochsBeginsSamples(iOnset) >= lightsOffSample)
+                        hasS1 = logical(1);
+                        consecS1 = consecS1 + 1;
+                        if ((onsetCandidate+consecS1) ~= iOnset)
+                            onsetCandidate = iOnset;
+                            consecS1 = 0;
+                        end
+                        if strcmp(SleepOnsetDefinition,'S1')
+                            break;
+                        end
+                    elseif ( strcmp(SleepOnsetDefinition,'S1_XREM') && (strcmp(hypnStages(iOnset,3),'NonREM') || strcmp(hypnStages(iOnset,3),'REM')) ) ...
+                            || ( strcmp(SleepOnsetDefinition,'S1_NonREM') && (strcmp(hypnStages(iOnset,3),'NonREM')) ) ...
+                            && (hypnEpochsBeginsSamples(iOnset) >= lightsOffSample)
+                        if ~hasS1
+                            onsetCandidate = iOnset;
+                        end
+                        break;
+                    else
+                        consecS1 = 0;
+                        hasS1 = logical(0);
+                    end
+                end
+                
+            end
+            
+            
+            
+            hypn = hypn(onsetCandidate:end,:);
+            hypnStages = hypnStages(onsetCandidate:end,:);
+            hypnEpochsBeginsSamples = hypnEpochsBeginsSamples(onsetCandidate:end,:);
+            
+            
+        end
+        
         hypnList{iHyp} = hypn;
         
         
         if strcmp(GenerateHypnogramFigures,'yes')
-            fprintf('dataset %i: generat hypnogram figure of hypfile %d\n',iData,iHyp);
+            fprintf('dataset %i: generate hypnogram figure of hypfile %d\n',iData,iHyp);
             
             titleName = sprintf('Hypnogram_datasetnum_%d_hypfile_%d',iData,iHyp);
             

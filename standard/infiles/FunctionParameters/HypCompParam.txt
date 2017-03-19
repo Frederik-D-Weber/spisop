@@ -18,3 +18,4 @@ GenerateHypnogramFiguresFormatResolution,300, choose resolution in pixesl per in
 GenerateHypnogramFiguresFormatFontSize,0.2, Font size in units stated in Parameter GenerateHypnogramFiguresUnit. default 0.2
 SleepOnsetDefinition,S1_XREM,either S1 or S1_NonREM or S1_XREM or NonREM or XREM. S1: starting with first S1 is sleep onset, nothing else. S1_NonREM: starting with first S1 if directly followed by either S2, S3 or S4, otherwise with first S2 or S3 or S4. S1_XREM: starting with first S1 if directly followed by either S2, S3, S4, or REM, otherwise with first S2 or S3 or S4 or REM. NonREM: starting with first one of S2, S3 or S4. XREM, starting with first one of S2, S3 or S4 or REM. default S1_XREM
 HypnogramTimeTicks,20,the time ticks in minutes the hypnograms shall have in the Figure output
+AlignToSleepOnset,no,choose if the hypnograms should be aligned (cut) to the sleep onset either yes or no default no
