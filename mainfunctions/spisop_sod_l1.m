@@ -432,7 +432,7 @@ parfor conseciData = conseciDatas
     [roiBegins, roiEnds] = getROIsByHypnogram(hypnogramPath,epochLengthSamples,sleepStagesOfInterest);
     
     if length(roiEnds) < 1
-        error(['no ROI in data left for analysis']);
+        error(['no ROI in data left for analysis for datasetnum ' num2str(iData)]);
     end
     
     if (signalOffsetSamples ~= 0)
@@ -1390,7 +1390,9 @@ if ~strcmp(AggregationOfDatasetOutputsOfDetections,'no')
     end
     export(temp_fidf_all,'file',[pathOutputFolder filesep ouputFilesPrefixString 'so_filter_' 'datanum_' 'all_recent' '.csv'],'Delimiter',delimiter);
     export(temp_fidc_all,'file',[pathOutputFolder filesep ouputFilesPrefixString 'so_channels_' 'datanum_' 'all_recent' '.csv'],'Delimiter',delimiter);
-    export(temp_fide_all,'file',[pathOutputFolder filesep ouputFilesPrefixString 'so_events_' 'datanum_' 'all_recent' '.csv'],'Delimiter',delimiter);
+    if strcmp(AggregationOfDatasetOutputsOfDetections,'full')
+        export(temp_fide_all,'file',[pathOutputFolder filesep ouputFilesPrefixString 'so_events_' 'datanum_' 'all_recent' '.csv'],'Delimiter',delimiter);
+    end
     
 end
 
