@@ -1,0 +1,9 @@
+new_channels,C3,A2
+C3:Cz,1,0
+C3:A2fspind,1,-1
+C3:A2sspind,1,-1
+C3:A2SO,1,-1
+C3:A2theta,1,-1
+C3:A2alpha,1,-1
+C3:A2,1,-1
+A2:Cz,0,1

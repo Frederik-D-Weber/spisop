@@ -1,0 +1,13 @@
+channel_number,new_channel_label,channel_order,signal_correction_factor,split_factor,high_pass,high_pass_freq,high_pass_order,high_pass_type,low_pass,low_pass_freq,low_pass_order,low_pass_type
+1,C3-A2ori,9,1,for_scoring,yes,0.3,4,but,yes,35,400,fir
+4,A2,6,-1,for_scoring,yes,0.3,4,but,yes,35,400,fir
+5,C3,7,-1,for_scoring,yes,0.3,4,but,yes,35,400,fir
+7,trigger,15,1,for_scoring,no,0,0,but,no,0,0,fir
+-1,C3:Cz,7,1,for_scoring,yes,0.3,4,but,yes,35,400,fir
+-1,A2:Cz,8,1,for_scoring,yes,0.3,4,but,yes,35,400,fir
+-1,C3:A2,2,1,for_scoring,yes,0.3,4,but,yes,35,400,fir
+-1,C3:A2fspind,10,1,for_scoring,yes,11.5,400,fir,yes,15,400,fir
+-1,C3:A2sspind,11,1,for_scoring,yes,8.5,400,fir,yes,11.5,400,fir
+-1,C3:A2SO,12,1,for_scoring,yes,0.5,4,but,yes,2,400,fir
+-1,C3:A2theta,13,1,for_scoring,yes,4,4,but,yes,8,400,fir
+-1,C3:A2alpha,14,1,for_scoring,yes,8,4,but,yes,12,400,fir

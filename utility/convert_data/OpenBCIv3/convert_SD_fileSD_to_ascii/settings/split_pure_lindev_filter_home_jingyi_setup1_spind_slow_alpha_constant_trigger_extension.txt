@@ -1,0 +1,7 @@
+channel_number,new_channel_label,channel_order,signal_correction_factor,split_factor,high_pass,high_pass_freq,high_pass_order,high_pass_type,low_pass,low_pass_freq,low_pass_order,low_pass_type
+2,C3,1,-1,for_scoring,yes,0.3,4,but,yes,35,400,fir
+3,Fz,5,-1,for_scoring,yes,0.3,4,but,yes,35,400,fir
+7,Pz,6,-1,for_scoring,yes,0.3,4,but,yes,35,400,fir
+-1,C3:Cz,7,1,for_scoring,yes,0.3,4,but,yes,35,400,fir
+-1,Fz:Cz,7,1,for_scoring,yes,0.3,4,but,yes,35,400,fir
+-1,Pz:Cz,8,1,for_scoring,yes,0.3,4,but,yes,35,400,fir

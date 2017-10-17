@@ -1,0 +1,4 @@
+new_channels,C3,Fz,Pz
+C3:Cz,1,0,0
+Fz:Cz,0,1,0
+Pz:Cz,0,0,1
