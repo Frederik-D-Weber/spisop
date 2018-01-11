@@ -279,7 +279,7 @@ elseif catlabel
   
 else
   % labels are inconsistent, cannot determine how to concatenate the data
-  error('cannot determine how the data should be concatenated');
+  error('cannot determine how the data should be concatenated, please check if there are channels with the same name to be excluded!');
 end
 
 % unshuffle the channels again to match the order of the first input data-structure

@@ -1203,9 +1203,16 @@ parfor conseciData = conseciDatas
         epochs = {};
         for iDet = 1:length(ch_detectedTroughsSamples{iChan})
             tempSample = ch_detectedTroughsSamples{iChan}(iDet);
-            epochs(iDet,:) = [hypnStages(((hypnEpochsBeginsSamples <= tempSample) & (tempSample <= hypnEpochsEndsSamples)),1) ...
-                hypnStages(((hypnEpochsBeginsSamples <= tempSample) & (tempSample <= hypnEpochsEndsSamples)),2) ...
-                hypnStages(((hypnEpochsBeginsSamples <= tempSample) & (tempSample <= hypnEpochsEndsSamples)),3)];
+            tempInd = ((hypnEpochsBeginsSamples <= tempSample) & (tempSample <= hypnEpochsEndsSamples));
+            if ~any(tempInd)
+            	tempInd = ((hypnEpochsBeginsSamples <= tempSample+1) & (tempSample <= hypnEpochsEndsSamples));
+            end
+             if ~any(tempInd)
+            	tempInd = ((hypnEpochsBeginsSamples <= tempSample) & (tempSample-1 <= hypnEpochsEndsSamples));
+            end
+            epochs(iDet,:) = [hypnStages(tempInd,1) ...
+                              hypnStages(tempInd,2) ...
+                              hypnStages(tempInd,3)];
         end;
         
         

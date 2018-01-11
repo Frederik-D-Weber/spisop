@@ -358,7 +358,7 @@ switch dataformat
             error('you should specify either the header or the data when writing to a MySQL database');
         end
         
-    case 'matlab'
+    case {'matlab', 'matlabv6'}
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % plain matlab file
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -381,7 +381,11 @@ switch dataformat
         elseif ~append && ~exist(filename, 'file')
             % file does not yet exist, which is not a problem
         end
-        save(filename, 'dat', 'hdr');
+        if strcmp(dataformat,'matlabv6')
+            save(filename, 'dat', 'hdr', '-v6');
+        else
+            save(filename, 'dat', 'hdr');
+        end
         
     case 'neuralynx_sdma'
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

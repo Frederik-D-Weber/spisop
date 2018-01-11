@@ -392,6 +392,7 @@ switch highlightstyle
       for i=1:(size(vdat,2)-1)
         for j=1:size(vdat,1)
           h = plot(hdat(i:i+1), vdat(j,i:i+1), style, 'LineWidth', linewidth, 'Color', mean(color([i i+1],:),1), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+          set(h,'tag',tag);
         end
       end
     else

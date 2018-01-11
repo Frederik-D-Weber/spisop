@@ -204,7 +204,7 @@ LongestWakeTimePeriodAfterSleepOnset_after_so_export = cell(1,numel(iDatas));
 tic
 memtic
 fprintf('HypVals function initialized\n');
-parfor iData = iDatas
+for iData = iDatas
     %iData = 11; iData = iDatas(end)
     
     datasetsPath = listOfDatasetsPaths{iData};

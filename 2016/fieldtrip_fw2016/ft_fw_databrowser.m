@@ -3,6 +3,7 @@ function [cfg] = ft_fw_databrowser(cfg, data)
 %marking
 %movement artifact detection,
 %mark lights-offs,
+%REMs detection
 %button for toggle automatic skipping after scoring epoch go to next even when already scored
 %export data, import data
 %DONE: Autosave on import and export of hypnogram, extention is
@@ -683,8 +684,8 @@ if strcmp(cfg.doSleepScoring,'yes')
     
     cfg.underlaySpindleSignal = 'no';
     cfg.underlaySOSignal = 'no';
-
     
+       
     
     cfg.spindle_mark_color = [0 1 0];
     cfg.slowoscillation_mark_color = [1 0 0];
@@ -723,6 +724,8 @@ if strcmp(cfg.doSleepScoring,'yes')
     
     cfg.emg_thresholdAmplitudeForDetection = 45;
     
+    
+    
     cfg.nEpochsBuffer = 0.34;
     
     cfg.FrqOfSmpl = opt.orgdata.fsample;
@@ -752,6 +755,36 @@ if strcmp(cfg.doSleepScoring,'yes')
     
     
     cfg = update_filters(cfg);
+    
+    cfg.markECG = 'no';
+    cfg.ECG_signalMultiplicator = 1;
+    cfg.ecg_peak_filter_minFreq = 20;
+    cfg.ecg_peak_filter_maxFreq = 35;
+    
+    if cfg.has_ECG
+        FpassLeft = cfg.ecg_peak_filter_minFreq; %left pass frequency in Hz
+        FpassRight = cfg.ecg_peak_filter_maxFreq; %right pass frequency in Hz
+        
+        FstopLeft = FpassLeft - cfg.StopToPassTransitionWidth_bp; %left stop frequency in Hz
+        FstopRight = FpassRight + cfg.PassToStopTransitionWidth_bp; %left stop frequency in Hz
+        
+        %usedFilterOrder_bp = NaN;
+        %bp_hdm = NaN;
+        if strcmp(cfg.core_cfg.bpfilttype,'IIRdesigned') || strcmp(cfg.core_cfg.bpfilttype,'FIRdesigned')
+            bp_d = [];
+            bp_hd = [];
+            if strcmp(cfg.UseFixedFilterOrder_bp,'yes')
+                bp_d = fdesign.bandpass('N,Fst1,Fp1,Fp2,Fst2',cfg.FilterOrder_bp,FstopLeft,FpassLeft,FpassRight,FstopRight,cfg.FrqOfSmpl);
+                bp_hd = design(bp_d,'equiripple');
+            else
+                bp_d = fdesign.bandpass('Fst1,Fp1,Fp2,Fst2,Ast1,Ap,Ast2',FstopLeft,FpassLeft,FpassRight,FstopRight,cfg.AstopLeft_bp,cfg.Apass_bp,cfg.AstopRight_bp,cfg.FrqOfSmpl);
+                bp_hd = design(bp_d,'equiripple','MinOrder', 'even');
+            end
+            %usedFilterOrder_bp = bp_hd.order;
+            cfg.hr_bpfilterdesign = bp_hd;
+            %bp_hdm = measure(bp_hd);
+        end
+    end
     
     opt.markingstatus = 'off';
     opt.zoomstatus = 'off';
@@ -864,11 +897,13 @@ if strcmp(cfg.doSleepScoring,'yes')
     uicontrol('tag', 'scbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'S4(4)','position', [0.52, temp_lower_line_y , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', '4')
     uicontrol('tag', 'scoptbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '?(D)','position', [0.56, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'd')
     
-    uicontrol('tag', 'scoptbuttons_SOdet', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '(+)_.·\_.·\_.·','Fontsize',6,'FontUnits','normalized','position', [0.62, temp_lower_line_y+0.08/4+0.08/4+0.08/4 , 0.05, 0.08/4],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'k')
-    uicontrol('tag', 'scoptbuttons_SOdisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--(_.·\)--','Fontsize',6,'FontUnits','normalized','position', [0.62, temp_lower_line_y+0.08/4+0.08/4 , 0.05, 0.08/4],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'o')
-    uicontrol('tag', 'scoptbuttons_SPdet', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--~~-~~--','Fontsize',6,'FontUnits','normalized', 'position', [0.62, temp_lower_line_y+0.08/4 , 0.05, 0.08/4],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'j')
-    uicontrol('tag', 'scoptbuttons_SPdisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--(~~~)--','Fontsize',6,'FontUnits','normalized', 'position', [0.62, temp_lower_line_y , 0.05, 0.08/4],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'n')
-    
+    uicontrol('tag', 'scoptbuttons_SOdet', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '(+)_.·\_.·\_.·','Fontsize',5,'FontUnits','normalized','position', [0.62, temp_lower_line_y+0.08/5+0.08/5+0.08/5+0.08/5 , 0.05, 0.08/5],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'k')
+    uicontrol('tag', 'scoptbuttons_SOdisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--(_.·\)--','Fontsize',5,'FontUnits','normalized','position', [0.62, temp_lower_line_y+0.08/5+0.08/5+0.08/5 , 0.05, 0.08/5],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'o')
+    uicontrol('tag', 'scoptbuttons_SPdet', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--~~-~~--','Fontsize',5,'FontUnits','normalized', 'position', [0.62, temp_lower_line_y+0.08/5+0.08/5 , 0.05, 0.08/5],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'j')
+    uicontrol('tag', 'scoptbuttons_SPdisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--(~~~)--','Fontsize',5,'FontUnits','normalized', 'position', [0.62, temp_lower_line_y+0.08/5 , 0.05, 0.08/5],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'n')
+    if cfg.has_ECG
+        uicontrol('tag', 'scoptbuttons_HRdisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<3 <3 <3','Fontsize',5,'FontUnits','normalized', 'position', [0.62, temp_lower_line_y , 0.05, 0.08/5],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'b')
+    end
     uicontrol('tag', 'scoptbuttons_pow', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'pow','position',  [0.675, temp_lower_line_y+0.08/3+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'p')
     uicontrol('tag', 'scoptbuttons_tfr', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'tfr','position', [0.675, temp_lower_line_y+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'f')
 
@@ -941,6 +976,9 @@ if strcmp(cfg.doSleepScoring,'yes');
     ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'style', 'pushbutton', 'callback', @keyboard_cb);
     ft_uilayout(h, 'tag', 'scoptbuttons_SPdet', 'style', 'pushbutton', 'callback', @keyboard_cb);
     ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'style', 'pushbutton', 'callback', @keyboard_cb);
+    if cfg.has_ECG
+        ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'style', 'pushbutton', 'callback', @keyboard_cb);
+    end
     ft_uilayout(h, 'tag', 'scoptbuttons_EvDisp', 'style', 'pushbutton', 'callback', @keyboard_cb);
     ft_uilayout(h, 'tag', 'scoptbuttons_mark', 'style', 'pushbutton', 'callback', @keyboard_cb);
     ft_uilayout(h, 'tag', 'scoptbuttons_zoom', 'style', 'pushbutton', 'callback', @keyboard_cb);
@@ -1040,6 +1078,7 @@ if nargout
     ft_postamble provenance
     ft_postamble previous data
     
+    
 end % if nargout
 
 end % main function
@@ -1075,6 +1114,9 @@ switch selection,
         opt.cleanup = true;
         setappdata(h, 'opt', opt);
         uiresume
+        opt = [];
+        cfg = [];
+        h = [];
     case 'No'
         return
 end
@@ -1249,9 +1291,11 @@ helptext = [ ...
 '  E: enable/disable display of pre-readin Events, if processed already \n'...
 '  Q: delete previously made marking \n'...
 '  R: enable/disable Ruler (aka "the Score-ship") \n'...
-'  J: enable/disable spindle marking (aka "the Score-ship") \n'...
+'  J: enable/disable spindle marking \n'...
 '  K: enable/[polartity-switch]/disable K-Complex \n'...
-'     or Slow oscillation marking (aka "the Score-ship") \n'...
+'     or Slow oscillation marking \n'...
+'  B: enable/[polartity-switch]/disable heart rate \n'...
+'     indication and coloring \n'...
 '  G: enable/disable display of the time grid \n'...
 '  Z: enable/disable zooming (double-click = return to full view) \n'...
 '     left-click: zoom in \n'...
@@ -2018,6 +2062,22 @@ switch key
             setappdata(h, 'opt', opt);
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
+         end
+    case 'b'
+        % toggle heart (b)eat detection
+        if cfg.has_ECG
+            if strcmp(cfg.markECG,'yes') && (cfg.ECG_signalMultiplicator == 1)
+                cfg.ECG_signalMultiplicator = -1;
+            elseif strcmp(cfg.markECG,'yes') && (cfg.ECG_signalMultiplicator == -1)
+                cfg.markECG = 'no';
+                cfg.ECG_signalMultiplicator = 1;
+            else
+                cfg.markECG = 'yes';
+                cfg.ECG_signalMultiplicator = 1;
+            end
+            setappdata(h, 'opt', opt);
+            setappdata(h, 'cfg', cfg);
+            redraw_cb(h, eventdata);
         end
     case 't'
         % select the trial to display
@@ -2495,6 +2555,21 @@ else
     ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'FontWeight', 'normal');   
 end
 
+if strcmp(cfg.markECG,'yes') && (cfg.ECG_signalMultiplicator == 1)
+       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'string', ['+<3+<3+<3']);
+       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'FontWeight', 'bold')
+       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'BackgroundColor', cfg.score_channel_ecg_color);
+
+elseif strcmp(cfg.markECG,'yes') && (cfg.ECG_signalMultiplicator == -1)
+       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'string', ['-<3-<3-<3']);
+       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'FontWeight', 'bold')
+       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'BackgroundColor', cfg.score_channel_ecg_color);
+else
+       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'string', ['<3 <3 <3']);
+       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'FontWeight', 'normal')
+       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'BackgroundColor', [0.5 0.5 0.5]);
+end
+
 
 if strcmp(cfg.displayEvents,'yes')
     %ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'BackgroundColor', cfg.underlaySpindleSignal_color);
@@ -2564,7 +2639,7 @@ end
 
 
 
-ft_uilayout(h, 'tag', 'artifactui_button', 'string', ['artifact(' opt.artdata.label{opt.ftsel} ')']);
+ft_uilayout(h, 'tag', 'artifactui_button', 'string', ['artfct(' opt.artdata.label{opt.ftsel} ')']);
 
 end
 uiresume(h);
@@ -2934,45 +3009,42 @@ if strcmp(cfg.doSleepScoring,'yes')
     end
     
     
+    nSamples_data = size(opt.orgdata.trial{1},2);
+    FrqOfSmpl = opt.orgdata.fsample;
+    
+    cfg_buffered_signal_redef = [];
+    lengthEpochSamples = endsample - begsample+1;
+    buff_begsample = begsample-fix(cfg.nEpochsBuffer*lengthEpochSamples);
+    buff_endsample = endsample+fix(cfg.nEpochsBuffer*lengthEpochSamples);
+    padd_samples_left = [];
+    padd_samples_right = [];
+    if buff_begsample < 1
+        cfg_buffered_signal_redef.begsample = 1;
+        padd_samples_left = repmat(0,1,1 - buff_begsample);
+    else
+        cfg_buffered_signal_redef.begsample = buff_begsample;
+    end
+    
+    if buff_endsample > nSamples_data
+        cfg_buffered_signal_redef.endsample = nSamples_data;
+        padd_samples_right = repmat(0,1,buff_endsample - nSamples_data);
+    else
+        cfg_buffered_signal_redef.endsample = buff_endsample;
+    end
+    
     if strcmp(cfg.markSO,'yes') || strcmp(cfg.markSpindles,'yes') || strcmp(cfg.underlaySpindleSignal,'yes') || strcmp(cfg.underlaySpindleSignal,'yes') || strcmp(cfg.display_power_spectrum,'yes') || strcmp(cfg.display_time_frequency,'yes')
         
         temp_channel_number_in_curr_display = find(chanindx == cfg.score_channel_eeg_number);
         for iChanDisplayed = temp_channel_number_in_curr_display
             
             
-            nSamples_data = size(opt.orgdata.trial{1},2);
-            EnvelopeMethod = 'hilbertEnv';
             
-            smplsMinDetectionLength = fix(opt.orgdata.fsample*cfg.sp_minSec);
-            smplsMaxDetectionLength = fix(opt.orgdata.fsample*cfg.sp_maxSec);
-            
-            
-            FrqOfSmpl = opt.orgdata.fsample;
-            
-            
-            cfg_eeg_redef = [];
-            lengthEpochSamples = endsample - begsample+1;
-            buff_begsample = begsample-fix(cfg.nEpochsBuffer*lengthEpochSamples);
-            buff_endsample = endsample+fix(cfg.nEpochsBuffer*lengthEpochSamples);
-            padd_samples_left = [];
-            padd_samples_right = [];
-            if buff_begsample < 1
-                cfg_eeg_redef.begsample = 1;
-                padd_samples_left = repmat(0,1,1 - buff_begsample);
-            else
-                cfg_eeg_redef.begsample = buff_begsample;
-            end
-            
-            if buff_endsample > nSamples_data
-                cfg_eeg_redef.endsample = nSamples_data;
-                padd_samples_right = repmat(0,1,buff_endsample - nSamples_data);
-            else
-                cfg_eeg_redef.endsample = buff_endsample;
-            end
             
             cfg_eeg_redef_channel = [];
             cfg_eeg_redef_channel.channel = cfg.score_channel_eeg_number;
-            data_det_signal_eeg_data = ft_selectdata(cfg_eeg_redef_channel,ft_redefinetrial(cfg_eeg_redef,opt.orgdata));
+            data_det_signal_eeg_data = ft_redefinetrial(cfg_buffered_signal_redef,ft_selectdata(cfg_eeg_redef_channel,opt.orgdata));
+            
+            
             
             %%%%%% Time-frequency #####
             
@@ -3444,13 +3516,17 @@ if strcmp(cfg.doSleepScoring,'yes')
                     'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
                 
                 
+                so_points_for_display_begins = [];
+                so_points_for_display_ends = [];
+                so_points_for_display_pairs = [];
+                if ~isempty(so_cand_pairsamples)
                 so_points_for_display_begins = so_cand_pairsamples(((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,1)) & ...
                     (so_cand_pairsamples(:,1) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
                 so_points_for_display_ends = so_cand_pairsamples(((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,2)) & ...
                     (so_cand_pairsamples(:,2) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
                 so_points_for_display_pairs = so_cand_pairsamples((((cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,1)) & ...
                     (so_cand_pairsamples(:,2) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
-                
+                end
 %                 temp_prevbeg = -1;
 %                 temp_count_overlapp = 0;
 %                 for k=1:size(so_points_for_display_pairs,1)
@@ -3514,6 +3590,9 @@ if strcmp(cfg.doSleepScoring,'yes')
             
             if strcmp(cfg.markSpindles,'yes') || strcmp(cfg.underlaySpindleSignal,'yes')
                 
+                EnvelopeMethod = 'hilbertEnv';
+                smplsMinDetectionLength = fix(opt.orgdata.fsample*cfg.sp_minSec);
+                smplsMaxDetectionLength = fix(opt.orgdata.fsample*cfg.sp_maxSec);
                 
                 cfg_eeg_sp = [];
                 cfg_eeg_sp = cfg.core_cfg;
@@ -3585,7 +3664,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                      temp_sp_y_offset1 = -1;
                     temp_sp_y_offset2 = -0.9;
                 else
-                   temp_sp_y_offset1 = 0.9;
+                    temp_sp_y_offset1 = 0.9;
                     temp_sp_y_offset2 = 1;
                 end
                 
@@ -3617,11 +3696,82 @@ if strcmp(cfg.doSleepScoring,'yes')
                     
                 end
                 temp_ax = h_sp_event;
-
+                
                 end
             end
+            
+            
+            
         end
         
+ 
+    end
+    
+    if cfg.has_ECG
+        if strcmp(cfg.markECG,'yes')
+            
+            temp_channel_number_in_curr_display = find(chanindx == cfg.score_channel_ecg_number);
+            for iChanDisplayed = temp_channel_number_in_curr_display
+                
+                cfg_ecg_redef_channel = [];
+                cfg_ecg_redef_channel.channel = cfg.score_channel_ecg_number;
+                data_det_signal_ecg_data = ft_redefinetrial(cfg_buffered_signal_redef,ft_selectdata(cfg_ecg_redef_channel,opt.orgdata));
+                
+                
+                cfg_ecg_peak = [];
+                cfg_ecg_peak = cfg.core_cfg;
+                cfg_ecg_peak.bpfilter = 'yes';
+                cfg_ecg_peak.bpfilterdesign = cfg.hr_bpfilterdesign;
+                
+                if strcmp(cfg.UseFixedFilterOrder_bp,'yes')
+                    cfg_ecg_peak.bpfiltord     = cfg.FilterOrder_bp;
+                end
+                cfg_ecg_peak.bpfreq        = [cfg.ecg_peak_filter_minFreq cfg.ecg_peak_filter_maxFreq];%dummy values are overwritten by low level function
+                cfg_ecg_peak.feedback = 'no';
+                
+                %cfg_ecg_peak.hilbert = 'abs';
+                data_det_signal_ecg_peak = ft_fw_preprocessing(cfg_ecg_peak,data_det_signal_ecg_data);
+                
+                if (cfg.ECG_signalMultiplicator ~= 1)
+                    data_det_signal_ecg_peak = ft_fw_factorMultiplicationOnSignal(data_det_signal_ecg_peak,'trial',cfg.ECG_signalMultiplicator);
+                end
+                
+                ECGpeakfrqBndPssSignal_hilbert = abs(hilbert([ padd_samples_left data_det_signal_ecg_peak.trial{1} padd_samples_right]));
+                
+                candSignal = ECGpeakfrqBndPssSignal_hilbert;
+                threshold_ECG = 2*std(ECGpeakfrqBndPssSignal_hilbert);
+                
+                
+                minPeakDistanceSamples = FrqOfSmpl * 0.2;%200ms the refractory time of a heart beat
+                [tempCandSignalPeaks, tempCandSignalPeaksSamples] = findpeaks(candSignal,'MINPEAKHEIGHT',threshold_ECG,'MINPEAKDISTANCE',minPeakDistanceSamples);
+                candSignalPeaks = candSignal(tempCandSignalPeaksSamples);
+                candSignalPeaksSamples = tempCandSignalPeaksSamples;%    candSignalPeaksSamples = currentRawDataSampleOffset + tempCandSignalPeaksSamples;
+                
+                if numel(candSignalPeaksSamples) > 2
+                    samples_diff = diff(candSignalPeaksSamples);
+                    %tempinstHRmin_pre = cat(2,0,60./(samples_diff(1:end-1)/FrqOfSmpl));
+                    %tempinstHRmin_post = cat(2,0,60./(samples_diff(2:end)/FrqOfSmpl));
+                    %tempinstHRmin_change = [0 , tempinstHRmin_post-tempinstHRmin_pre];
+                    tempinstHRmin = cat(2,0,60./(samples_diff/FrqOfSmpl));
+                    
+                    tempinstHRmin = interp1(candSignalPeaksSamples,tempinstHRmin,1:length(candSignal),'linear');
+                    
+                    %tempinstHRmin_change = interp1(candSignalPeaksSamples,tempinstHRmin_change,1:length(candSignal),'linear');
+                    
+                    cfg.ECG_instHRsmin = tempinstHRmin(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples));
+                    %cfg.ECG_instHRsmin_change = tempinstHRmin_change(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples));
+                    cfg.ECG_instHRsmin(isnan(cfg.ECG_instHRsmin)) = 0;
+                    %cfg.ECG_instHRsmin_change(isnan(cfg.ECG_instHRsmin_change)) = 0;
+                    cfg.ECG_instHRsmin_SignalPeaksSamples = candSignalPeaksSamples((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= candSignalPeaksSamples) & (candSignalPeaksSamples <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
+                else
+                    cfg.ECG_instHRsmin = zeros(1,lengthEpochSamples);
+                    %cfg.ECG_instHRsmin_change = zeros(1,lengthEpochSamples);
+                    cfg.ECG_instHRsmin_SignalPeaksSamples = [];
+                    
+                end
+            end
+            
+        end
     end
     
     setappdata(h, 'cfg', cfg);
@@ -3713,6 +3863,23 @@ if strcmp(cfg.doSleepScoring,'yes')
             'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', temp_ax);
         temp_ax = h_scorechan_emg;
         
+    end
+    
+    
+    delete(findobj(h, 'tag', 'scorechan_ecg'));
+    
+    if cfg.has_ECG
+    
+    temp_channel_number_in_curr_display = find(chanindx == cfg.score_channel_ecg_number);
+    
+    for iChanDisplayed = temp_channel_number_in_curr_display;
+        
+        h_scorechan_ecg = ft_plot_box([tim(1) tim(end) -1 1],'facealpha',0.3, 'facecolor', cfg.score_channel_ecg_color , 'edgecolor', 'none', 'tag', 'scorechan_ecg',  ...
+            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', temp_ax);
+        temp_ax = h_scorechan_ecg;
+        
+    end
+    
     end
 end
 
@@ -3936,6 +4103,8 @@ delete(findobj(h,'tag', 'timecourse'));
 delete(findobj(h,'tag', 'identify'));
 delete(findobj(h,'tag', 'spindle_timecourse'));
 delete(findobj(h,'tag', 'so_timecourse'));
+delete(findobj(h,'tag', 'ecg_HR_timecourse'));
+delete(findobj(h,'tag', 'ecg_HR_peaks_markers'));
 
 
 
@@ -3984,7 +4153,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
             % this is a cheap quick fix. If it causes error in plotting components, do this conditional on viewmode
             if numel(findobj(h,'tag', 'chanlabel'))<numel(chanindx)
                 if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
-                    h_curr_stage = ft_plot_text(tim(1)+range(tim)*0.0125, 0.5, opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'Color', [0.85 0.85 0.85], 'FontSize', 0.9/2/numel(chanindx), 'FontUnits',  'normalized','HorizontalAlignment', 'left', ...
+                    h_chanlabel = ft_plot_text(tim(1)+range(tim)*0.0125, 0.5, opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'Color', [0.85 0.85 0.85], 'FontSize', 0.9/2/numel(chanindx), 'FontUnits',  'normalized','HorizontalAlignment', 'left', ...
                         'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.width, 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none');
                     
                     %ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none','FontUnits','normalized','FontSize',0.9/2/numel(chanindx));
@@ -3992,6 +4161,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
             end
             
             if strcmp(cfg.doSleepScoring,'yes')
+              
             if laysel == find(chanindx == cfg.score_channel_eeg_number);
                 
                 if strcmp(cfg.underlaySpindleSignal,'yes')
@@ -4030,6 +4200,40 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
             ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', ...
                 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
             
+            
+            if strcmp(cfg.doSleepScoring,'yes')
+                if cfg.has_ECG
+                    
+                    if laysel == find(chanindx == cfg.score_channel_ecg_number);
+                        
+                        if strcmp(cfg.markECG,'yes')
+                            
+%                             %rgb_ind = 1+fix(fw_normalize(cfg.ECG_instHRsmin, min(cfg.ECG_instHRsmin), max(cfg.ECG_instHRsmin), 0, 127));
+%                             %rgb_ind(isnan(rgb_ind)) = 1;
+%                             %rgb = flip(autumn(128),1);
+%                             %ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', rgb(rgb_ind,:), 'tag', 'ecg_HR_timecourse', ...
+%                             ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', 'k', 'tag', 'ecg_HR_timecourse', ...
+%                             'linewidth', 1.5, ...
+%                                 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+%                             
+                            if ~isempty(cfg.ECG_instHRsmin_SignalPeaksSamples)
+                                rgb_ind = 1+fix(fw_normalize(cfg.ECG_instHRsmin(cfg.ECG_instHRsmin_SignalPeaksSamples), min(cfg.ECG_instHRsmin), max(cfg.ECG_instHRsmin), 0, 127));
+                                rgb_ind(isnan(rgb_ind)) = 1;
+                                rgb = flip(autumn(128),1);
+                                for iECGpeak = 1:numel(cfg.ECG_instHRsmin_SignalPeaksSamples)
+                                    %ft_plot_text(tim(cfg.ECG_instHRsmin_SignalPeaksSamples(iECGpeak)), dat(datsel, cfg.ECG_instHRsmin_SignalPeaksSamples(iECGpeak)), num2str(round(cfg.ECG_instHRsmin(cfg.ECG_instHRsmin_SignalPeaksSamples(iECGpeak)))),'FontSize', 8, 'tag', 'ecg_HR_peaks_markers','interpreter','none','color', [0.2 0.2 0.2], ...
+                                    ft_plot_text(tim(cfg.ECG_instHRsmin_SignalPeaksSamples(iECGpeak)), dat(datsel, cfg.ECG_instHRsmin_SignalPeaksSamples(iECGpeak)), num2str(round(cfg.ECG_instHRsmin(cfg.ECG_instHRsmin_SignalPeaksSamples(iECGpeak)))),'FontSize', 8, 'tag', 'ecg_HR_peaks_markers','interpreter','none','color', rgb(rgb_ind(iECGpeak),:), ...
+                                        'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+                                end
+                                %                             ft_plot_vector(tim(cfg.ECG_instHRsmin_SignalPeaksSamples), dat(datsel, cfg.ECG_instHRsmin_SignalPeaksSamples), 'box', false, 'color', 'none', 'marker', 'o', 'markerfacecolor', [1 90/255 0], 'tag', 'ecg_HR_peaks_markers', ...
+                                %                                 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+                            end
+                        end
+                    end
+                    
+                end
+                
+            end
             
         end
     end
@@ -4714,7 +4918,9 @@ set(gca,'Parent',panel2);
 if vertical_size_total > 1
 slider = uicontrol('Style','Slider','Parent',dlg,...
       'Units','normalized','Position',[0.95 0 0.05 1],...
-      'Value',1,'Callback',{@(src,eventdata,arg1,arg2) set(arg1,'Position',[0 -get(src,'Value') 1 arg2]), panel2, vertical_size_total});
+      'Value',1,'Callback',{@(src,eventdata,nch,vsizech,vsize,panel) slider_callback1(src,eventdata,nch,vsizech,vsize,panel), Nchannels, vertical_size_row_pre, vertical_size_total, panel2});
+      %'Value',1,'Callback',{@(src,eventdata,arg1,arg2) set(arg1,'Position',[0 -get(src,'Value')*Nchannels/(1/vertical_size_row_pre) 1 arg2]), panel2, vertical_size_total});
+
 end
 indices_selected = indices_selected(:)';     % ensure that it is a row array
 
@@ -4732,8 +4938,8 @@ index_unselected = setdiff(1:length(channels), indices_selected);
 % uicontrol(dlg, 'style', 'pushbutton', 'position', [105  85+20 80  20], 'string', '< remove all', 'callback', @label_removeall);
 % uicontrol(dlg, 'style', 'pushbutton', 'position', [ 55  10    80  20], 'string', 'Cancel',       'callback', 'close');
 % uicontrol(dlg, 'style', 'pushbutton', 'position', [155  10    80  20], 'string', 'OK',           'callback', 'uiresume');
-line_x_offsets = [0   0.2 0.3 0.4 0.5 0.6  0.65 0.7  0.9];
-line_x_width =   [0.2 0.1 0.1 0.1 0.1 0.05 0.05 0.05 0.1];
+line_x_offsets = [0   0.2 0.3 0.4 0.5 0.6  0.65 0.7 0.75 0.83];
+line_x_width =   [0.2 0.1 0.1 0.1 0.1 0.05 0.05 0.05 0.05 0.17];
 uicontrol(panel2, 'style', 'text', 'units', 'normalized','HorizontalAlignment','left', 'position', [line_x_offsets(1) 1-1*vertical_size_row line_x_width(1), vertical_size_row], 'string', 'channel','tag',['heading1']);
 uicontrol(panel2, 'style', 'text', 'units', 'normalized','HorizontalAlignment','left', 'position', [line_x_offsets(2) 1-1*vertical_size_row line_x_width(2), vertical_size_row], 'string', 'visible','tag',['heading2']);
 uicontrol(panel2, 'style', 'text', 'units', 'normalized','HorizontalAlignment','left', 'position', [line_x_offsets(3) 1-1*vertical_size_row line_x_width(3), vertical_size_row], 'string', 'scaling','tag',['heading3']);
@@ -4747,10 +4953,19 @@ bg_EEG = uibuttongroup('Visible','off', 'units', 'normalized','Position',[line_x
 bg_EOG = uibuttongroup('Visible','off', 'units', 'normalized','Position',[line_x_offsets(7) 1-(numel(channels)+1)*vertical_size_row line_x_width(7), vertical_size_row*numel(channels)],'tag',['rdg_EOG'],'backgroundcolor', cfg.score_channel_eog_color,'parent',panel2);
 bg_EMG = uibuttongroup('Visible','off', 'units', 'normalized','Position',[line_x_offsets(8) 1-(numel(channels)+1)*vertical_size_row line_x_width(8), vertical_size_row*numel(channels)],'tag',['rdg_EMG'],'backgroundcolor', cfg.score_channel_emg_color,'parent',panel2);
 
-uicontrol(panel2, 'style', 'pushbutton', 'units', 'normalized', 'position', [line_x_offsets(9) 1-1*vertical_size_row line_x_width(9), vertical_size_row], 'string', 'OK','tag',['button_OK'],'Callback','uiresume');
-uicontrol(panel2, 'style', 'pushbutton', 'units', 'normalized', 'position', [line_x_offsets(9) 1-2*vertical_size_row line_x_width(9), vertical_size_row], 'string', 'Cancel','tag',['button_Cancel'],'Callback','close');
-%uicontrol(panel2, 'style', 'pushbutton', 'units', 'normalized', 'position', [line_x_offsets(9) 1-2*vertical_size_row line_x_width(9), vertical_size_row], 'string', 'Cancel','tag',['button_Cancel'],'Callback','close');
+if cfg.has_ECG
+uicontrol(panel2, 'style', 'text', 'units', 'normalized','HorizontalAlignment','left', 'position', [line_x_offsets(9) 1-1*vertical_size_row line_x_width(9), vertical_size_row], 'string', 'ECG','tag',['heading9'],'backgroundcolor', cfg.score_channel_ecg_color);
+bg_ECG = uibuttongroup('Visible','off', 'units', 'normalized','Position',[line_x_offsets(9) 1-(numel(channels)+1)*vertical_size_row line_x_width(9), vertical_size_row*numel(channels)],'tag',['rdg_ECG'],'backgroundcolor', cfg.score_channel_ecg_color,'parent',panel2);
+end
 
+uicontrol(panel2, 'style', 'pushbutton', 'units', 'normalized', 'position', [line_x_offsets(10) 1-1*vertical_size_row line_x_width(10), vertical_size_row], 'string', 'OK','tag',['button_OK'],'Callback','uiresume');
+uicontrol(panel2, 'style', 'pushbutton', 'units', 'normalized', 'position', [line_x_offsets(10) 1-2*vertical_size_row line_x_width(10), vertical_size_row], 'string', 'Cancel','tag',['button_Cancel'],'Callback','close');
+%uicontrol(panel2, 'style', 'pushbutton', 'units', 'normalized', 'position', [line_x_offsets(10) 1-2*vertical_size_row line_x_width(10), vertical_size_row], 'string', 'Cancel','tag',['button_Cancel'],'Callback','close');
+uicontrol(panel2, 'style', 'pushbutton', 'units', 'normalized', 'position', [line_x_offsets(10) 1-3*vertical_size_row line_x_width(10), vertical_size_row], 'string', '(ch colors)','tag',['button_Color'],'Callback',{@cb_channelDialog_color_channels, numel(channels)});
+
+uicontrol(panel2, 'style', 'text', 'units', 'normalized','HorizontalAlignment','left', 'position', [line_x_offsets(10) 1-4*vertical_size_row line_x_width(10), vertical_size_row], 'string', 'all chan.?','tag',['text_all_chan']);
+uicontrol(panel2, 'style', 'checkbox', 'units', 'normalized', 'position', [line_x_offsets(10) 1-5*vertical_size_row+vertical_size_row/2 line_x_width(10), vertical_size_row],'tag',['enabled_all_chan'],'Callback',{@cb_channelDialog_all_channels});
+    
 
 
 for iCh = 1:numel(channels)
@@ -4763,8 +4978,10 @@ for iCh = 1:numel(channels)
 
     uicontrol(panel2, 'style', 'radiobutton', 'units', 'normalized', 'position', [0.1 1-(iCh)*vertical_size_row/(vertical_size_row*numel(channels))+vertical_size_row*0.25 1-0.1 vertical_size_row ], 'string', '','tag',['radiobutton_focusEEG' num2str(iCh)],'parent',bg_EEG,'backgroundcolor', cfg.score_channel_eeg_color);
     uicontrol(panel2, 'style', 'radiobutton', 'units', 'normalized', 'position', [0.1 1-(iCh)*vertical_size_row/(vertical_size_row*numel(channels))+vertical_size_row*0.25 1-0.1 vertical_size_row ], 'string', '','tag',['radiobutton_focusEOG' num2str(iCh)],'parent',bg_EOG,'backgroundcolor', cfg.score_channel_eog_color);
-    uicontrol(panel2, 'style', 'radiobutton', 'units', 'normalized', 'position', [0.1 1-(iCh)*vertical_size_row/(vertical_size_row*numel(channels))+vertical_size_row*0.25 1-0.1 vertical_size_row ], 'string', '','tag',['radiobutton_focusEMG' num2str(iCh)],'parent',bg_EMG,'backgroundcolor', cfg.score_channel_emg_color);
-
+    uicontrol(panel2, 'style', 'radiobutton', 'units', 'normalized', 'position', [0.1 1-(iCh)*vertical_size_row/(vertical_size_row*numel(channels))+vertical_size_row*0.25 1-0.1 vertical_size_row ], 'string', '','tag',['radiobutton_focusEMG' num2str(iCh)],'parent',bg_EMG,'backgroundcolor', cfg.score_channel_emg_color); 
+    if cfg.has_ECG
+        uicontrol(panel2, 'style', 'radiobutton', 'units', 'normalized', 'position', [0.1 1-(iCh)*vertical_size_row/(vertical_size_row*numel(channels))+vertical_size_row*0.25 1-0.1 vertical_size_row ], 'string', '','tag',['radiobutton_focusECG' num2str(iCh)],'parent',bg_ECG,'backgroundcolor', cfg.score_channel_ecg_color); 
+    end
     
     if ismember(iCh,indices_selected)
         ft_uilayout(panel2, 'tag', ['enabled_chan' num2str(iCh)], 'value', 1);
@@ -4776,12 +4993,18 @@ set(bg_EEG,'SelectedObject',findobj(get(bg_EEG,'children'),'tag',['radiobutton_f
 set(bg_EOG,'SelectedObject',findobj(get(bg_EOG,'children'),'tag',['radiobutton_focusEOG' num2str(cfg.score_channel_eog_number)]))
 set(bg_EMG,'SelectedObject',findobj(get(bg_EMG,'children'),'tag',['radiobutton_focusEMG' num2str(cfg.score_channel_emg_number)]))
 
+if cfg.has_ECG
+    set(bg_ECG,'SelectedObject',findobj(get(bg_ECG,'children'),'tag',['radiobutton_focusECG' num2str(cfg.score_channel_ecg_number)]))
+end
 
 
 
 set(bg_EEG,'Visible','on')
 set(bg_EOG,'Visible','on')
 set(bg_EMG,'Visible','on')
+if cfg.has_ECG
+    set(bg_ECG,'Visible','on')
+end
 
 
 drawnow
@@ -4836,6 +5059,16 @@ if ishandle(dlg)
             break;
         end
     end
+    
+    if cfg.has_ECG
+        chanNum_focusECG = 1;
+        for iCh = 1:numel(channels)
+            if strcmp(get(get(bg_ECG,'SelectedObject'),'Tag'),['radiobutton_focusECG' num2str(iCh)])
+                chanNum_focusECG = iCh;
+                break;
+            end
+        end
+    end
 
     
     
@@ -4848,6 +5081,10 @@ if ishandle(dlg)
             cfg.score_channel_emg_number = find(curr_chanIndexOrder == chanNum_focusEMG,1,'first');
             %ft_uilayout(h, 'tag', 'scoptbuttons_focusEMG', 'string', ['Focus EMG: ' opt.hdr.label{cfg.score_channel_emg_number}]);
 
+            if cfg.has_ECG
+            	cfg.score_channel_ecg_number = find(curr_chanIndexOrder == chanNum_focusECG,1,'first');
+            end
+            
             if isfield(cfg,'begin_end_events')
                 cfg.times_ind_per_channel = cfg.times_ind_per_channel(curr_chanIndexOrder);
                 cfg.begin_end_events = cfg.begin_end_events(curr_chanIndexOrder);
@@ -4893,6 +5130,65 @@ end
 
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_channelDialog_all_channels(src,eventdata,handles)
+val = get(src,'Value');
+for obj = findobj('-regexp','tag',['enabled_chan.*'])
+    set(obj,'Value',val);
+end
+
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_channelDialog_color_channels(src,eventdata,nChan)
+colSchemes = {'black' 'jet' 'hsv' 'copper' 'gray' 'bone' 'lines' 'prism' 'white' 'mono'};
+nColSchemes = numel(colSchemes);
+for obj = findobj('tag',['button_Color'])
+    colscheme = get(obj,'string');
+    colschemeInd = find(strcmp(colscheme,colSchemes));
+    if isempty(colschemeInd) || (colschemeInd == nColSchemes)
+        colschemeInd = 1;
+    else
+        colschemeInd = colschemeInd + 1;
+    end
+    newColScheme = colSchemes(colschemeInd);
+    cols = zeros(nChan,3);
+    switch newColScheme{:}
+        case 'jet'
+            cols = jet(nChan);
+        case 'hsv'
+            cols = hsv(nChan);
+        case 'copper'
+            cols = copper(nChan);
+        case 'gray'
+            cols = gray(nChan);
+        case 'bone'
+            cols = bone(nChan);
+        case 'lines'
+            cols = lines(nChan);
+        case 'prism'
+            cols = prism(nChan);
+        case 'white'
+            cols = white(nChan);
+        case 'mono'
+            color_new = uisetcolor([0.5 0.5 0.5],'Color for all channels'); 
+            cols = repmat(color_new,nChan,1);
+            newColScheme = num2str(round(color_new*255));
+    end
+    chanobjs = findobj('-regexp','tag',['color_chan.*']);
+    for iChan = 1:numel(chanobjs)
+        set(chanobjs(iChan),'ForegroundColor',cols(iChan,:));
+    end
+    set(obj,'string',newColScheme);
+end
+end
+
+
 % function  cb_channelDialog_enable_checkbox(source, eventdata, handles)
 % %new_value = setxor(get(source,'Value'),[0 1]);
 % set(source,'Value', get(source,'Value'))
@@ -4919,13 +5215,15 @@ color = arg1;
 color_new = uisetcolor(color,'new channel color'); 
 set(src,'ForegroundColor',color_new);
 end
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % SUBFUNCTION
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function slider_callback1(src,eventdata,arg1,arg2)
-% val = get(src,'Value');
-% set(arg1,'Position',[0 -val 1 arg2])
-% end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function slider_callback1(src,eventdata,nch,vsizech,vsize,panel)
+val = get(src,'Value');
+%set(arg1,'Position',[0 -val 1 arg2])
+set(panel,'Position',[0 -val*nch/(1/vsizech) 1 vsize]);
+end
 
 function opt = changeDataChannelOrder(channel_order,opt)
 %channel_order(2) = 3.5

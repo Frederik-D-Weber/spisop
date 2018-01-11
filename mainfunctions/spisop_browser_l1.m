@@ -14,7 +14,7 @@ end
 
 TraceBackgroundColor = 'white';
 try
-    TraceBackgroundColor = getParam('TraceBackgroundColor',TraceBackgroundColor);
+    TraceBackgroundColor = getParam('TraceBackgroundColor',listOfParameters);
 catch e
 end
 
@@ -56,6 +56,15 @@ DefaultOutputUnit = getParam('DefaultOutputUnit',listOfParameters);
 OutputDataformat = getParam('OutputDataformat',listOfParameters);
 IncludePostiveMarkerAtBeginning = getParam('IncludePostiveMarkerAtBeginning',listOfParameters);
 
+CutDataAtEndHypnogram = 'no'; %default
+try
+CutDataAtEndHypnogram = getParam('CutDataAtEndHypnogram',listOfParameters);% either yes or no default no
+catch e
+    
+end
+if ~(strcmp(CutDataAtEndHypnogram,'yes') || strcmp(CutDataAtEndHypnogram,'no'))
+    error(['CutDataAtEndHypnogram ' CutDataAtEndHypnogram ' in parameters is unknown, use either yes or no, default no'])
+end
 
 epochLength = str2num(getParam('epochLength',listOfCoreParameters)); % in seconds
 %sleepStagesOfInterst = {'S3','S4'};
@@ -83,13 +92,14 @@ if strcmp(IgnoreDataSetHeader,'no')
     end
 end
 
-if strcmp(DoEpochData,'yes') || strcmp(ReadInHypnogram,'yes')
+if strcmp(DoEpochData,'yes') || strcmp(ReadInHypnogram,'yes') || strcmp(CutDataAtEndHypnogram,'yes')
     listOfHypnogramPaths = read_mixed_csv([pathInputFolder filesep HypnogramsFileName],',');
 end
 
 listOfChannelsOfInterest = read_mixed_csv([pathInputFolder filesep ChannelsOfInterestFileName],',');
 
-if strcmp(DoEpochData,'yes')
+
+if strcmp(DoEpochData,'yes') || strcmp(CutDataAtEndHypnogram,'yes')
     if ~(all(size(listOfDatasetsPaths) == size(listOfHypnogramPaths)) && (size(listOfDatasetsPaths,1) == size(listOfChannelsOfInterest,1)))
         error('files or number of Datasetspaths Hypnogramsfiles ChannelsOfInterest are invalid or do not aggree')
     end
@@ -611,7 +621,7 @@ for conseciData = conseciDatas
     
     if useDummyDataset
         datasetsPath = 'dummy.eeg';
-        if strcmp(DoEpochData,'yes') || strcmp(ReadInHypnogram,'yes')
+        if strcmp(DoEpochData,'yes') || strcmp(ReadInHypnogram,'yes') || strcmp(CutDataAtEndHypnogram,'yes')
             hypnogramPath = 'dummy.txt';
         end
         channelsOfInterest = 'all';
@@ -620,7 +630,7 @@ for conseciData = conseciDatas
         
     else
         datasetsPath = listOfDatasetsPaths{iData};
-        if strcmp(DoEpochData,'yes') || strcmp(ReadInHypnogram,'yes')
+        if strcmp(DoEpochData,'yes') || strcmp(ReadInHypnogram,'yes') || strcmp(CutDataAtEndHypnogram,'yes')
             hypnogramPath = listOfHypnogramPaths{iData};
         end
         channelsOfInterest = listOfChannelsOfInterest(iData,:);
@@ -668,6 +678,8 @@ for conseciData = conseciDatas
         error('wrong parameter for IgnoreDataSetHeader either yes or no');
     end
     
+    signalOffsetSeconds = signalOffsetSamples/preDownsampleFreq;
+    
     if strcmp(DoEpochData,'yes')
         fprintf('dataset %i: process ROI from hypnogram info\n',iData);
         %ROI
@@ -701,13 +713,15 @@ for conseciData = conseciDatas
             error(['no ROI in data left for analysis']);
         end
         
+        if (signalOffsetSamples ~= 0)
+            signalOffsetSeconds = signalOffsetSamples/preDownsampleFreq;
+            roiBegins = roiBegins + signalOffsetSamples;
+            roiEnds = roiEnds + signalOffsetSamples;
+        end
+        
     end
     
-    if (signalOffsetSamples ~= 0)
-        signalOffsetSeconds = signalOffsetSamples/preDownsampleFreq;
-        roiBegins = roiBegins + signalOffsetSamples;
-        roiEnds = roiEnds + signalOffsetSamples;
-    end
+  
     
     %     for second read in of hypnogramm after downsampling
     %     if (signalOffsetSamples ~= 0)
@@ -835,9 +849,15 @@ for conseciData = conseciDatas
             
             
             montageTable = dataset('File',[pathInputFolder filesep linearDeviationMontageFile],'Delimiter',DelimiterLinearDeviationMontage,'ReadVarNames',true,'ReadObsNames',true);
+            montageTableChanNames = dataset('File',[pathInputFolder filesep linearDeviationMontageFile],'Delimiter',DelimiterLinearDeviationMontage,'ReadVarNames',false,'ReadObsNames',true);
+            oldChanNames = {};
+            for iCol = 1:length(get(montageTable,'VarNames'))
+                oldChanNames{iCol} = montageTableChanNames{1,iCol};
+            end
             
             montage = [];
-            montage.labelorg = get(montageTable,'VarNames');
+            %montage.labelorg = get(montageTable,'VarNames');
+            montage.labelorg = oldChanNames;
             montage.labelnew  = get(montageTable,'ObsNames')';
             montage.tra = double(montageTable);
             
@@ -924,15 +944,6 @@ for conseciData = conseciDatas
         data.label = {'meanOverChannels'};
     end
     
-    %FrqOfSmplWished = 400;
-    if (FrqOfSmplWishedPar < data.fsample)
-        fprintf('dataset %i: resample data from %i to %i Hz\n',iData,data.fsample,FrqOfSmplWishedPar);
-        cfg = [];
-        cfg.resamplefs = FrqOfSmplWishedPar;%frequency at which the data will be resampled (default = 256 Hz)
-        cfg.detrend = 'no';
-        cfg.feedback = core_cfg.feedback;
-        data = ft_resampledata(cfg,data);
-    end
     
     if (signalMultiplicator ~= 1)
         data = ft_fw_factorMultiplicationOnSignal(data,'trial',signalMultiplicator);
@@ -944,6 +955,10 @@ for conseciData = conseciDatas
     %usedFilterOrder_lp = -1;
     %usedFilterOrder_hp = -1;
     %usedFilterOrder_bp = -1;
+    
+    used_specified_filtering_once_bp = false;
+    used_specified_filtering_once_hp = false;
+    used_specified_filtering_once_lp = false;
     
     if strcmp(ApplyFilterSettings,'yes')
         fileFilterSettings = listOfFilterSettingsFiles{iData};
@@ -979,6 +994,7 @@ for conseciData = conseciDatas
             data_filt{iChanCount} = ft_selectdata(cfg,data);
             
             curr_filterdefs = curr_channel_settings_table.filter_definitions(iChannelbyOrder);
+            curr_filterdefs = strtrim(curr_filterdefs);
             curr_filterdefs = strsplit(char(curr_filterdefs));
             
             
@@ -993,27 +1009,110 @@ for conseciData = conseciDatas
             curr_operator_wait_for_second_term = {};
             %curr_operator = '';
             data_store = {};%stack
+            used_specified_filtering_once_bp = false;
+            used_specified_filtering_once_hp = false;
+            used_specified_filtering_once_lp = false;
+
             while curr_filterdefs_filterPos <= length(curr_filterdefs)
                 curr_filter = char(curr_filterdefs(curr_filterdefs_filterPos));
                 FpassLeft = -1;
                 FpassRight = -1;
                 MultFactor = 1;
+                SmoothSeconds = -1;
                 conversion_state_success = true;
+                useSpecifiedFilterOrder = false;
+                overwriteFilterType = false;
                 try
                     switch curr_filter
+                        case 'normtomean'
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 1;
+                        case 'min'
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 1;
+                        case 'max'
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 1;
+                        case 'ztransform'
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 1;
+                        case 'smooth'
+                            [SmoothSeconds conversion_state_success] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+1)));
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2;
+                        case 'envpeaks'
+                            [minPeakDistanceSeconds conversion_state_success] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+1)));
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2;
+                        case 'rect'
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 1;
+                        case 'env'
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 1;
                         case 'mult'
                             [MultFactor conversion_state_success] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+1)));
-                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2;
-                        case 'bp'
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2;                            
+                        case {'bp', 'waveletband'}
                             [FpassLeft conversion_state_success] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+1)));
                             [FpassRight conversion_state_success] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+2)));
-                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 3;
+                            temp_additional_values = 0;
+                            if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+3)
+                                [pot_additional_value conversion_state_success_potaddval] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+3)));
+                                if conversion_state_success_potaddval
+                                      useSpecifiedFilterOrder = true;
+                                      filterOrder = round(pot_additional_value);
+                                      temp_additional_values = temp_additional_values + 1; 
+                                      
+                                      if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+4) && strcmp(curr_filter,'bp')
+                                          pot_filterType = char(curr_filterdefs(curr_filterdefs_filterPos+4));
+                                          if strcmp(pot_filterType,'iir') || strcmp(pot_filterType,'fir')
+                                                overwriteFilterType = true;
+                                                used_specified_filtering_once_bp = true;
+                                                filterType = pot_filterType;
+                                                temp_additional_values = temp_additional_values + 1;
+                                          end
+                                      end
+                                      if strcmp(curr_filter,'waveletband')
+                                          used_specified_filtering_once_bp = true;
+                                      end
+                                end
+                            end
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 3 + temp_additional_values;
                         case 'hp'
                             [FpassLeft conversion_state_success] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+1)));
-                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2;
+                            temp_additional_values = 0;
+                            if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+2)
+                                [pot_additional_value conversion_state_success_potaddval] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+2)));
+                                if conversion_state_success_potaddval 
+                                      useSpecifiedFilterOrder = true;
+                                      filterOrder = round(pot_additional_value);
+                                      temp_additional_values = temp_additional_values + 1;
+                                      if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+3)
+                                          pot_filterType = char(curr_filterdefs(curr_filterdefs_filterPos+3));
+                                          if strcmp(pot_filterType,'iir') || strcmp(pot_filterType,'fir')
+                                                overwriteFilterType = true;
+                                                used_specified_filtering_once_hp = true;
+                                                filterType = pot_filterType;
+                                                temp_additional_values = temp_additional_values + 1;
+                                          end
+                                      end
+                                end
+                            end
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2 + temp_additional_values;
                         case 'lp'
                             [FpassRight conversion_state_success] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+1)));
-                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2;
+                            temp_additional_values = 0;
+                            if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+2)
+                                [pot_additional_value conversion_state_success_potaddval] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+2)));
+                                if conversion_state_success_potaddval
+                                      useSpecifiedFilterOrder = true;
+                                      filterOrder = round(pot_additional_value);
+                                      temp_additional_values = temp_additional_values + 1;
+                                       if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+3)
+                                          pot_filterType = char(curr_filterdefs(curr_filterdefs_filterPos+3));
+                                          if strcmp(pot_filterType,'iir') || strcmp(pot_filterType,'fir')
+                                                overwriteFilterType = true;
+                                                used_specified_filtering_once_lp = true;
+                                                filterType = pot_filterType;
+                                                temp_additional_values = temp_additional_values + 1;
+                                          end
+                                      end
+                                end
+                            end
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2 + temp_additional_values;
                         case 'no'
                             curr_filterdefs_filterPos = curr_filterdefs_filterPos + 1;
                         case {'+' '-'}
@@ -1080,8 +1179,48 @@ for conseciData = conseciDatas
                 cfg.channel = curr_channel_label;
                 
                 switch curr_filter
+                    case 'normtomean'
+                        data_filt{iChanCount}.trial{1} = (data_filt{iChanCount}.trial{1} - nanmean(data_filt{iChanCount}.trial{1}));
+                    case 'min'
+                        data_filt{iChanCount}.trial{1} = repmat(min(data_filt{iChanCount}.trial{1}),size(data_filt{iChanCount}.trial{1}));
+                    case 'max'
+                        data_filt{iChanCount}.trial{1} = repmat(max(data_filt{iChanCount}.trial{1}),size(data_filt{iChanCount}.trial{1}));
+                    case 'ztransform'
+                        data_filt{iChanCount}.trial{1} = (data_filt{iChanCount}.trial{1} - nanmean(data_filt{iChanCount}.trial{1}))./nanstd(data_filt{iChanCount}.trial{1});
+                    case 'smooth'
+                        data_filt{iChanCount}.trial{1} = smooth(data_filt{iChanCount}.trial{1},max(1,round(SmoothSeconds*data_filt{iChanCount}.fsample)),'moving')';
+                    case 'envpeaks'
+                        data_filt{iChanCount}.trial{1} = envpeaks(data_filt{iChanCount}.trial{1},data_filt{iChanCount}.fsample,minPeakDistanceSeconds);
+                    case 'rect'
+                        data_filt{iChanCount}.trial{1} = abs(data_filt{iChanCount}.trial{1});
+                    case 'env'
+                        data_filt{iChanCount}.trial{1} = abs(hilbert(data_filt{iChanCount}.trial{1}));
                     case 'mult'
                         data_filt{iChanCount}.trial{1} = data_filt{iChanCount}.trial{1} .* MultFactor;
+                    case 'waveletband'
+                        usedFilterOrder_bp = NaN;
+                        bp_hdm = NaN;
+                        
+                        cfg.method = 'wavelet';
+                        cfg.output = 'pow';
+                        FreqSteps = abs(FpassRight-FpassLeft)/10;
+                        cfg.foi = [FpassLeft:FreqSteps:FpassRight];
+                        if useSpecifiedFilterOrder
+                            cfg.width = filterOrder;
+                        else
+                            cfg.width =  4;
+                        end
+                        %cfg.pad = 'maxperlen';
+                        cfg.toi = data_filt{iChanCount}.time{1};
+                        cfg.pad = ( 2*cfg.width*(1/min(cfg.foi)) ) + ( max(cfg.toi)-min(cfg.toi) ) +  10 ;
+                        cfg.feedback = core_cfg.feedback;
+                        fprintf('dataset %i: reprocess and apply band wavlet filter to %s\n',iData,curr_channel_label{:});
+                        data_freq = ft_freqanalysis(cfg,data_filt{iChanCount});
+                        temp_freqdat = squeeze(nanmean(data_freq.powspctrm,2))';
+                        temp_freqdat(isnan(temp_freqdat)) = 0;
+                        data_filt{iChanCount}.trial = {temp_freqdat};
+                        temp_freqdat = [];
+                        dat_freq = [];
                     case 'bp'
                         cfg.bpfilter = 'yes';
                         FstopLeft = FpassLeft - StopToPassTransitionWidth_bp; %left stop frequency in Hz
@@ -1089,7 +1228,7 @@ for conseciData = conseciDatas
                         
                         usedFilterOrder_bp = NaN;
                         bp_hdm = NaN;
-                        if strcmp(core_cfg.bpfilttype,'IIRdesigned') || strcmp(core_cfg.bpfilttype,'FIRdesigned')
+                        if strcmp(core_cfg.bpfilttype,'IIRdesigned') || strcmp(core_cfg.bpfilttype,'FIRdesigned') && ~overwriteFilterType
                             bp_d = [];
                             bp_hd = [];
                             fprintf('dataset %i: designing band pass filter\n',iData);
@@ -1103,9 +1242,25 @@ for conseciData = conseciDatas
                             usedFilterOrder_bp = bp_hd.order;
                             cfg.bpfilterdesign = bp_hd;
                             bp_hdm = measure(bp_hd);
+                        else
+                            cfg.bpinstabilityfix = 'split';
+                            switch filterType
+                                case 'iir'
+                                    cfg.bpfilttype =  'but';   
+                                case 'fir'
+                                    cfg.bpfilttype =  'fir';
+                                otherwise
+                                    error(['filter type ' filterType ' unknown'])
+                            end
                         end
-                        if strcmp(UseFixedFilterOrder_bp,'yes')
-                            cfg.bpfiltord     = FilterOrder_bp;
+                        
+                        if strcmp(UseFixedFilterOrder_bp,'yes') || useSpecifiedFilterOrder
+                            if useSpecifiedFilterOrder 
+                              cfg.bpfiltord = filterOrder;  
+                            else
+                                cfg.bpfiltord = FilterOrder_bp;
+                            end
+                            usedFilterOrder_bp = cfg.bpfiltord;
                         end
                         cfg.bpfreq        = [FpassLeft FpassRight];%dummy values are overwritten by low level function
                         cfg.feedback = core_cfg.feedback;
@@ -1118,8 +1273,7 @@ for conseciData = conseciDatas
                         
                         usedFilterOrder_hp = NaN;
                         hp_hdm = NaN;
-                        if strcmp(core_cfg.hpfilttype,'IIRdesigned') || strcmp(core_cfg.hpfilttype,'FIRdesigned')
-                            
+                        if strcmp(core_cfg.hpfilttype,'IIRdesigned') || strcmp(core_cfg.hpfilttype,'FIRdesigned') && ~overwriteFilterType
                             hp_d = [];
                             hp_hd = [];
                             if strcmp(UseFixedFilterOrder_hp,'yes')
@@ -1138,21 +1292,35 @@ for conseciData = conseciDatas
                             usedFilterOrder_hp = hp_hd.order;
                             cfg.hpfilterdesign = hp_hd;
                             hp_hdm = measure(hp_hd);
+                        else
+                            cfg.hpinstabilityfix = 'split';
+                            switch filterType
+                                case 'iir'
+                                    cfg.hpfilttype =  'but';
+                                case 'fir'
+                                    cfg.hpfilttype =  'fir';
+                                otherwise
+                                    error(['filter type ' filterType ' unknown'])
+                            end
                         end
-                        if strcmp(UseFixedFilterOrder_hp,'yes')
-                            cfg.hpfiltord     = FilterOrder_hp;
+                        if strcmp(UseFixedFilterOrder_hp,'yes') || useSpecifiedFilterOrder
+                            if useSpecifiedFilterOrder 
+                              cfg.hpfiltord = filterOrder;  
+                            else
+                                cfg.hpfiltord = FilterOrder_hp;
+                            end
+                            usedFilterOrder_hp = cfg.hpfiltord;
                         end
                         cfg.hpfreq        = [FpassLeft];%dummy values are overwritten by low level function
                         cfg.feedback = core_cfg.feedback;
                         fprintf('dataset %i: reprocess and apply high pass filter to %s\n',iData,curr_channel_label{:});
                         data_filt{iChanCount} = ft_fw_preprocessing(cfg,data_filt{iChanCount});
-                        
                     case 'lp'
                         cfg.lpfilter = 'yes';
                         FstopRight = FpassRight + PassToStopTransitionWidth_lp; %right stop frequency in Hz
                         usedFilterOrder_lp = NaN;
                         lp_hdm = NaN;
-                        if strcmp(core_cfg.lpfilttype,'IIRdesigned') || strcmp(core_cfg.lpfilttype,'FIRdesigned')
+                        if strcmp(core_cfg.lpfilttype,'IIRdesigned') || strcmp(core_cfg.lpfilttype,'FIRdesigned') && ~overwriteFilterType
                             lp_d = [];
                             lp_hd = [];
                             fprintf('dataset %i: designing low pass filter \n',iData);
@@ -1166,9 +1334,24 @@ for conseciData = conseciDatas
                             usedFilterOrder_lp = lp_hd.order;
                             cfg.lpfilterdesign = lp_hd;
                             lp_hdm = measure(lp_hd);
+                        else
+                            cfg.lpinstabilityfix = 'split';
+                            switch filterType
+                                case 'iir'
+                                    cfg.lpfilttype =  'but';
+                                case 'fir'
+                                    cfg.lpfilttype =  'fir';
+                                otherwise
+                                    error(['filter type ' filterType ' unknown'])
+                            end
                         end
-                        if strcmp(UseFixedFilterOrder_lp,'yes')
-                            cfg.lpfiltord     = FilterOrder_lp;
+                        if strcmp(UseFixedFilterOrder_lp,'yes') || useSpecifiedFilterOrder
+                            if useSpecifiedFilterOrder
+                                cfg.lpfiltord = filterOrder;
+                            else
+                                cfg.lpfiltord = FilterOrder_lp;
+                            end
+                            usedFilterOrder_lp = cfg.lpfiltord;
                         end
                         cfg.lpfreq        = [FpassRight];%dummy values are overwritten by low level function
                         cfg.feedback = core_cfg.feedback;
@@ -1193,6 +1376,48 @@ for conseciData = conseciDatas
         end
         
     end
+    
+    
+     %FrqOfSmplWished = 400;
+    if (FrqOfSmplWishedPar < data.fsample)
+        fprintf('dataset %i: resample data from %i to %i Hz\n',iData,data.fsample,FrqOfSmplWishedPar);
+        cfg = [];
+        cfg.resamplefs = FrqOfSmplWishedPar;%frequency at which the data will be resampled (default = 256 Hz)
+        cfg.detrend = 'no';
+        cfg.feedback = core_cfg.feedback;
+        data = ft_resampledata(cfg,data);
+    end
+    
+    FrqOfSmpl = data.fsample;%data.hdr.Fs;%samples per second / Hz
+    
+    %signalOffsetSamples = 100
+    %signalOffsetSeconds = 1;
+    if (signalOffsetSamples ~= 0) && ~strcmp(DoEpochData,'yes')
+        signalOffsetSamples_new = round(signalOffsetSeconds*FrqOfSmpl);
+        if (signalOffsetSamples_new ~= 0)
+            cfg = [];
+            if (signalOffsetSamples_new > 0) && (signalOffsetSamples_new+1+epochLengthSamples < size(data.trial{1},2))
+                cfg.begsample = signalOffsetSamples_new+1;
+                cfg.endsample = numel(data.time{1});
+                
+                data = ft_redefinetrial(cfg,data);
+                cfg = [];
+                cfg.offset = signalOffsetSamples_new+1;
+                data = ft_redefinetrial(cfg,data);
+                data.sampleinfo = [1 numel(data.time{1})];
+            elseif signalOffsetSamples_new < 0
+                for iTrTr = 1:numel(data.trial)
+                    cfg.padtype = 'zero';
+                    data.trial{iTrTr} = ft_preproc_padding(data.trial{iTrTr}, cfg.padtype, -signalOffsetSamples_new, 0);
+                end
+                data.time{1} = (0:(size(data.trial{1},2)-1))/data.fsample;
+                data.sampleinfo = [1 numel(data.time{1})];
+            end
+        end
+    end
+    
+    
+    
     
     if strcmp(DoWriteData,'yes')
         
@@ -1234,6 +1459,7 @@ for conseciData = conseciDatas
             data.trial{1} = sigpositive_data;
         end
         
+        tempOutputDataformat = OutputDataformat;
         switch OutputDataformat
             case 'brainvision_eeg_int16'
                 tempOutputDataformat = 'brainvision_eeg';
@@ -1279,6 +1505,26 @@ for conseciData = conseciDatas
         data.trial{1} = sigpositive_data;
     end
     
+     if strcmp(CutDataAtEndHypnogram,'yes') && ~strcmp(DoEpochData,'yes')
+            epochLengthSamples = epochLength * data.fsample;
+            [hypn hypnStages hypnEpochs hypnEpochsBeginsSamples hypnEpochsEndsSamples] = readInSleepHypnogram(hypnogramPath,epochLengthSamples);
+            if size(data.trial{1},2) > hypnEpochsEndsSamples(end)
+                temp_data = data.trial{1};
+                temp_data(:,(hypnEpochsEndsSamples(end)+1):end) = [];
+                data.trial{1} = temp_data;
+                temp_data = [];
+                
+                temp_time = data.time{1};
+                temp_time((hypnEpochsEndsSamples(end)+1):end) = [];
+                data.time{1} = temp_time;
+                temp_time = [];
+                
+                %data.hdr = [];
+                data.sampleinfo = [1 (hypnEpochsEndsSamples(end))];
+            end
+           
+        end
+    
     
     
     if PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff == 0
@@ -1294,7 +1540,7 @@ for conseciData = conseciDatas
     end
     
     
-    if ~(strcmp(core_cfg.hpfilttype,'FIRdesigned') || strcmp(core_cfg.hpfilttype,'IIRdesigned'))
+    if ~(strcmp(core_cfg.hpfilttype,'FIRdesigned') || strcmp(core_cfg.hpfilttype,'IIRdesigned')) || used_specified_filtering_once_hp
         
         usedFilterOrder_hp_preDS = NaN;
         hp_preDS_hdm.Fs = preDownsampleFreq;
@@ -1341,8 +1587,7 @@ for conseciData = conseciDatas
             hp_f_type_detail = 'IIR_Butterworth_signal_toolbox';
     end
     
-    
-    if ~(strcmp(core_cfg.lpfilttype,'FIRdesigned') || strcmp(core_cfg.lpfilttype,'IIRdesigned'))
+    if ~(strcmp(core_cfg.lpfilttype,'FIRdesigned') || strcmp(core_cfg.lpfilttype,'IIRdesigned')) || used_specified_filtering_once_lp
         
         usedFilterOrder_lp = NaN;
         lp_hdm.Fs = FrqOfSmpl;
@@ -1377,17 +1622,17 @@ for conseciData = conseciDatas
     end
     
     
-    if ~(strcmp(core_cfg.bpfilttype,'FIRdesigned') || strcmp(core_cfg.bpfilttype,'IIRdesigned'))
+    if ~(strcmp(core_cfg.bpfilttype,'FIRdesigned') || strcmp(core_cfg.bpfilttype,'IIRdesigned')) || used_specified_filtering_once_bp
         
         usedFilterOrder_bp = NaN;
         bp_hdm.Fs = FrqOfSmpl;
         bp_hdm.Astop1 = NaN;
         bp_hdm.TransitionWidth1 = NaN;
-        bp_hdm.F3dB1 = minFreq;
+        bp_hdm.F3dB1 = NaN;
         bp_hdm.F6dB1 = NaN;
         bp_hdm.Fpass1 = NaN;
         bp_hdm.Apass = NaN;
-        bp_hdm.Fpass2 = minFreq;
+        bp_hdm.Fpass2 = NaN;
         bp_hdm.F3dB2 = NaN;
         bp_hdm.F6dB2 = NaN;
         bp_hdm.TransitionWidth2 = NaN;
@@ -1419,6 +1664,11 @@ for conseciData = conseciDatas
     
     if ~exist('usedFilterOrder_hp','var')%(usedFilterOrder_hp  == -1)
         usedFilterOrder_hp = NaN;
+    end
+    if ~exist('hp_hdm','var')%(usedFilterOrder_hp  == -1)
+        hp_hdm = NaN;
+    end
+    if ~isa(hp_hdm,'fdesign.highpassmeas')
         hp_hdm.Fs = FrqOfSmpl;
         hp_hdm.Astop = NaN;
         hp_hdm.Fstop = NaN;
@@ -1431,6 +1681,11 @@ for conseciData = conseciDatas
     
     if ~exist('usedFilterOrder_bp','var')%(usedFilterOrder_bp  == -1)
         usedFilterOrder_bp = NaN;
+    end
+    if ~exist('bp_hdm','var')%(usedFilterOrder_hp  == -1)
+        bp_hdm = NaN;
+    end
+    if ~isa(bp_hdm,'fdesign.bandpassmeas')
         bp_hdm.Fs = FrqOfSmpl;
         bp_hdm.Astop1 = NaN;
         bp_hdm.TransitionWidth1 = NaN;
@@ -1449,6 +1704,11 @@ for conseciData = conseciDatas
     
     if ~exist('usedFilterOrder_lp','var')%(usedFilterOrder_lp  == -1)
         usedFilterOrder_lp = NaN;
+    end
+    if ~exist('lp_hdm','var')%(usedFilterOrder_hp  == -1)
+        lp_hdm = NaN;
+    end
+    if ~isa(lp_hdm,'fdesign.lowpassmeas')
         lp_hdm.Fs = FrqOfSmpl;
         lp_hdm.Astop = NaN;
         lp_hdm.Fstop = NaN;
@@ -1499,6 +1759,7 @@ for conseciData = conseciDatas
     %cfg_datbrow.artfctdef.EMG.artifact = [200 500; 600 950];
     cfg_datbrow.artfctdef.EEG.artifact = [];
     cfg_datbrow.artfctdef.EMG.artifact = [];
+    cfg_datbrow.artfctdef.EOG.artifact = [];
     cfg_datbrow.selectfeature = 'EEG';
     cfg_datbrow.selectmode = 'markartifact';
     
@@ -1720,11 +1981,11 @@ for conseciData = conseciDatas
         plot_MA_offset = -5.5;
         [hypn_plot_interpol hypn_plot_interpol_MA] = interpolate_hypn_for_plot(hypn,cfg_datbrow.hyp_epochLengthSamples,plot_MA_offset);
         
-        if (signalOffsetSamples ~= 0)
-            signalOffsetSamples_downsampled = floor(signalOffsetSeconds*data.fsample);
-            hypn_plot_interpol = [repmat(0,signalOffsetSamples_downsampled,1); hypn_plot_interpol];
-            hypn_plot_interpol_MA = [repmat(plot_MA_offset,signalOffsetSamples_downsampled,1); hypn_plot_interpol_MA];
-        end
+%         if (signalOffsetSamples ~= 0)
+%             signalOffsetSamples_downsampled = floor(signalOffsetSeconds*data.fsample);
+%             hypn_plot_interpol = [repmat(0,signalOffsetSamples_downsampled,1); hypn_plot_interpol];
+%             hypn_plot_interpol_MA = [repmat(plot_MA_offset,signalOffsetSamples_downsampled,1); hypn_plot_interpol_MA];
+%         end
         
         cfg_datbrow.hypn_plot_interpol = hypn_plot_interpol;
         cfg_datbrow.hypn_plot_interpol_MA = hypn_plot_interpol_MA;
@@ -1743,7 +2004,7 @@ for conseciData = conseciDatas
         cfg_datbrow.drawgrid_colors = {[0.9 0.9 0.9] [0.9 0.9 0.9] [0.5 0 0]};
         cfg_datbrow.drawgrid_LineStyle = {':' '-' '-'};
         
-        if numel(data.label) < 3 then
+        if numel(data.label) < 3
             error('Data must conatain at least 3 channels one EOG one EEG and one EMG, please make sure you selected sufficient channels for scoring!');
         end
         
@@ -1756,6 +2017,18 @@ for conseciData = conseciDatas
         cfg_datbrow.score_channel_eeg_color = [1 1 0.8];
         cfg_datbrow.score_channel_eog_color = [0.8 1 1];
         cfg_datbrow.score_channel_emg_color = [1 0.8 0.8];
+        
+        [numberECG] = getECGChannelNumbers(data.label);
+        
+        if numberECG > 0 % has an ECG channel
+            cfg_datbrow.has_ECG = true;
+            cfg_datbrow.score_channel_ecg_number = numberECG;
+            cfg_datbrow.score_channel_ecg_color = [0.8 1 0.8];
+        else
+            cfg_datbrow.has_ECG = false;
+        end
+            
+
         
         cfg_datbrow.core_cfg = core_cfg;
     else
@@ -1808,5 +2081,10 @@ res_filters = fidf_all;
 fprintf('BROWSER function finished\n');
 toc
 memtoc
+end
+
+function signal = envpeaks(x,fsample,seconds)  
+    [pks locs] = findpeaks(x,'MINPEAKDISTANCE',max(1,floor(seconds*fsample)));
+    signal = interp1([1 locs numel(x)],[x(1) pks x(end)],1:numel(x),'linear');   
 end
 
