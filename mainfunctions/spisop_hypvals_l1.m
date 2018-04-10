@@ -3,6 +3,21 @@ function res_hypnvals = spisop_hypvals_l1(pathInputFolder, pathOutputFolder, oup
 % one valid epoch of S2 or S3 or S4 or REM
 % Copyright Frederik D. Weber
 
+functionName = 'hypvals';
+ouputFilesPrefixString_folder = strtrim(ouputFilesPrefixString);
+if strcmp(ouputFilesPrefixString_folder,'')
+    ouputFilesPrefixString_folder = 'run0';
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder]);
+end
+
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName]);
+end
+pathOutputFolder = [pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName];
+
+
 DataSetPathsFileName = getParam('DataSetPathsFileName',listOfCoreParameters);
 DataSetHeaderPathsFileName = getParam('DataSetHeaderPathsFileName',listOfCoreParameters);
 IgnoreDataSetHeader = getParam('IgnoreDataSetHeader',listOfCoreParameters);
@@ -418,7 +433,7 @@ for iData = iDatas
         
         
         [temp_pathstr,temp_name,temp_ext] = fileparts(hypnogramPath);
-        fid_export = fopen([ouputFilesPrefixString num2str(iData) '_' temp_name tempExportPostfix '.txt'], 'wt');
+        fid_export = fopen([pathOutputFolder filesep ouputFilesPrefixString num2str(iData) '_' temp_name tempExportPostfix '.txt'], 'wt');
         
         for iRow = 1:size(tempExport_hypn,1)
             fprintf(fid_export, '%i\t%i\n', tempExport_hypn(iRow,:));
@@ -489,7 +504,7 @@ end
 headerOrderSting = '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n';
 
 if strcmp(ExportHypnogram,'yes')
-    headerOrderSting = '%s,%s,%s,%s;%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s';
+    headerOrderSting = '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s';
 end
 
 fprintf(fidh,headerOrderSting,'datasetnum','dataset','hypnogram','epoch_length_seconds','Total_sleep_time_min','Sleep_Onset_min','S1_onset_min','S2_onset_min','SWS_onset_min','S4_onset_min','REM_onset_min'...

@@ -14,10 +14,12 @@ numParallelWorkers = 2;
 if (nargin < NStandardParam) || (nargin > NMaxParam)
     if (nargin < 1)
 
-    helpdlg(sprintf(['SpiSOP is a command line tool!\n\n It does NOT run by double clicking it.\nYou need to give parameters in a command line... \n\n' ...
+    hlp = helpdlg(sprintf(['SpiSOP is a command line tool!\n\n It does NOT run by double clicking it.\nYou need to give parameters in a command line... \n\n' ...
         getUsageString()]),'It does not work like this!');
     end
-    fprintf(['Wrong number of input arguments, should be between ' num2str(NStandardParam) ' and ' num2str(NMaxParam) ' but is ' nargin '\n'])
+    uiwait(hlp);
+
+    fprintf(['Wrong number of input arguments, should be between ' num2str(NStandardParam) ' and ' num2str(NMaxParam) ' but is ' num2str(nargin) '\n'])
     printUsage();
     if (~isdeployed)
         error('try again!');
@@ -26,7 +28,7 @@ if (nargin < NStandardParam) || (nargin > NMaxParam)
     end
 end
 
-if nargin > 6 && ~(strcmpi(functionName,'manipulateparam')) 
+if nargin > 6 && ~(strcmpi(functionName,'manipulateparam')) || (nargin > 5 && (strcmpi(functionName,'eventcooccurrence')))
     for iArg = 1:length(varargin)
         currArg = lower(varargin{iArg});
         currArgPair = strsplit(currArg,'=');
@@ -88,6 +90,24 @@ if (~isdeployed)
 end
 %spisop_init_helper(datasetAndInputFolderName,datasetAndInputFolderName,parallelComputation,numParallelWorkers);
 [pathInputFolder, pathOutputFolder] = spisop_init_helper2016(pathPrefix,inputFolderName,outputFolderName,parallelComputation,numParallelWorkers);
+try
+    if (~isdeployed)
+        %...\external_code\automatic_sleep_scoring\z3score
+        %Download cfslib-MATLAB from https://github.com/amiyapatanaik/cfslib-MATLAB
+        addpath([pathPrefix  filesep 'external_code' filesep 'automatic_sleep_scoring' filesep 'z3score' filesep 'z3score-api' filesep 'cfslib-MATLAB']);
+        addpath([pathPrefix  filesep 'external_code' filesep 'automatic_sleep_scoring' filesep 'z3score' filesep 'z3score-api' filesep 'cfslib-MATLAB' filesep 'utilities']);
+        addpath([pathPrefix  filesep 'external_code' filesep 'automatic_sleep_scoring' filesep 'z3score' filesep 'z3score-api' filesep 'cfslib-MATLAB' filesep 'utilities' filesep 'jsonlab']);
+        addpath([pathPrefix  filesep 'external_code' filesep 'automatic_sleep_scoring' filesep 'z3score' filesep 'z3score-api' filesep 'cfslib-MATLAB' filesep 'utilities' filesep 'encoder']);
+    end
+    
+    if (~isdeployed)
+        %...\external_code\REMs_detector\marek_adamczyk\REMdetector
+        addpath([pathPrefix  filesep 'external_code' filesep 'REMs_detector' filesep 'marek_adamczyk' filesep 'REMdetector']);
+    end
+    
+catch
+    warning('Z3Score: could not be initialized');
+end
 
 %% -------- run until here to initilize -------- % 
 
@@ -121,6 +141,8 @@ switch lower(functionName)
         spisop_freqpeaks(pathInputFolder, pathOutputFolder, outputFilesPrefixString, coreParamFile, functionParamFile);
     case 'confounds'
         spisop_confounds(pathInputFolder, pathOutputFolder, outputFilesPrefixString, coreParamFile, functionParamFile);
+    case 'remsmaad'
+        spisop_remsMaAd(pathInputFolder, pathOutputFolder, outputFilesPrefixString, coreParamFile, functionParamFile);
     case 'nonevents'
         spisop_nonEvents(pathInputFolder, pathOutputFolder, outputFilesPrefixString, coreParamFile, functionParamFile);
     case 'hypcomp'
@@ -199,6 +221,7 @@ fstring = ['USAGE: spisop(.exe) functionName currentFullInstallationFilePath inp
         '  pow' '\n'...
         '  freqpeaks' '\n'...
         '  confounds' '\n'...
+        '  remsMaAd' '\n'...
         '  nonEvents' '\n'...
         '  hypcomp' '\n'...
         '  eventCooccurrence' '\n'...

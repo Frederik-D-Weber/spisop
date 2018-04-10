@@ -2,6 +2,20 @@ function [res_filters, res_confoundsinfo] = spisop_confounds_l1(pathInputFolder,
 % determine (average) power of specific frequency bands
 % Copyright Frederik D. Weber
 
+functionName = 'confounds';
+ouputFilesPrefixString_folder = strtrim(ouputFilesPrefixString);
+if strcmp(ouputFilesPrefixString_folder,'')
+    ouputFilesPrefixString_folder = 'run0';
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder]);
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName]);
+end
+pathOutputFolder = [pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName];
+
+
 DataSetPathsFileName = getParam('DataSetPathsFileName',listOfCoreParameters);
 DataSetHeaderPathsFileName = getParam('DataSetHeaderPathsFileName',listOfCoreParameters);
 IgnoreDataSetHeader = getParam('IgnoreDataSetHeader',listOfCoreParameters);

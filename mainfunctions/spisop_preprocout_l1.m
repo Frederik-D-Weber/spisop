@@ -2,6 +2,18 @@ function [res_filters] = spisop_preprocout_l1(pathInputFolder, pathOutputFolder,
 % preprocess files and output them
 % Copyright Frederik D. Weber
 
+functionName = 'preprocout';
+ouputFilesPrefixString_folder = strtrim(ouputFilesPrefixString);
+if strcmp(ouputFilesPrefixString_folder,'')
+    ouputFilesPrefixString_folder = 'run0';
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder]);
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName]);
+end
+pathOutputFolder = [pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName];
 
 
 DataSetPathsFileName = getParam('DataSetPathsFileName',listOfCoreParameters);
@@ -230,6 +242,19 @@ end
 
 DoWriteData = getParam('DoWriteData',listOfParameters);%either yes or no
 
+DoKeepOldFileNameForExport = 'no';
+try
+	DoKeepOldFileNameForExport = getParam('DoKeepOldFileNameForExport',listOfParameters);%either yes or no
+catch e
+
+end
+
+FileNamePostfixString = '';
+try
+	FileNamePostfixString = getParam('FileNamePostfixString',listOfParameters);%a string with the name at the ending
+catch e
+
+end
 
 
 core_cfg = [];
@@ -1247,7 +1272,15 @@ parfor conseciData = conseciDatas
                 hdr.edf_docutoff = true;
         end
         
-        data_file_name = [pathOutputFolder filesep ouputFilesPrefixString 'preprocout_' 'datanum_' num2str(iData)];
+        data_file_name = [pathOutputFolder filesep ouputFilesPrefixString 'preprocout_' 'datanum_' num2str(iData) FileNamePostfixString];
+        
+        if strcmp(DoKeepOldFileNameForExport,'yes')
+        
+        [filepath_temp,oriDataFilename,oriDataFilenameExt] = fileparts(datasetsPath);
+        	
+                data_file_name = [pathOutputFolder filesep oriDataFilename FileNamePostfixString];
+        end
+        
         ft_write_data([data_file_name], data.trial{:},'dataformat',tempOutputDataformat,'header',hdr);
         
         

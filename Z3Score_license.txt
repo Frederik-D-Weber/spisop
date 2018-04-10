@@ -1,0 +1,3 @@
+http://z3score.com/api/v1
+anexample@email.com
+yourapiKey

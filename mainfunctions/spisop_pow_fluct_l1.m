@@ -2,6 +2,20 @@ function [res_filters, res_band_channels, res_full_channels] = spisop_pow_fluct_
 % determine (average) power of specific frequency bands
 % Copyright Frederik D. Weber
 
+functionName = 'pow_fluct';
+ouputFilesPrefixString_folder = strtrim(ouputFilesPrefixString);
+if strcmp(ouputFilesPrefixString_folder,'')
+    ouputFilesPrefixString_folder = 'run0';
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder]);
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName]);
+end
+pathOutputFolder = [pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName];
+
+
 DataSetPathsFileName = getParam('DataSetPathsFileName',listOfCoreParameters);
 DataSetHeaderPathsFileName = getParam('DataSetHeaderPathsFileName',listOfCoreParameters);
 IgnoreDataSetHeader = getParam('IgnoreDataSetHeader',listOfCoreParameters);

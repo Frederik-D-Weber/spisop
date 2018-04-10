@@ -2,6 +2,20 @@ function [res_filters, res_channels, res_events, res_peaks, res_troughs, res_pea
 % spindle and related phenomena detection
 % Copyright Frederik D. Weber
 
+functionName = 'spd';
+ouputFilesPrefixString_folder = strtrim(ouputFilesPrefixString);
+if strcmp(ouputFilesPrefixString_folder,'')
+    ouputFilesPrefixString_folder = 'run0';
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder]);
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName]);
+end
+pathOutputFolder = [pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName];
+
+
 
 
 DataSetPathsFileName = getParam('DataSetPathsFileName',listOfCoreParameters);

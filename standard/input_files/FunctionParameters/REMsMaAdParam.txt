@@ -1,0 +1,10 @@
+## REQUIRED,,
+ChannelsOfInterestFileName,ChannelsOfInterest_REMs.txt,Filename of file containing comma seperated channel names for analysis per line for respective dataset. There should be two channel names be given idally something like EOGleft_down:A1 and EOGrigh_up:A1
+## OPTIONAL,,
+PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff,0,prefilter frequency before downsampling. if 0 then no prefiltering is applied. should be set to 0.3 to 0.5 if data was not previously filtered. default 0
+ExcludeMAepochs,no,if the MA epochs should not be considered at all either yes or no. default no
+RemoveSignalThatIsNotREM,no,if the signal that is not REM should be excluded from the detection completely
+BasicThresholdFactorOfEOGnoise,0.7,factor of EOG noise that results in the basic threshold in REMs detection
+RelaxedThresholdFactorOfBasicThreshold,0.66,factor mulitplied to the basic threshold that results in the relaxed threshold for REMs detection
+DataSetsWhich,all,Datasets to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
+DataSetsNumbers,1 2,The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset

@@ -2,6 +2,19 @@ function res_nonEvents = spisop_nonEvents_l1(pathInputFolder, pathOutputFolder, 
 % discover correspondent non-events according to new events and hypnogram
 % Copyright Frederik D. Weber
 
+functionName = 'nonEvents';
+ouputFilesPrefixString_folder = strtrim(ouputFilesPrefixString);
+if strcmp(ouputFilesPrefixString_folder,'')
+    ouputFilesPrefixString_folder = 'run0';
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder]);
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName]);
+end
+pathOutputFolder = [pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName];
+
 
 DataSetPathsFileName = getParam('DataSetPathsFileName',listOfCoreParameters);
 DataSetHeaderPathsFileName = getParam('DataSetHeaderPathsFileName',listOfCoreParameters);

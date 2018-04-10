@@ -33,9 +33,13 @@ fprintf('computing parameters are set, check if warnings indicates parallel comp
 if ~isdir(pathPrefix)
     error(['the folder ' pathPrefix ' does not exist, please check the variable called pathPrefix!'])
 end
-pathInputFolder = [pathPrefix filesep 'input' filesep inputFolderName];
-if ~isdir(pathInputFolder)
-    error(['the folder ' pathInputFolder ' does not exist, please create it and copy parameter files in it!'])
+if strcmp(inputFolderName,'')
+    pathInputFolder = '';
+else
+    pathInputFolder = [pathPrefix filesep 'input' filesep inputFolderName];
+    if ~isdir(pathInputFolder)
+        error(['the folder ' pathInputFolder ' does not exist, please create it and copy parameter files in it!'])
+    end
 end
 pathOutputFolder = [pathPrefix filesep 'output' filesep outputFolderName];
 if ~isdir(pathOutputFolder)
@@ -53,6 +57,24 @@ if (~isdeployed)
     % initialize fieldtrip
     ft_defaults;
 end
+
+try
+    if (~isdeployed)
+        %...\external_code\automatic_sleep_scoring\z3score
+        %Download cfslib-MATLAB from https://github.com/amiyapatanaik/cfslib-MATLAB
+        addpath([pathPrefix  filesep 'external_code' filesep 'automatic_sleep_scoring' filesep 'z3score' filesep 'z3score-api' filesep 'cfslib-MATLAB']);
+        addpath([pathPrefix  filesep 'external_code' filesep 'automatic_sleep_scoring' filesep 'z3score' filesep 'z3score-api' filesep 'cfslib-MATLAB' filesep 'utilities']);
+        addpath([pathPrefix  filesep 'external_code' filesep 'automatic_sleep_scoring' filesep 'z3score' filesep 'z3score-api' filesep 'cfslib-MATLAB' filesep 'utilities' filesep 'jsonlab']);
+        addpath([pathPrefix  filesep 'external_code' filesep 'automatic_sleep_scoring' filesep 'z3score' filesep 'z3score-api' filesep 'cfslib-MATLAB' filesep 'utilities' filesep 'encoder']);
+    end
+    if (~isdeployed)
+        %...\external_code\REMs_detector\marek_adamczyk\REMdetector
+        addpath([pathPrefix  filesep 'external_code' filesep 'REMs_detector' filesep 'marek_adamczyk' filesep 'REMdetector']);
+    end
+catch
+    warning('Z3Score: could not be initialized');
+end
+
 % change working directory to output folder
 cd([pathOutputFolder]);
 fprintf('path to toolbox and input and output folders are initialized\n');

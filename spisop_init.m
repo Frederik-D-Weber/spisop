@@ -39,10 +39,10 @@ tempCoreParamFile = 'CoreParam_short.txt';
 spisop('hypvals',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'HypValsParam_short.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
 %% Hypnogram export function (expample first 20 min after sleep onset)
 spisop('hypvals',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'HypValsParam_first20min_after_sleeponset_short.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
-%% Power (density) estimation
-spisop('pow',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'PowParam_short.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
 %% Frequency peaks for sleep spindles (find slow and fast spindles power peaks in spectra)
 spisop('freqpeaks',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'SpindlesFreqPeaksParam_short.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
+%% Power (density) estimation
+spisop('pow',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'PowParam_short.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
 %% Sleep spindle detection based on frequency band defined by center frequencies
 spisop('spd',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'SpindlesParam_short.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
 %% Slow oscillation detection 
@@ -64,10 +64,10 @@ tempCoreParamFile = 'CoreParam_EMSA.txt';
 
 %% Hypnogram values for sleep table
 spisop('hypvals',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'HypValsParam_EMSA.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
-%% Power (density) estimation
-spisop('pow',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'PowParam_EMSA.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
 %% Frequency peaks for sleep spindles (find slow and fast spindles power peaks in spectra)
 spisop('freqpeaks',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'SpindlesFreqPeaksParam_EMSA.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
+%% Power (density) estimation
+spisop('pow',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'PowParam_EMSA.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
 %% Sleep spindle detection based on frequency band defined by center frequencies
 spisop('spd',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'SpindlesParam_EMSA.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
 %% Slow oscillation detection 
@@ -126,6 +126,8 @@ spisop('preprocout',currentFullInstallationFilePath,datasetAndInputFolderName,da
 spisop('sod',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'SOParam_lindev.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
 %% Sleep spindle detection based on frequency band defined by center frequencies
 spisop('spd',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'SpindlesParam_lindev.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
+%% REMs detection based on Algo by Marek Adamczyk
+spisop('remsMaAd',currentFullInstallationFilePath, datasetAndInputFolderName, datasetAndInputFolderName, tempCoreParamFile, 'REMsMaAdParam_lindev.txt' ,['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
 %% compare hypnograms
 spisop('hypcomp',currentFullInstallationFilePath,datasetAndInputFolderName,datasetAndInputFolderName,tempCoreParamFile,'HypCompParam_lindev.txt',['prefixExtentionName=' outputFilesPrefixString],['parallelComputation=' numParallelWorkers])
 %% sleep scoring with browser from the raw data 

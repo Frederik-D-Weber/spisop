@@ -2,6 +2,19 @@ function res_fpeaks = spisop_freqpeaks_l1(pathInputFolder, pathOutputFolder, oup
 % determine peaks in frequency band of e.g. spindles or SO etc. (depends on parameters)
 % Copyright Frederik D. Weber
 
+functionName = 'freqpeaks';
+ouputFilesPrefixString_folder = strtrim(ouputFilesPrefixString);
+if strcmp(ouputFilesPrefixString_folder,'')
+    ouputFilesPrefixString_folder = 'run0';
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder]);
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName]);
+end
+pathOutputFolder = [pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName];
+
 
 DataSetPathsFileName = getParam('DataSetPathsFileName',listOfCoreParameters);
 DataSetHeaderPathsFileName = getParam('DataSetHeaderPathsFileName',listOfCoreParameters);

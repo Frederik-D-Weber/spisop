@@ -1,6 +1,6 @@
 function [hypn_plot_interpol hypn_plot_interpol_MA] = interpolate_hypn_for_plot(hypn,epochLengthSamples,plot_MA_offset)
 
-        plot_MA_offset = -5.5;
+        %plot_MA_offset = -5.5;
         hypn_plot = hypn;
         hypn_plot(hypn_plot(:,1) == 5,1) = 0.5;
         hypn_plot(hypn_plot(:,1) == 8,1) = 0;

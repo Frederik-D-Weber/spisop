@@ -1,4 +1,11 @@
-function [ iDatas, doAsInParameterFile, useDummyDataset] = dataSetInputDialog(listOfDatasetsPaths,iDatas,selectionType)
+function [ iDatas, doAsInParameterFile, useDummyDataset] = dataSetInputDialog(listOfDatasetsPaths,iDatas,selectionType,initDataIndex)
+
+if initDataIndex > numel(listOfDatasetsPaths)
+    initDataIndex = numel(listOfDatasetsPaths);
+end
+
+initDataIndex = initDataIndex + 1;
+
 doAsInParameterFile = false;
 temp_has_decided = false;
 temp_selection_items = listOfDatasetsPaths;
@@ -17,6 +24,7 @@ while ~temp_has_decided
     [dataset_selection,dataset_selection_ok] = listdlg('PromptString',promt,...
         'SelectionMode',selectionType,...
         'ListString',temp_selection_items,...
+        'InitialValue',initDataIndex,...
         'ListSize',temp_listSize,...
         'CancelString','Open all as stated in Parameterfile');
     if dataset_selection_ok

@@ -30,4 +30,4 @@ addpath(pathPrefix);
 [pathInputFolder, pathOutputFolder] = spisop_init_helper(pathPrefix,datasetAndInputFolderName,datasetAndInputFolderName,parallelComputation,numParallelWorkers);
 
 cd(pathPrefix)
-mcc -mv -I ./subfunctions -I ./mainfunctions -a ./subfunctions/*.m -a ./dummy/dummy.eeg -a ./dummy/dummy.vhdr -a ./dummy/dummy.txt -a ./dummy/dummy.vmrk  spisop.m
+mcc -mv -I ./subfunctions -I ./mainfunctions -I ./external_code/REMs_detector/marek_adamczyk/REMdetector -a ./external_code/REMs_detector/marek_adamczyk/REMdetector/*.m -a ./external_code/REMs_detector/marek_adamczyk/REMdetector/*.mat -a ./subfunctions/*.m -a ./dummy/dummy.eeg -a ./dummy/dummy.vhdr -a ./dummy/dummy.txt -a ./dummy/dummy.vmrk spisop.m

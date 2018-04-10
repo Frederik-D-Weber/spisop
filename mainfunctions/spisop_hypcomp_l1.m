@@ -2,6 +2,19 @@ function [res_stats_table_all, res_stats_table_single_category_all, res_stats_ta
 % compare sleep scorings against each other
 % Copyright Frederik D. Weber
 
+functionName = 'hypcomp';
+ouputFilesPrefixString_folder = strtrim(ouputFilesPrefixString);
+if strcmp(ouputFilesPrefixString_folder,'')
+    ouputFilesPrefixString_folder = 'run0';
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder]);
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName]);
+end
+pathOutputFolder = [pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName];
+
 
 HypnogramLinksFileName = getParam('HypnogramLinksFileName',listOfParameters);
 listOfHypnogramLinksFileName = {};
@@ -186,7 +199,7 @@ for iData = iDatas
             
             generateTheHypnogramFigure(hypn,hypnStages,hypnEpochsBeginsSamples,lightsOffSample,SleepOnsetDefinition,epochLengthSamples,epochLength,...
                 GenerateHypnogramFiguresFormat,GenerateHypnogramFiguresUnit,GenerateHypnogramFiguresFormatWidth,GenerateHypnogramFiguresFormatHeight,GenerateHypnogramFiguresFormatResolution,GenerateHypnogramFiguresFormatFontSize,...
-                dummySampleRate,ouputFilesPrefixString,titleName,HypnogramTimeTicks...
+                dummySampleRate,pathOutputFolder,ouputFilesPrefixString,titleName,HypnogramTimeTicks...
                 )
             
         end
@@ -238,7 +251,7 @@ for iData = iDatas
         
         temp_stats_table_all = [temp_datasetnumber_table temp_hypfilenumber_table temp_stats_table];
         
-        writetable(temp_stats_table_all,[ouputFilesPrefixString 'hypcomp_stats_datasetnum_' num2str(iData) '.csv'],'FileType','text','Delimiter',',');
+        writetable(temp_stats_table_all,[pathOutputFolder filesep ouputFilesPrefixString 'hypcomp_stats_datasetnum_' num2str(iData) '.csv'],'FileType','text','Delimiter',',');
         
         
         if isempty(res_stats_table_all)
@@ -258,7 +271,7 @@ for iData = iDatas
         temp_datasetnumber_table.Properties.VariableNames = {'datasetnum'};
         temp_hypfilenumber_table.Properties.VariableNames = {'hyplinkfilepath'};
         temp_stats_table2_norm = [temp_datasetnumber_table temp_hypfilenumber_table temp_stats_table2_norm];
-        writetable(temp_stats_table2_norm,[ouputFilesPrefixString 'hypcomp_stats_category_datasetnum_' num2str(iData) '.csv'],'FileType','text','Delimiter',',');
+        writetable(temp_stats_table2_norm,[pathOutputFolder filesep ouputFilesPrefixString 'hypcomp_stats_category_datasetnum_' num2str(iData) '.csv'],'FileType','text','Delimiter',',');
         
         
         if isempty(res_stats_table_single_category_all)
@@ -277,7 +290,7 @@ for iData = iDatas
         temp_datasetnumber_table.Properties.VariableNames = {'datasetnum'};
         temp_hypfilenumber_table.Properties.VariableNames = {'hyplinkfilepath'};
         temp_stats_table2_MA = [temp_datasetnumber_table temp_hypfilenumber_table temp_stats_table2_MA];
-        writetable(temp_stats_table2_MA,[ouputFilesPrefixString 'hypcomp_stats_category_MA_datasetnum_' num2str(iData) '.csv'],'FileType','text','Delimiter',',');
+        writetable(temp_stats_table2_MA,[pathOutputFolder filesep ouputFilesPrefixString 'hypcomp_stats_category_MA_datasetnum_' num2str(iData) '.csv'],'FileType','text','Delimiter',',');
         
         
         
@@ -303,10 +316,10 @@ for iData = iDatas
         end
         
         if ~isempty(cc_all_norm)
-            writetable(cc_all_norm,[ouputFilesPrefixString 'hypcomp_cross_comp_datasetnum_' num2str(iData) '.csv'],'FileType','text','Delimiter',',');
+            writetable(cc_all_norm,[pathOutputFolder filesep ouputFilesPrefixString 'hypcomp_cross_comp_datasetnum_' num2str(iData) '.csv'],'FileType','text','Delimiter',',');
         end
         if ~isempty(cc_all_MA)
-            writetable(cc_all_MA,[ouputFilesPrefixString 'hypcomp_cross_comp_MA_datasetnum_' num2str(iData) '.csv'],'FileType','text','Delimiter',',');
+            writetable(cc_all_MA,[pathOutputFolder filesep ouputFilesPrefixString 'hypcomp_cross_comp_MA_datasetnum_' num2str(iData) '.csv'],'FileType','text','Delimiter',',');
         end
         
         hypn = [consensusModusVoteMatrix_norm' consensusModusVoteMatrix_MA'];
@@ -329,7 +342,7 @@ for iData = iDatas
             
             generateTheHypnogramFigure(hypn,hypnStages,hypnEpochsBeginsSamples,lightsOffSample,SleepOnsetDefinition,epochLengthSamples,epochLength,...
                 GenerateHypnogramFiguresFormat,GenerateHypnogramFiguresUnit,GenerateHypnogramFiguresFormatWidth,GenerateHypnogramFiguresFormatHeight,GenerateHypnogramFiguresFormatResolution,GenerateHypnogramFiguresFormatFontSize,...
-                dummySampleRate,ouputFilesPrefixString,titleName,HypnogramTimeTicks...
+                dummySampleRate,pathOutputFolder,ouputFilesPrefixString,titleName,HypnogramTimeTicks...
                 )
             
         end
@@ -558,13 +571,13 @@ end
 %     res_hypnvals = dataset('File',[pathOutputFolder filesep ouputFilesPrefixString 'hypvals_full_' 'datanum_all_selected' '.csv'],'Delimiter',',');
 
 if ~isempty(res_cc_all_all_norm)
-    writetable(res_cc_all_all_norm,[ouputFilesPrefixString 'hypcomp_cross_comp_datasetnum_' 'all_recent' '.csv'],'FileType','text','Delimiter',',');
+    writetable(res_cc_all_all_norm,[pathOutputFolder filesep ouputFilesPrefixString 'hypcomp_cross_comp_datasetnum_' 'all_recent' '.csv'],'FileType','text','Delimiter',',');
 end
 if ~isempty(res_cc_all_all_MA)
-    writetable(res_cc_all_all_MA,[ouputFilesPrefixString 'hypcomp_cross_comp_MA_datasetnum_' 'all_recent' '.csv'],'FileType','text','Delimiter',',');
+    writetable(res_cc_all_all_MA,[pathOutputFolder filesep ouputFilesPrefixString 'hypcomp_cross_comp_MA_datasetnum_' 'all_recent' '.csv'],'FileType','text','Delimiter',',');
 end
 if ~isempty(res_stats_table_all)
-    writetable(res_stats_table_all,[ouputFilesPrefixString 'hypcomp_stats_datasetnum_' 'all_recent' '.csv'],'FileType','text','Delimiter',',');
+    writetable(res_stats_table_all,[pathOutputFolder filesep ouputFilesPrefixString 'hypcomp_stats_datasetnum_' 'all_recent' '.csv'],'FileType','text','Delimiter',',');
 end
 
 fprintf('HypComp function finished\n');
@@ -637,7 +650,7 @@ end
 
 function generateTheHypnogramFigure(hypn,hypnStages,hypnEpochsBeginsSamples,lightsOffSample,SleepOnsetDefinition,epochLengthSamples,epochLength,...
     GenerateHypnogramFiguresFormat,GenerateHypnogramFiguresUnit,GenerateHypnogramFiguresFormatWidth,GenerateHypnogramFiguresFormatHeight,GenerateHypnogramFiguresFormatResolution,GenerateHypnogramFiguresFormatFontSize,...
-    dummySampleRate,ouputFilesPrefixString,titleName,HypnogramTimeTicks...
+    dummySampleRate,pathOutputFolder,ouputFilesPrefixString,titleName,HypnogramTimeTicks...
     )
 
 
@@ -742,11 +755,11 @@ set(hhyp,'PaperOrientation', 'portrait');
 
 switch GenerateHypnogramFiguresFormat
     case 'fig'
-        saveas(hhyp, [ouputFilesPrefixString titleName '.fig']);
+        saveas(hhyp, [pathOutputFolder filesep ouputFilesPrefixString titleName '.fig']);
     case 'eps'
-        print(hhyp,['-d' 'epsc'],['-r' GenerateHypnogramFiguresFormatResolution],[ouputFilesPrefixString titleName]);
+        print(hhyp,['-d' 'epsc'],['-r' GenerateHypnogramFiguresFormatResolution],[pathOutputFolder filesep ouputFilesPrefixString titleName]);
     otherwise
-        print(hhyp,['-d' GenerateHypnogramFiguresFormat],['-r' GenerateHypnogramFiguresFormatResolution],[ouputFilesPrefixString titleName]);
+        print(hhyp,['-d' GenerateHypnogramFiguresFormat],['-r' GenerateHypnogramFiguresFormatResolution],[pathOutputFolder filesep ouputFilesPrefixString titleName]);
 end
 %saveas(hhyp, [titleName '.png']);
 %saveas(hhyp, [titleName '.eps']);

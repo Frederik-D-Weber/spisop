@@ -3,6 +3,20 @@ function [res_match, res_mismatch, res_summary] = spisop_eventCooccurrence_l1(pa
 % fall within a defined timewindow arround target events.
 % Copyright Frederik D. Weber
 
+functionName = 'eventCooccurrence';
+ouputFilesPrefixString_folder = strtrim(ouputFilesPrefixString);
+if strcmp(ouputFilesPrefixString_folder,'')
+    ouputFilesPrefixString_folder = 'run0';
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder]);
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName]);
+end
+pathOutputFolder = [pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName];
+
+
 EventsTestFilePathsFileName = getParam('EventsTestFilePathsFileName',listOfParameters);
 EventsTargetFilePathsFileName = getParam('EventsTargetFilePathsFileName',listOfParameters);
 

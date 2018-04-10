@@ -2,6 +2,20 @@ function [res_filters] = spisop_browser_l1(pathInputFolder, pathOutputFolder, ou
 % browser for sleep data scoring and events
 % Copyright Frederik D. Weber
 
+functionName = 'browser';
+ouputFilesPrefixString_folder = strtrim(ouputFilesPrefixString);
+if strcmp(ouputFilesPrefixString_folder,'')
+    ouputFilesPrefixString_folder = 'run0';
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder]);
+end
+if ~isdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName])
+    mkdir([pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName]);
+end
+pathOutputFolder = [pathOutputFolder filesep ouputFilesPrefixString_folder filesep functionName];
+
+
 %set(0, 'DefaultFigureRenderer', 'OpenGL');
 try
     DefaultFigureRenderer = getParam('DefaultFigureRenderer',listOfParameters);
@@ -27,25 +41,133 @@ HypnogramsFileName = getParam('HypnogramsFileName',listOfCoreParameters);
 ChannelsOfInterestFileName = getParam('ChannelsOfInterestFileName',listOfParameters);
 AVGoverChannels = getParam('AVGoverChannels',listOfParameters);
 
-if exist([pathInputFolder filesep DataSetPathsFileName],'file') ~= 2
-    error(['DataSetPathsFileName file ' [pathInputFolder filesep DataSetPathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
-end
-if ~strcmp(IgnoreDataSetHeader,'yes')
-    if exist([pathInputFolder filesep DataSetHeaderPathsFileName],'file') ~= 2
-        error(['DataSetHeaderPathsFileName file ' [pathInputFolder filesep DataSetHeaderPathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+ReadInHypnogram = getParam('ReadInHypnogram',listOfParameters);%either yes or no
+
+ReadSession = 'no';
+ReadSingleDataset = 'no';
+if strcmp(DataSetPathsFileName,'')
+    answer_data = questdlg('Open new data or sesion', ...
+        'Replace Primary with deleted?', ...
+        'New data','Previous session','New data');
+    switch answer_data
+        case 'New data'
+            ReadSingleDataset = 'yes';
+        case 'Previous session'
+            ReadSession = 'yes';
     end
 end
-ReadInHypnogram = getParam('ReadInHypnogram',listOfParameters);%either yes or no
-if strcmp(ReadInHypnogram,'yes')
-if exist([pathInputFolder filesep HypnogramsFileName],'file') ~= 2
-    error(['HypnogramsFileName file ' [pathInputFolder filesep HypnogramsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
-end
+
+if strcmp(ReadSingleDataset,'yes')
+    
+    [dataset_file_name dataset_file_path dataset_file_filterindex] = uigetfile(...
+        {'*.eeg;*.edf','Import formats (*.eeg,*.edf)';...
+        '*.eeg','Brainvision files (*.eeg)';...
+        '*.edf','EDF files (*.edf)';...
+        % '*.m', 'program files (*.m)';...
+        % '*.fig','Figures (*.fig)';...
+        % '*.mat','MAT-files (*.mat)';...
+        '*.*',  'All Files (*.*)'},...
+        'Import Dataset');
+    
+    DataSetPathsFileName = [dataset_file_path dataset_file_name];
+    [temppath, tempname, tempext] = fileparts(DataSetPathsFileName);
+    
+    if strcmp(tempext,'.eeg')
+        DataSetHeaderPathsFileName = [temppath filesep tempname '.vhdr'];
+    elseif strcmp(tempext,'.edf')
+        DataSetHeaderPathsFileName = DataSetPathsFileName;
+    else
+        if strcmp(IgnoreDataSetHeader,'no')
+            %%temppath = DataSetPathsFileName;
+            [datasetheader_file_name datasetheader_file_path datasetheader_file_filterindex] = uigetfile(...
+                {'*.vhdr;*.edf','Import formats (*.eeg,*.edf)';...
+                '*.vhdr','Brainvision files (*.eeg)';...
+                '*.edf','EDF files (*.edf)';...
+                % '*.m', 'program files (*.m)';...
+                % '*.fig','Figures (*.fig)';...
+                % '*.mat','MAT-files (*.mat)';...
+                '*.*',  'All Files (*.*)'},...
+                'Import Dataset Header',...
+                temppath);
+            DataSetHeaderPathsFileName = [datasetheader_file_path filesep datasetheader_file_name];
+        end
+    end
+    
+    answer_read_hyp = questdlg('Would you like to read in a Hypnogram?', ...
+        'Read in Hypnogram?', ...
+        'Yes','No','No');
+    switch answer_read_hyp
+        case 'Yes'
+            ReadInHypnogram = 'yes';
+        case 'No'
+            ReadInHypnogram = 'no';
+    end
+    
+    if strcmp(ReadInHypnogram,'yes')
+        [hyp_file_name hyp_file_path hyp_file_filterindex] = uigetfile(...
+            {'*.txt;*.csv','Import formats (*.txt,*.csv)';...
+            '*.txt','Text - Tab delimited (*.txt)';...
+            '*.csv','Comma Separated Values (*.csv)';...
+            % '*.m', 'program files (*.m)';...
+            % '*.fig','Figures (*.fig)';...
+            % '*.mat','MAT-files (*.mat)';...
+            '*.*',  'All Files (*.*)'},...
+            'Import Hypnogram File',...
+            temppath);
+        HypnogramsFileName = [hyp_file_path filesep hyp_file_name];
+    else
+        [temppath, tempname, tempext] = fileparts(DataSetPathsFileName);
+        if ~strcmp(tempext,'.txt')
+            ReadSingleDataset = 'yes';
+        end
+        %         if strcmp(IgnoreDataSetHeader,'no')
+        %             [temppath, tempname, tempext] = fileparts(DataSetHeaderPathsFileName);
+        %         end
+        %         if strcmp(ReadInHypnogram,'yes')
+        %             [temppath, tempname, tempext] = fileparts(HypnogramsFileName);
+        %         end
+    end
 end
 
-if exist([pathInputFolder filesep ChannelsOfInterestFileName],'file') ~= 2
-    error(['ChannelsOfInterestFileName file ' [pathInputFolder filesep ChannelsOfInterestFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+if strcmp(ReadSingleDataset,'yes')
+    if exist([DataSetPathsFileName],'file') ~= 2
+        error(['DataSetPathsFileName file ' [DataSetPathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+    end
+    
+    if ~strcmp(IgnoreDataSetHeader,'yes')
+        if exist([DataSetHeaderPathsFileName],'file') ~= 2
+            error(['DataSetHeaderPathsFileName file ' [DataSetHeaderPathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+    end
+    
+    if strcmp(ReadInHypnogram,'yes')
+        if exist([HypnogramsFileName],'file') ~= 2
+            error(['HypnogramsFileName file ' [HypnogramsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+    end
+    
+elseif ~strcmp(ReadSession,'yes')
+    if exist([pathInputFolder filesep DataSetPathsFileName],'file') ~= 2
+        error(['DataSetPathsFileName file ' [pathInputFolder filesep DataSetPathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+    end
+    if ~strcmp(IgnoreDataSetHeader,'yes')
+        if exist([pathInputFolder filesep DataSetHeaderPathsFileName],'file') ~= 2
+            error(['DataSetHeaderPathsFileName file ' [pathInputFolder filesep DataSetHeaderPathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+    end
+    
+    
+    if strcmp(ReadInHypnogram,'yes')
+        if exist([pathInputFolder filesep HypnogramsFileName],'file') ~= 2
+            error(['HypnogramsFileName file ' [pathInputFolder filesep HypnogramsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+    end
+    
+    if exist([pathInputFolder filesep ChannelsOfInterestFileName],'file') ~= 2
+        error(['ChannelsOfInterestFileName file ' [pathInputFolder filesep ChannelsOfInterestFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+    end
+    
 end
-
 
 PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff = str2num(getParam('PreDownSampleHighPassFilter_FpassLeft_or_F3dBcutoff',listOfParameters));%in Hz
 
@@ -58,7 +180,7 @@ IncludePostiveMarkerAtBeginning = getParam('IncludePostiveMarkerAtBeginning',lis
 
 CutDataAtEndHypnogram = 'no'; %default
 try
-CutDataAtEndHypnogram = getParam('CutDataAtEndHypnogram',listOfParameters);% either yes or no default no
+    CutDataAtEndHypnogram = getParam('CutDataAtEndHypnogram',listOfParameters);% either yes or no default no
 catch e
     
 end
@@ -83,22 +205,40 @@ DataSetsWhich = getParam('DataSetsWhich',listOfParameters);%Datasets to be proce
 DataSetsNumbers = str2num(getParam('DataSetsNumbers',listOfParameters));%The line numbers of the Datasets to be processed if DataSetsWich parameter is set to subset
 
 
-listOfDatasetsPaths = read_mixed_csv([pathInputFolder filesep DataSetPathsFileName],',');
-listOfDatasetHeaderPaths = [];
-if strcmp(IgnoreDataSetHeader,'no')
-    listOfDatasetHeaderPaths = read_mixed_csv([pathInputFolder filesep DataSetHeaderPathsFileName],',');
-    if ~(all(size(listOfDatasetsPaths) == size(listOfDatasetHeaderPaths)))
-        error('files or number of Datasetspaths and Headerpaths are invalid or do not aggree')
+if strcmp(ReadSingleDataset,'yes') || strcmp(ReadSession,'yes')
+    listOfDatasetsPaths = {DataSetPathsFileName};
+    listOfDatasetHeaderPaths = {DataSetHeaderPathsFileName};
+else 
+    listOfDatasetsPaths = read_mixed_csv([pathInputFolder filesep DataSetPathsFileName],',');
+    listOfDatasetHeaderPaths = [];
+    if strcmp(IgnoreDataSetHeader,'no')
+        listOfDatasetHeaderPaths = read_mixed_csv([pathInputFolder filesep DataSetHeaderPathsFileName],',');
+        if ~(all(size(listOfDatasetsPaths) == size(listOfDatasetHeaderPaths)))
+            error('files or number of Datasetspaths and Headerpaths are invalid or do not aggree')
+        end
     end
 end
 
 if strcmp(DoEpochData,'yes') || strcmp(ReadInHypnogram,'yes') || strcmp(CutDataAtEndHypnogram,'yes')
-    listOfHypnogramPaths = read_mixed_csv([pathInputFolder filesep HypnogramsFileName],',');
+    if strcmp(ReadSingleDataset,'yes')
+        listOfHypnogramPaths = {HypnogramsFileName};
+    elseif ~strcmp(ReadSession,'yes')
+        listOfHypnogramPaths = read_mixed_csv([pathInputFolder filesep HypnogramsFileName],',');
+    end
 end
 
-listOfChannelsOfInterest = read_mixed_csv([pathInputFolder filesep ChannelsOfInterestFileName],',');
+[temppath, tempname, tempext] = fileparts(ChannelsOfInterestFileName);
+if strcmp(tempext,'.txt') && strcmp(ReadSingleDataset,'yes')
+    error('ChannelsOfInterest should not be defined in a list, but directly in the Parameter file, e.g. C3 C4')
+end
 
+if strcmp(ReadSingleDataset,'yes')
+    listOfChannelsOfInterest = strsplit(ChannelsOfInterestFileName);
+elseif ~strcmp(ReadSession,'yes')
+    listOfChannelsOfInterest = read_mixed_csv([pathInputFolder filesep ChannelsOfInterestFileName],',');
+end
 
+if ~strcmp(ReadSession,'yes')
 if strcmp(DoEpochData,'yes') || strcmp(CutDataAtEndHypnogram,'yes')
     if ~(all(size(listOfDatasetsPaths) == size(listOfHypnogramPaths)) && (size(listOfDatasetsPaths,1) == size(listOfChannelsOfInterest,1)))
         error('files or number of Datasetspaths Hypnogramsfiles ChannelsOfInterest are invalid or do not aggree')
@@ -108,11 +248,22 @@ else
         error('files or number of Datasetspaths nd ChannelsOfInterest are invalid or do not aggree')
     end
 end
+end
 
 
 
-iDatas = 1:(length(listOfDatasetsPaths));
-[iDatas, doAsInParameterFile, useDummyDataset] = dataSetInputDialog(listOfDatasetsPaths,iDatas,'single');
+if strcmp(ReadSingleDataset,'yes')
+    initDataIndex = 1;
+end
+if strcmp(ReadSession,'yes')
+    useDummyDataset = true;
+    iDatas = 0;
+    doAsInParameterFile = false;
+else
+    iDatas = 1:(length(listOfDatasetsPaths));
+    initDataIndex = 0;
+    [iDatas, doAsInParameterFile, useDummyDataset] = dataSetInputDialog(listOfDatasetsPaths,iDatas,'single',initDataIndex);
+end
 
 if doAsInParameterFile && strcmp(DataSetsWhich,'subset') && (~useDummyDataset)
     if ~(ismember(min(DataSetsNumbers),iDatas) && ismember(max(DataSetsNumbers),iDatas))
@@ -129,14 +280,18 @@ end
 % end
 
 if (~useDummyDataset)
-pretestHeaderForPersistentSampleFrequencies(IgnoreDataSetHeader,iDatas,listOfDatasetHeaderPaths,listOfChannelsOfInterest,FrqOfSmplWished);
-pretestHeaderForPersistentSampleFrequencies(IgnoreDataSetHeader,iDatas,listOfDatasetHeaderPaths,listOfChannelsOfInterest,FrqOfSmplWishedPreRedefine);
-
+    pretestHeaderForPersistentSampleFrequencies(IgnoreDataSetHeader,iDatas,listOfDatasetHeaderPaths,listOfChannelsOfInterest,FrqOfSmplWished);
+    pretestHeaderForPersistentSampleFrequencies(IgnoreDataSetHeader,iDatas,listOfDatasetHeaderPaths,listOfChannelsOfInterest,FrqOfSmplWishedPreRedefine);
+    
 end
 
 SignalMultiplicator = getParam('SignalMultiplicator',listOfCoreParameters);%factor that signals should be muliplicated with either a number or mixed. e.g. -1 means inverted. in case of mixed DataSetSignalMultiplicatorFileName is used. default 1 (nothing)
 if (useDummyDataset)
     SignalMultiplicator = '1';
+end
+
+if (strcmp(SignalMultiplicator,'mixed')) && strcmp(ReadSingleDataset,'yes')
+    error('SignalMultiplicator cannot be mixed for a single dataset picked in the Parameter file.')
 end
 
 DataSetSignalMultiplicatorFileName = getParam('DataSetSignalMultiplicatorFileName',listOfCoreParameters);%Filename of file containing an muliplicatoion factor (for example -1 for inversion) applied to each signal per line for respective dataset
@@ -157,6 +312,11 @@ DataSetOffsetSamples = getParam('DataSetOffsetSamples',listOfCoreParameters);%of
 if (useDummyDataset)
     DataSetOffsetSamples = '0';
 end
+
+if (strcmp(DataSetOffsetSamples,'mixed')) && strcmp(ReadSingleDataset,'yes')
+    error('DataSetOffsetSamples cannot be mixed for a single dataset picked in the Parameter file.')
+end
+
 DataSetOffsetSamplesFileName = getParam('DataSetOffsetSamplesFileName',listOfCoreParameters);%Filename of file containing an offset factor (for example -1 for inversion) applied to each signal per line for respective dataset
 
 if (strcmp(DataSetOffsetSamples,'mixed'))
@@ -175,14 +335,23 @@ DoReReference = getParam('DoReReference',listOfCoreParameters);%either yes or no
 if (useDummyDataset)
     DoReReference = 'no';
 end
+
+
 RerefDefinitionsFileName = getParam('RerefDefinitionsFileName',listOfCoreParameters);
 listOfRerefDefinitionFiles = {};
 if strcmp(DoReReference,'yes')
     
-    if exist([pathInputFolder filesep RerefDefinitionsFileName],'file') ~= 2
-        error(['RerefChannelsFileName file ' [pathInputFolder filesep RerefDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+    if strcmp(ReadSingleDataset,'yes')
+        if exist([RerefDefinitionsFileName],'file') ~= 2
+            error(['RerefChannelsFileName file ' [RerefDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfRerefDefinitionFiles = {RerefDefinitionsFileName};
+    else
+        if exist([pathInputFolder filesep RerefDefinitionsFileName],'file') ~= 2
+            error(['RerefChannelsFileName file ' [pathInputFolder filesep RerefDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfRerefDefinitionFiles = read_mixed_csv([pathInputFolder filesep RerefDefinitionsFileName],',');
     end
-    listOfRerefDefinitionFiles = read_mixed_csv([pathInputFolder filesep RerefDefinitionsFileName],',');
     if ~(all(size(listOfDatasetsPaths) == size(listOfRerefDefinitionFiles)))
         error('files or number of Datasetspaths RerefChannels are invalid or do not aggree')
     end
@@ -215,10 +384,18 @@ DelimiterLinearDeviationMontage = ',';
 LinearDeviationMontageDefinitionsFileName = getParam('LinearDeviationMontageDefinitionsFileName',listOfCoreParameters);
 listOfLinearDeviationMontageFiles = {};
 if strcmp(ApplyLinearDeviationMontage,'yes')
-    if exist([pathInputFolder filesep LinearDeviationMontageDefinitionsFileName],'file') ~= 2
-        error(['LinearDeviationMontagePathsFileName file ' [pathInputFolder filesep LinearDeviationMontageDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+    
+    if strcmp(ReadSingleDataset,'yes')
+        if exist([LinearDeviationMontageDefinitionsFileName],'file') ~= 2
+            error(['LinearDeviationMontagePathsFileName file ' [LinearDeviationMontageDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfLinearDeviationMontageFiles = {LinearDeviationMontageDefinitionsFileName};
+    else
+        if exist([pathInputFolder filesep LinearDeviationMontageDefinitionsFileName],'file') ~= 2
+            error(['LinearDeviationMontagePathsFileName file ' [pathInputFolder filesep LinearDeviationMontageDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfLinearDeviationMontageFiles = read_mixed_csv([pathInputFolder filesep LinearDeviationMontageDefinitionsFileName],',');
     end
-    listOfLinearDeviationMontageFiles = read_mixed_csv([pathInputFolder filesep LinearDeviationMontageDefinitionsFileName],',');
     if ~(all(size(listOfDatasetsPaths) == size(listOfLinearDeviationMontageFiles)))
         error('files or number of Datasetspaths LinearDeviationMontagePaths are invalid or do not aggree')
     end
@@ -245,10 +422,18 @@ end
 FiltersSettingsDefinitionsFileName = getParam('FiltersSettingsDefinitionsFileName',listOfParameters);
 listOfFilterSettingsFiles = {};
 if strcmp(ApplyFilterSettings,'yes')
-    if exist([pathInputFolder filesep FiltersSettingsDefinitionsFileName],'file') ~= 2
-        error(['FiltersSettingsDefinitionsFileName file ' [pathInputFolder filesep FiltersSettingsDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+    
+    if strcmp(ReadSingleDataset,'yes')
+        if exist([FiltersSettingsDefinitionsFileName],'file') ~= 2
+            error(['FiltersSettingsDefinitionsFileName file ' [FiltersSettingsDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfFilterSettingsFiles = {FiltersSettingsDefinitionsFileName};
+    else
+        if exist([pathInputFolder filesep FiltersSettingsDefinitionsFileName],'file') ~= 2
+            error(['FiltersSettingsDefinitionsFileName file ' [pathInputFolder filesep FiltersSettingsDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfFilterSettingsFiles = read_mixed_csv([pathInputFolder filesep FiltersSettingsDefinitionsFileName],',');
     end
-    listOfFilterSettingsFiles = read_mixed_csv([pathInputFolder filesep FiltersSettingsDefinitionsFileName],',');
     if ~(all(size(listOfDatasetsPaths) == size(listOfFilterSettingsFiles)))
         error('files or number of Datasetspaths listOfFilterSettingsFiles are invalid or do not aggree')
     end
@@ -274,10 +459,18 @@ end
 ScalingSettingsDefinitionsFileName = getParam('ScalingSettingsDefinitionsFileName',listOfParameters);
 listOfScalingSettingsFiles = {};
 if strcmp(ApplyScalingSettings,'yes')
-    if exist([pathInputFolder filesep ScalingSettingsDefinitionsFileName],'file') ~= 2
-        error(['FiltersSettingsDefinitionsFileName file ' [pathInputFolder filesep ScalingSettingsDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+    
+    if strcmp(ReadSingleDataset,'yes')
+        if exist([ScalingSettingsDefinitionsFileName],'file') ~= 2
+            error(['FiltersSettingsDefinitionsFileName file ' [ScalingSettingsDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfScalingSettingsFiles = {ScalingSettingsDefinitionsFileName};
+    else
+        if exist([pathInputFolder filesep ScalingSettingsDefinitionsFileName],'file') ~= 2
+            error(['FiltersSettingsDefinitionsFileName file ' [pathInputFolder filesep ScalingSettingsDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfScalingSettingsFiles = read_mixed_csv([pathInputFolder filesep ScalingSettingsDefinitionsFileName],',');
     end
-    listOfScalingSettingsFiles = read_mixed_csv([pathInputFolder filesep ScalingSettingsDefinitionsFileName],',');
     if ~(all(size(listOfDatasetsPaths) == size(listOfScalingSettingsFiles)))
         error('files or number of Datasetspaths listOfScalingSettingsFiles are invalid or do not aggree')
     end
@@ -303,10 +496,18 @@ end
 EventmappingSettingsDefinitionsFileName = getParam('EventmappingSettingsDefinitionsFileName',listOfParameters);
 listOfEventmappingSettingsFiles = {};
 if strcmp(ApplyEventmappingSettings,'yes')
-    if exist([pathInputFolder filesep EventmappingSettingsDefinitionsFileName],'file') ~= 2
-        error(['EventmappingSettingsDefinitionsFileName file ' [pathInputFolder filesep EventmappingSettingsDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+    
+    if strcmp(ReadSingleDataset,'yes')
+        if exist([EventmappingSettingsDefinitionsFileName],'file') ~= 2
+            error(['EventmappingSettingsDefinitionsFileName file ' [EventmappingSettingsDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfEventmappingSettingsFiles = {EventmappingSettingsDefinitionsFileName};
+    else
+        if exist([pathInputFolder filesep EventmappingSettingsDefinitionsFileName],'file') ~= 2
+            error(['EventmappingSettingsDefinitionsFileName file ' [pathInputFolder filesep EventmappingSettingsDefinitionsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfEventmappingSettingsFiles = read_mixed_csv([pathInputFolder filesep EventmappingSettingsDefinitionsFileName],',');
     end
-    listOfEventmappingSettingsFiles = read_mixed_csv([pathInputFolder filesep EventmappingSettingsDefinitionsFileName],',');
     if ~(all(size(listOfDatasetsPaths) == size(listOfEventmappingSettingsFiles)))
         error('files or number of Datasetspaths listOfEventmappingSettingsFiles are invalid or do not aggree')
     end
@@ -333,9 +534,7 @@ if strcmp(ApplyEventsSelection,'yes')
     
     EventsTarget1FilePathsFileName = getParam('EventsTarget1FilePathsFileName',listOfParameters);
     
-    if exist([pathInputFolder filesep EventsTarget1FilePathsFileName],'file') ~= 2
-        error(['EventsTarget1FilePathsFileName file ' [pathInputFolder filesep EventsTarget1FilePathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
-    end
+    
     
     
     EventsTarget1TimePointColumn = getParam('EventsTarget1TimePointColumn',listOfParameters);
@@ -353,9 +552,17 @@ if strcmp(ApplyEventsSelection,'yes')
     EventsFilesWhich = getParam('EventsFilesWhich',listOfParameters);%Event files to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
     EventsFilesNumbers = str2num(getParam('EventsFilesNumbers',listOfParameters));%The line numbers of the events file to be processed if EventsFilesWhich parameter is set to subset
     
-    
-    listOfEventsTarget1Paths = read_mixed_csv([pathInputFolder filesep EventsTarget1FilePathsFileName],',');
-    
+    if strcmp(ReadSingleDataset,'yes')
+        if exist([EventsTarget1FilePathsFileName],'file') ~= 2
+            error(['EventsTarget1FilePathsFileName file ' [EventsTarget1FilePathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfEventsTarget1Paths = {EventsTarget1FilePathsFileName};
+    else
+        if exist([pathInputFolder filesep EventsTarget1FilePathsFileName],'file') ~= 2
+            error(['EventsTarget1FilePathsFileName file ' [pathInputFolder filesep EventsTarget1FilePathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfEventsTarget1Paths = read_mixed_csv([pathInputFolder filesep EventsTarget1FilePathsFileName],',');
+    end
     iDatas_Events = 1:(length(listOfEventsTarget1Paths));
     
     if strcmp(EventsFilesWhich,'subset')
@@ -381,9 +588,7 @@ if strcmp(ApplyEventsSelection2,'yes')
     
     EventsTarget2FilePathsFileName = getParam('EventsTarget2FilePathsFileName',listOfParameters);
     
-    if exist([pathInputFolder filesep EventsTarget2FilePathsFileName],'file') ~= 2
-        error(['EventsTarget2FilePathsFileName file ' [pathInputFolder filesep EventsTarget2FilePathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
-    end
+    
     
     
     EventsTarget2TimePointColumn = getParam('EventsTarget2TimePointColumn',listOfParameters);
@@ -401,9 +606,17 @@ if strcmp(ApplyEventsSelection2,'yes')
     EventsFilesWhich2 = getParam('EventsFilesWhich2',listOfParameters);%Event files to be processed either all or subset if subset then DataSetsNumbers is used for selection default all
     EventsFilesNumbers2 = str2num(getParam('EventsFilesNumbers2',listOfParameters));%The line numbers of the events file to be processed if EventsFilesWhich parameter is set to subset
     
-    
-    listOfEventsTarget2Paths = read_mixed_csv([pathInputFolder filesep EventsTarget2FilePathsFileName],',');
-    
+    if strcmp(ReadSingleDataset,'yes')
+        if exist([EventsTarget2FilePathsFileName],'file') ~= 2
+            error(['EventsTarget2FilePathsFileName file ' [EventsTarget2FilePathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfEventsTarget2Paths = {EventsTarget2FilePathsFileName};
+    else
+        if exist([pathInputFolder filesep EventsTarget2FilePathsFileName],'file') ~= 2
+            error(['EventsTarget2FilePathsFileName file ' [pathInputFolder filesep EventsTarget2FilePathsFileName] ' does not exist. Check if this file is a correct parameter, if so then check for correct path and if file exists in it.'])
+        end
+        listOfEventsTarget2Paths = read_mixed_csv([pathInputFolder filesep EventsTarget2FilePathsFileName],',');
+    end
     iDatas_Events = 1:(length(listOfEventsTarget2Paths));
     
     if strcmp(EventsFilesWhich,'subset')
@@ -663,10 +876,10 @@ for conseciData = conseciDatas
         cfg = ft_definetrial(cfg);
         cfg.continuous = 'yes'; %overwrite the trial uncontinuous data structure
         
-%         [temppath tempname tempending] = fileparts(datasetsPath);
-%         if strcmp(tempending,'.mat')
-%             cfg.inputfile = datasetsPath;
-%         end
+        %         [temppath tempname tempending] = fileparts(datasetsPath);
+        %         if strcmp(tempending,'.mat')
+        %             cfg.inputfile = datasetsPath;
+        %         end
         
         cfg.dataset = datasetsPath;
         cfg.channel = 1;
@@ -679,11 +892,11 @@ for conseciData = conseciDatas
     end
     
     signalOffsetSeconds = signalOffsetSamples/preDownsampleFreq;
+    epochLengthSamples = epochLength * preDownsampleFreq;
     
     if strcmp(DoEpochData,'yes')
         fprintf('dataset %i: process ROI from hypnogram info\n',iData);
         %ROI
-        epochLengthSamples = epochLength * preDownsampleFreq;
         [roiBegins, roiEnds] = getROIsByHypnogram(hypnogramPath,epochLengthSamples,sleepStagesOfInterest);
         
         if length(roiEnds) < 1
@@ -721,7 +934,7 @@ for conseciData = conseciDatas
         
     end
     
-  
+    
     
     %     for second read in of hypnogramm after downsampling
     %     if (signalOffsetSamples ~= 0)
@@ -745,10 +958,10 @@ for conseciData = conseciDatas
         end
         cfg.continuous = 'yes'; %overwrite the trial uncontinuous data structure
         
-%         [temppath tempname tempending] = fileparts(datasetsPath);
-%         if strcmp(tempending,'.mat')
-%             cfg.inputfile = datasetsPath;
-%         end
+        %         [temppath tempname tempending] = fileparts(datasetsPath);
+        %         if strcmp(tempending,'.mat')
+        %             cfg.inputfile = datasetsPath;
+        %         end
         
         cfg.dataset = datasetsPath;
         cfg.channel = 'all';
@@ -929,10 +1142,10 @@ for conseciData = conseciDatas
             cfg = ft_definetrial(cfg);
         end
         cfg.continuous = 'yes'; %overwrite the trial uncontinuous data structure
-%         [temppath tempname tempending] = fileparts(datasetsPath);
-%         if strcmp(tempending,'.mat')
-%             cfg.inputfile = datasetsPath;
-%         end
+        %         [temppath tempname tempending] = fileparts(datasetsPath);
+        %         if strcmp(tempending,'.mat')
+        %             cfg.inputfile = datasetsPath;
+        %         end
         cfg.dataset = datasetsPath;
         data = ft_fw_preprocessing(cfg);
     end
@@ -978,7 +1191,7 @@ for conseciData = conseciDatas
         
         fprintf('dataset %i: apply filtering to data\n',iData);
         
-     
+        
         
         data_filt = {};
         iChanCount = 1;
@@ -1012,7 +1225,7 @@ for conseciData = conseciDatas
             used_specified_filtering_once_bp = false;
             used_specified_filtering_once_hp = false;
             used_specified_filtering_once_lp = false;
-
+            
             while curr_filterdefs_filterPos <= length(curr_filterdefs)
                 curr_filter = char(curr_filterdefs(curr_filterdefs_filterPos));
                 FpassLeft = -1;
@@ -1044,7 +1257,7 @@ for conseciData = conseciDatas
                             curr_filterdefs_filterPos = curr_filterdefs_filterPos + 1;
                         case 'mult'
                             [MultFactor conversion_state_success] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+1)));
-                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2;                            
+                            curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2;
                         case {'bp', 'waveletband'}
                             [FpassLeft conversion_state_success] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+1)));
                             [FpassRight conversion_state_success] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+2)));
@@ -1052,22 +1265,22 @@ for conseciData = conseciDatas
                             if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+3)
                                 [pot_additional_value conversion_state_success_potaddval] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+3)));
                                 if conversion_state_success_potaddval
-                                      useSpecifiedFilterOrder = true;
-                                      filterOrder = round(pot_additional_value);
-                                      temp_additional_values = temp_additional_values + 1; 
-                                      
-                                      if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+4) && strcmp(curr_filter,'bp')
-                                          pot_filterType = char(curr_filterdefs(curr_filterdefs_filterPos+4));
-                                          if strcmp(pot_filterType,'iir') || strcmp(pot_filterType,'fir')
-                                                overwriteFilterType = true;
-                                                used_specified_filtering_once_bp = true;
-                                                filterType = pot_filterType;
-                                                temp_additional_values = temp_additional_values + 1;
-                                          end
-                                      end
-                                      if strcmp(curr_filter,'waveletband')
-                                          used_specified_filtering_once_bp = true;
-                                      end
+                                    useSpecifiedFilterOrder = true;
+                                    filterOrder = round(pot_additional_value);
+                                    temp_additional_values = temp_additional_values + 1;
+                                    
+                                    if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+4) && strcmp(curr_filter,'bp')
+                                        pot_filterType = char(curr_filterdefs(curr_filterdefs_filterPos+4));
+                                        if strcmp(pot_filterType,'iir') || strcmp(pot_filterType,'fir')
+                                            overwriteFilterType = true;
+                                            used_specified_filtering_once_bp = true;
+                                            filterType = pot_filterType;
+                                            temp_additional_values = temp_additional_values + 1;
+                                        end
+                                    end
+                                    if strcmp(curr_filter,'waveletband')
+                                        used_specified_filtering_once_bp = true;
+                                    end
                                 end
                             end
                             curr_filterdefs_filterPos = curr_filterdefs_filterPos + 3 + temp_additional_values;
@@ -1076,19 +1289,19 @@ for conseciData = conseciDatas
                             temp_additional_values = 0;
                             if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+2)
                                 [pot_additional_value conversion_state_success_potaddval] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+2)));
-                                if conversion_state_success_potaddval 
-                                      useSpecifiedFilterOrder = true;
-                                      filterOrder = round(pot_additional_value);
-                                      temp_additional_values = temp_additional_values + 1;
-                                      if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+3)
-                                          pot_filterType = char(curr_filterdefs(curr_filterdefs_filterPos+3));
-                                          if strcmp(pot_filterType,'iir') || strcmp(pot_filterType,'fir')
-                                                overwriteFilterType = true;
-                                                used_specified_filtering_once_hp = true;
-                                                filterType = pot_filterType;
-                                                temp_additional_values = temp_additional_values + 1;
-                                          end
-                                      end
+                                if conversion_state_success_potaddval
+                                    useSpecifiedFilterOrder = true;
+                                    filterOrder = round(pot_additional_value);
+                                    temp_additional_values = temp_additional_values + 1;
+                                    if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+3)
+                                        pot_filterType = char(curr_filterdefs(curr_filterdefs_filterPos+3));
+                                        if strcmp(pot_filterType,'iir') || strcmp(pot_filterType,'fir')
+                                            overwriteFilterType = true;
+                                            used_specified_filtering_once_hp = true;
+                                            filterType = pot_filterType;
+                                            temp_additional_values = temp_additional_values + 1;
+                                        end
+                                    end
                                 end
                             end
                             curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2 + temp_additional_values;
@@ -1098,18 +1311,18 @@ for conseciData = conseciDatas
                             if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+2)
                                 [pot_additional_value conversion_state_success_potaddval] = str2num(char(curr_filterdefs(curr_filterdefs_filterPos+2)));
                                 if conversion_state_success_potaddval
-                                      useSpecifiedFilterOrder = true;
-                                      filterOrder = round(pot_additional_value);
-                                      temp_additional_values = temp_additional_values + 1;
-                                       if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+3)
-                                          pot_filterType = char(curr_filterdefs(curr_filterdefs_filterPos+3));
-                                          if strcmp(pot_filterType,'iir') || strcmp(pot_filterType,'fir')
-                                                overwriteFilterType = true;
-                                                used_specified_filtering_once_lp = true;
-                                                filterType = pot_filterType;
-                                                temp_additional_values = temp_additional_values + 1;
-                                          end
-                                      end
+                                    useSpecifiedFilterOrder = true;
+                                    filterOrder = round(pot_additional_value);
+                                    temp_additional_values = temp_additional_values + 1;
+                                    if (numel(curr_filterdefs) >= curr_filterdefs_filterPos+3)
+                                        pot_filterType = char(curr_filterdefs(curr_filterdefs_filterPos+3));
+                                        if strcmp(pot_filterType,'iir') || strcmp(pot_filterType,'fir')
+                                            overwriteFilterType = true;
+                                            used_specified_filtering_once_lp = true;
+                                            filterType = pot_filterType;
+                                            temp_additional_values = temp_additional_values + 1;
+                                        end
+                                    end
                                 end
                             end
                             curr_filterdefs_filterPos = curr_filterdefs_filterPos + 2 + temp_additional_values;
@@ -1246,7 +1459,7 @@ for conseciData = conseciDatas
                             cfg.bpinstabilityfix = 'split';
                             switch filterType
                                 case 'iir'
-                                    cfg.bpfilttype =  'but';   
+                                    cfg.bpfilttype =  'but';
                                 case 'fir'
                                     cfg.bpfilttype =  'fir';
                                 otherwise
@@ -1255,8 +1468,8 @@ for conseciData = conseciDatas
                         end
                         
                         if strcmp(UseFixedFilterOrder_bp,'yes') || useSpecifiedFilterOrder
-                            if useSpecifiedFilterOrder 
-                              cfg.bpfiltord = filterOrder;  
+                            if useSpecifiedFilterOrder
+                                cfg.bpfiltord = filterOrder;
                             else
                                 cfg.bpfiltord = FilterOrder_bp;
                             end
@@ -1304,8 +1517,8 @@ for conseciData = conseciDatas
                             end
                         end
                         if strcmp(UseFixedFilterOrder_hp,'yes') || useSpecifiedFilterOrder
-                            if useSpecifiedFilterOrder 
-                              cfg.hpfiltord = filterOrder;  
+                            if useSpecifiedFilterOrder
+                                cfg.hpfiltord = filterOrder;
                             else
                                 cfg.hpfiltord = FilterOrder_hp;
                             end
@@ -1378,7 +1591,7 @@ for conseciData = conseciDatas
     end
     
     
-     %FrqOfSmplWished = 400;
+    %FrqOfSmplWished = 400;
     if (FrqOfSmplWishedPar < data.fsample)
         fprintf('dataset %i: resample data from %i to %i Hz\n',iData,data.fsample,FrqOfSmplWishedPar);
         cfg = [];
@@ -1405,6 +1618,7 @@ for conseciData = conseciDatas
                 cfg.offset = signalOffsetSamples_new+1;
                 data = ft_redefinetrial(cfg,data);
                 data.sampleinfo = [1 numel(data.time{1})];
+                warning(['IMPORTANT: for dataset ' num2str(iData) ': JUST CUT ' num2str(signalOffsetSamples_new) ' samples at the beginning corresponding to : ' num2str(signalOffsetSamples_new/FrqOfSmpl) ' seconds because of hypnogram/data offset!']);
             elseif signalOffsetSamples_new < 0
                 for iTrTr = 1:numel(data.trial)
                     cfg.padtype = 'zero';
@@ -1412,6 +1626,7 @@ for conseciData = conseciDatas
                 end
                 data.time{1} = (0:(size(data.trial{1},2)-1))/data.fsample;
                 data.sampleinfo = [1 numel(data.time{1})];
+                warning(['IMPORTANT: for dataset ' num2str(iData) ': JUST ADDED ' num2str(signalOffsetSamples_new) ' samples at the beginning corresponding to : ' num2str(signalOffsetSamples_new/FrqOfSmpl) ' seconds because of hypnogram/data offset!']);
             end
         end
     end
@@ -1505,25 +1720,25 @@ for conseciData = conseciDatas
         data.trial{1} = sigpositive_data;
     end
     
-     if strcmp(CutDataAtEndHypnogram,'yes') && ~strcmp(DoEpochData,'yes')
-            epochLengthSamples = epochLength * data.fsample;
-            [hypn hypnStages hypnEpochs hypnEpochsBeginsSamples hypnEpochsEndsSamples] = readInSleepHypnogram(hypnogramPath,epochLengthSamples);
-            if size(data.trial{1},2) > hypnEpochsEndsSamples(end)
-                temp_data = data.trial{1};
-                temp_data(:,(hypnEpochsEndsSamples(end)+1):end) = [];
-                data.trial{1} = temp_data;
-                temp_data = [];
-                
-                temp_time = data.time{1};
-                temp_time((hypnEpochsEndsSamples(end)+1):end) = [];
-                data.time{1} = temp_time;
-                temp_time = [];
-                
-                %data.hdr = [];
-                data.sampleinfo = [1 (hypnEpochsEndsSamples(end))];
-            end
-           
+    if strcmp(CutDataAtEndHypnogram,'yes') && ~strcmp(DoEpochData,'yes')
+        epochLengthSamples = epochLength * data.fsample;
+        [hypn hypnStages hypnEpochs hypnEpochsBeginsSamples hypnEpochsEndsSamples] = readInSleepHypnogram(hypnogramPath,epochLengthSamples);
+        if size(data.trial{1},2) > hypnEpochsEndsSamples(end)
+            temp_data = data.trial{1};
+            temp_data(:,(hypnEpochsEndsSamples(end)+1):end) = [];
+            data.trial{1} = temp_data;
+            temp_data = [];
+            
+            temp_time = data.time{1};
+            temp_time((hypnEpochsEndsSamples(end)+1):end) = [];
+            data.time{1} = temp_time;
+            temp_time = [];
+            
+            %data.hdr = [];
+            data.sampleinfo = [1 (hypnEpochsEndsSamples(end))];
         end
+        
+    end
     
     
     
@@ -1966,7 +2181,9 @@ for conseciData = conseciDatas
             if size(hypn,1) < nEpochs
                 missingEpochs = nEpochs - size(hypn,1);
                 %hypn(end+1:end+missingEpochs,:) = [ones(1,missingEpochs,1)*-1 zeros(0,missingEpochs,1)];
-                hypn = [hypn ; [ones(missingEpochs,1,1)*-1 zeros(missingEpochs,1,1)]];
+                hypn_missing = zeros(missingEpochs,size(hypn,2));
+                hypn_missing(:,1) = -1;
+                hypn = [hypn ; hypn_missing];
             end
         end
     elseif strcmp(DoSleepScoring,'yes')
@@ -1979,19 +2196,29 @@ for conseciData = conseciDatas
     
     if strcmp(ReadInHypnogram,'yes') || strcmp(DoSleepScoring,'yes')
         plot_MA_offset = -5.5;
+        plot_confidence_offset = 0.25;
         [hypn_plot_interpol hypn_plot_interpol_MA] = interpolate_hypn_for_plot(hypn,cfg_datbrow.hyp_epochLengthSamples,plot_MA_offset);
         
-%         if (signalOffsetSamples ~= 0)
-%             signalOffsetSamples_downsampled = floor(signalOffsetSeconds*data.fsample);
-%             hypn_plot_interpol = [repmat(0,signalOffsetSamples_downsampled,1); hypn_plot_interpol];
-%             hypn_plot_interpol_MA = [repmat(plot_MA_offset,signalOffsetSamples_downsampled,1); hypn_plot_interpol_MA];
-%         end
+        %         if (signalOffsetSamples ~= 0)
+        %             signalOffsetSamples_downsampled = floor(signalOffsetSeconds*data.fsample);
+        %             hypn_plot_interpol = [repmat(0,signalOffsetSamples_downsampled,1); hypn_plot_interpol];
+        %             hypn_plot_interpol_MA = [repmat(plot_MA_offset,signalOffsetSamples_downsampled,1); hypn_plot_interpol_MA];
+        %         end
         
         cfg_datbrow.hypn_plot_interpol = hypn_plot_interpol;
         cfg_datbrow.hypn_plot_interpol_MA = hypn_plot_interpol_MA;
         cfg_datbrow.plot_MA_offset = plot_MA_offset;
+        cfg_datbrow.plot_confidence_offset = plot_confidence_offset;
         cfg_datbrow.plotHyp = 'yes';
         cfg_datbrow.hypn = hypn;
+        
+        cfg_datbrow.hypn_plot_interpol_confidence = [];
+        if size(cfg_datbrow.hypn,2) > 2
+            if (max(cfg_datbrow.hypn(:,3)) <= 1) && (min(cfg_datbrow.hypn(:,3)) >=0)
+                [dummy_temp curr_ep_hypn_plot_interpol_confidence] = interpolate_hypn_for_plot(cfg_datbrow.hypn(:,2:3),cfg_datbrow.hyp_epochLengthSamples,cfg_datbrow.plot_confidence_offset);
+                cfg_datbrow.hypn_plot_interpol_confidence = curr_ep_hypn_plot_interpol_confidence;
+            end
+        end
         
     end
     
@@ -2027,8 +2254,8 @@ for conseciData = conseciDatas
         else
             cfg_datbrow.has_ECG = false;
         end
-            
-
+        
+        
         
         cfg_datbrow.core_cfg = core_cfg;
     else
@@ -2042,7 +2269,11 @@ for conseciData = conseciDatas
     cfg_datbrow.datasetsPath = datasetsPath;
     
     cfg_datbrow.black_background = strcmp(TraceBackgroundColor,'black');
-
+    
+    cfg_datbrow.StartWithOpenSession = false;
+    if strcmp(ReadSession,'yes')
+        cfg_datbrow.StartWithOpenSession = true;
+    end
     
     
     cfg_datbrowres = ft_fw_databrowser(cfg_datbrow, data);
@@ -2083,8 +2314,8 @@ toc
 memtoc
 end
 
-function signal = envpeaks(x,fsample,seconds)  
-    [pks locs] = findpeaks(x,'MINPEAKDISTANCE',max(1,floor(seconds*fsample)));
-    signal = interp1([1 locs numel(x)],[x(1) pks x(end)],1:numel(x),'linear');   
+function signal = envpeaks(x,fsample,seconds)
+[pks locs] = findpeaks(x,'MINPEAKDISTANCE',max(1,floor(seconds*fsample)));
+signal = interp1([1 locs numel(x)],[x(1) pks x(end)],1:numel(x),'linear');
 end
 
