@@ -455,7 +455,7 @@ if ~is_below_2GB || ~read_16bit_success
   [buf,num] = fread(fp,numwords,'bit16=>double');
   fclose(fp);
   if (num<numwords)
-    error(['failed reading ' filename]);
+    ft_error(['failed reading ' filename]);
     return
   end
 end
