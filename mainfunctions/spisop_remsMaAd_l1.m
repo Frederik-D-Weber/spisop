@@ -383,7 +383,7 @@ tic
 memtic
 fprintf('REMsMaAd function initialized\n');
 conseciDatas = 1:length(iDatas);
-parfor conseciData = conseciDatas
+for conseciData = conseciDatas
     iData = iDatas(conseciData);
     %iData = 1
     
@@ -771,8 +771,11 @@ parfor conseciData = conseciDatas
          
          begins = begins(1:numel(ends));
          
-         indicesValid = find(keep_samples(begins) == 1 | (keep_samples(ends) == 1)); %consider border effects filter
-
+         if isempty(begins)
+             indicesValid = [];
+         else
+             indicesValid = find(keep_samples(begins) == 1 | (keep_samples(ends) == 1)); %consider border effects filter
+         end
          begins = begins(indicesValid);
          ends = ends(indicesValid);
         

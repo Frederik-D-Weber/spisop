@@ -1554,7 +1554,7 @@ parfor conseciData = conseciDatas
     fidpa = fopen([pathOutputFolder filesep ouputFilesPrefixString 'spindle_peaks_filtered_potential_' 'datanum_' num2str(iData) '.csv'],'wt');
     fidta = fopen([pathOutputFolder filesep ouputFilesPrefixString 'spindle_troughs_filtered_potential_' 'datanum_' num2str(iData) '.csv'],'wt');
     
-    %write header of ouptufiles
+    %write header of outputfiles
     fprintf(fidc,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n','datasetnum','channel','count','density_per_epoch','mean_duration_seconds','mean_amplitude_trough2peak_potential','mean_frequency_by_mean_pk_trgh_cnt_per_dur','epoch_length_seconds','merged_count','lengths_ROI_seconds','used_threshold_basis','used_factor_for_threshold_basis_begin_end','used_factor_for_threshold_basis_criterion','used_min_detection_pass_or_cutoff_freq','used_max_detection_pass_or_cutoff_freq','used_center_freq','mean_SD_of_filtered_signal','mean_troughs_per_event','mean_peaks_per_event','mean_linear_regression_freq_slope','mean_linear_regression_freq_offset','mean_linear_regression_freq_R_squared');
     
     fprintf(fide,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n',...
