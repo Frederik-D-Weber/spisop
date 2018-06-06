@@ -834,7 +834,7 @@ for conseciData = conseciDatas
             epochs = {};
             for iDetected = 1:nDetected
                 detected.REMSpeed_uV_per_second(iDetected) = mean(abs(EOG1_lp_dev(begins:ends))) + mean(abs(EOG2_lp_dev(begins:ends)));
-                
+                detected.REMSpeed_uV_per_second(iDetected) = detected.REMSpeed_uV_per_second(iDetected)/sampling;
                 detected.REMSpeed_uV_per_second(iDetected) = detected.REMSpeed_uV_per_second(iDetected)/detected.seconds_duration(iDetected);
                 
                 tempSample = begins(iDetected);

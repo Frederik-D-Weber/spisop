@@ -15,3 +15,6 @@ IncludePostiveMarkerAtBeginning,yes, uses the first 402 samples to indicate a po
 ApplyFilterSettings,no,either yes or no default no
 FiltersSettingsDefinitionsFileName,FiltersSettingsDefinitions.txt,Filename of file containing paths to linear deviation definitions
 DoWriteData,yes,either yes or no default yes
+CutDataAtEndHypnogram,no,if the data should be cut at the end of the hypnogram. either yes or no default no
+DoKeepOldFileNameForExport,no,if the original filename should be preserved. FileNamePostfixString still applies. either yes or no default no
+FileNamePostfixString,,a string at the end of the filename that is added for the output files. default [empty string]
