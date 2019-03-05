@@ -383,7 +383,7 @@ tic
 memtic
 fprintf('REMsMaAd function initialized\n');
 conseciDatas = 1:length(iDatas);
-for conseciData = conseciDatas
+parfor conseciData = conseciDatas
     iData = iDatas(conseciData);
     %iData = 1
     
@@ -833,10 +833,7 @@ for conseciData = conseciDatas
             detected.REMSpeed_uV_per_second = zeros(nDetected,1);
             epochs = {};
             for iDetected = 1:nDetected
-                detected.REMSpeed_uV_per_second(iDetected) = mean(abs(EOG1_lp_dev(begins:ends))) + mean(abs(EOG2_lp_dev(begins:ends)));
-                detected.REMSpeed_uV_per_second(iDetected) = detected.REMSpeed_uV_per_second(iDetected)/sampling;
-                detected.REMSpeed_uV_per_second(iDetected) = detected.REMSpeed_uV_per_second(iDetected)/detected.seconds_duration(iDetected);
-                
+                detected.REMSpeed_uV_per_second(iDetected) = mean([abs(mean(EOG1_lp_dev(begins:ends))) abs(mean(EOG2_lp_dev(begins:ends)))])*sampling;                
                 tempSample = begins(iDetected);
                 tempInd = ((hypnEpochsBeginsSamples <= tempSample) & (tempSample <= hypnEpochsEndsSamples));
                 if ~any(tempInd)

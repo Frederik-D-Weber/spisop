@@ -671,6 +671,8 @@ else
     cfg.displayEvents = 'no';
 end
 
+cfg.browserversion = '2.3.8';
+
 if strcmp(cfg.doSleepScoring,'yes')
     
     
@@ -685,7 +687,7 @@ if strcmp(cfg.doSleepScoring,'yes')
     cfg.underlaySpindleSignal = 'no';
     cfg.underlaySOSignal = 'no';
     
-       
+    
     
     cfg.spindle_mark_color = [0 1 0];
     cfg.slowoscillation_mark_color = [1 0 0];
@@ -693,6 +695,7 @@ if strcmp(cfg.doSleepScoring,'yes')
     
     cfg.underlaySOSignal_color = [255/255 165/255 0/255];
     
+    cfg.color_text_on_bg = [0.8 0.8 0.8];
     
     cfg.curr_displayed_detected_slowosci_perc_display_ind = 0;
     cfg.curr_displayed_detected_slowosci_perc = -1;
@@ -701,9 +704,9 @@ if strcmp(cfg.doSleepScoring,'yes')
     cfg.curr_displayed_detected_slowosci_perc_substractive = 0;
     cfg.curr_displayed_detected_spindels_number = -1;
     cfg.curr_displayed_marking = -1;
-
+    
     cfg.SOdetection_orientation = 1;
-                
+    
     cfg.sp_thresholdForDetectionBeginEnd = 10;
     cfg.sp_thresholdForDetectionCriterion = 15;
     cfg.sp_minSec = 0.5;
@@ -712,7 +715,7 @@ if strcmp(cfg.doSleepScoring,'yes')
     cfg.sp_maxFreq = 14;
     
     cfg.markSO_filter = 'yes';
-
+    
     
     cfg.so_minFreq = 0.5;
     cfg.so_maxFreq = 2;
@@ -743,14 +746,14 @@ if strcmp(cfg.doSleepScoring,'yes')
     cfg.AstopLeft_hp = 100;
     cfg.Apass_hp = 0.001;
     cfg.StopToPassTransitionWidth_hp = 0.2;
-
+    
     
     cfg.UseFixedFilterOrder_lp = 'no';
     cfg.FilterOrder_lp = 100;
     cfg.AstopRight_lp = 100;
     cfg.Apass_lp = 0.001;
     cfg.PassToStopTransitionWidth_lp = 1.25;
-
+    
     
     
     
@@ -794,6 +797,8 @@ if strcmp(cfg.doSleepScoring,'yes')
     cfg.autosave_hypnogram_every_number_change = 5;
     opt.autosave_hypnogram_change_interator = 0;
     
+    cfg.confidence_skip_to_lower_than_threshold = 0;
+    
     cfg.display_power_spectrum = 'no';
     cfg.freq_borders = [0.5 4; 4 8; 8 12; 12 15; 20 30;];
     cfg.freq_colors = jet(size(cfg.freq_borders,1));
@@ -804,6 +809,15 @@ if strcmp(cfg.doSleepScoring,'yes')
     cfg.artifact_export_delimiter = ',';
     
     cfg.toggle_epoch_marker = 0;
+    
+    
+    if ~isfield(cfg,'hypn_mult')
+        cfg.hypn_mult = {};
+        cfg.hypn_plot_interpol_mult = {};
+        cfg.hypn_plot_interpol_MA_mult = {};
+        cfg.hypn_plot_interpol_confidence_mult = {};
+        cfg.hypn_mult_idx = 1;
+    end
     
 end
 
@@ -886,8 +900,8 @@ end
 
 if strcmp(cfg.doSleepScoring,'yes')
     
-    uicontrol('tag', 'scbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'W(0)','position', [0.4, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', '0')
-    uicontrol('tag', 'scbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'REM(5)','position', [0.44, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', '5')
+    uicontrol('tag', 'scbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'W(0/W)','position', [0.4, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', '0')
+    uicontrol('tag', 'scbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'REM(5/R)','position', [0.44, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', '5')
     uicontrol('tag', 'scbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'MT(8)','position', [0.48, temp_lower_line_y2, 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', '8')
     uicontrol('tag', 'scbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'MA(9)','position', [0.52, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', '9')
     
@@ -895,7 +909,7 @@ if strcmp(cfg.doSleepScoring,'yes')
     uicontrol('tag', 'scbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'S2(2)','position', [0.44 temp_lower_line_y , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', '2')
     uicontrol('tag', 'scbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'S3(3)','position', [0.48, temp_lower_line_y , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', '3')
     uicontrol('tag', 'scbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'S4(4)','position', [0.52, temp_lower_line_y , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', '4')
-    uicontrol('tag', 'scoptbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '?(D)','position', [0.56, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'd')
+    uicontrol('tag', 'scoptbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '?(7/D)','position', [0.56, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'd')
     
     uicontrol('tag', 'scoptbuttons_SOdet', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '(+)_.·\_.·\_.·','Fontsize',5,'FontUnits','normalized','position', [0.62, temp_lower_line_y+0.08/5+0.08/5+0.08/5+0.08/5 , 0.05, 0.08/5],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'k')
     uicontrol('tag', 'scoptbuttons_SOdisp', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '--(_.·\)--','Fontsize',5,'FontUnits','normalized','position', [0.62, temp_lower_line_y+0.08/5+0.08/5+0.08/5 , 0.05, 0.08/5],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'o')
@@ -906,7 +920,7 @@ if strcmp(cfg.doSleepScoring,'yes')
     end
     uicontrol('tag', 'scoptbuttons_pow', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'pow','position',  [0.675, temp_lower_line_y+0.08/3+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'p')
     uicontrol('tag', 'scoptbuttons_tfr', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'tfr','position', [0.675, temp_lower_line_y+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'f')
-
+    
     uicontrol('tag', 'scoptbuttons_mark', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'mark','position', [0.7, temp_lower_line_y+0.08/3+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'm')
     uicontrol('tag', 'scoptbuttons_zoom', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'zoom','position', [0.7, temp_lower_line_y+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'z')
     uicontrol('tag', 'scoptbuttons_grid', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'grid','position', [0.725, temp_lower_line_y+0.08/3+0.08/3 , 0.025, 0.08/3],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'g')
@@ -931,7 +945,7 @@ if strcmp(cfg.doSleepScoring,'yes')
     
     
     uicontrol('tag', 'scoptbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'shortcuts','position', [0.9, temp_lower_line_y2 , 0.05, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'shift+h')
-
+    
     
     uicontrol('tag', 'scoptbuttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'thresholds','position', [0.95, temp_lower_line_y2 , 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1], 'userdata', 'l')
 end
@@ -1005,6 +1019,21 @@ end
 
 
 definetrial_cb(h);
+
+if cfg.StartWithOpenSession
+    try
+        [h,opt,cfg,hyp_file_filterindex] = loadSession(h,opt,cfg);
+        setappdata(h, 'opt', opt);
+        setappdata(h, 'cfg', cfg);
+        %redraw_cb(h);
+        if hyp_file_filterindex ~= 0
+            msgbox('Opening session successful!' ,'Opening successful','modal');
+        end
+    catch err
+        msgbox('Open the session failed!' ,'Open failed','error','modal');
+    end
+end
+
 redraw_cb(h);
 
 
@@ -1045,6 +1074,10 @@ redraw_cb(h);
 %     'visible', 'off'); %'value', xmin
 %initialize postion of plot
 % set(gca,'xlim',[xmin xmin+dx]);
+
+
+
+
 
 if nargout
     % wait until the user interface is closed, get the user data with the updated artifact details
@@ -1093,14 +1126,14 @@ selection = questdlg('Close Browser?',...
     'Yes','No','No');
 switch selection,
     case 'Yes',
-
+        
         cfg = getappdata(h, 'cfg');
         if isfield(cfg,'hhyp')
             if ishandle(cfg.hhyp)
                 close(cfg.hhyp);
             end
         end
-         if isfield(cfg,'f_ps')
+        if isfield(cfg,'f_ps')
             if ishandle(cfg.f_ps)
                 close(cfg.f_ps);
             end
@@ -1255,65 +1288,66 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function helptext = help_text()
 helptext = [ ...
-'\nKEYBOARD SHORTCUTS ONLY WILL WORK \n' ...
-'IF MOUSE WAS CLICKED IN DISPLAY AREA!\n\n' ...
-'Keyboard shortcuts for... \n' ...
-' Scoring:\n'...
-'  1: Stage 1 (S1) \n'...
-'  2: Stage 2 (S2) \n'...
-'  3: Stage 3 (S3) \n'...
-'  4: Stage 4 (S4) \n'...
-'  5: REM \n'...
-'  8: Movement Time (MT) \n'...
-'  9: Movement Arousal/Epoch with artifact(s) (MA, additional) \n'...
-'  D: Delete Stage \n'...
-' Control:\n'...
-'  Left-arrow: go to previous epoch \n'...
-'  Right-arrow: go to next epoch \n'...
-'  Up-arrow: decrease scaling (zoom in all channels) \n'...
-'  Down-arrow: increase scaling (zoom out all channels) \n'...
-'  Y: Vertical Y-scaling basis (equivalent to scaling factor = 1) (dialog) \n'...
-'  Shift + C: Channel settings \n' ...
-'             select, color, scaling, order, foci (EEG, EMG, EOG) \n'...
-'  Shift + Up-arrow: skip up through undisplayed channels \n'...
-'  Shift + Down-arrow: skip down through undisplayed channels \n'...
-'  Shift + Q: Quit Program \n'...
-'  P: Power spectrum of the current epoch \n'...
-'  F: Time-frequency plot of the current EEG scoring channel \n'...
-'  X: Hide/Display menue bar \n'...
-'  T: Select epoch to jump to (dialog) \n'...
-'  Shift + T and Ctrl + T: toggle and un-toggle epoch start-marker\n'...
-'  L: Set Thresholds (dialog) \n'...
-'  Shift + H: Shortcut help \n'...
-' Scoring aids:\n'...
-'  M: enable/disable marking, cummulative time \n'...
-'  N: enable/disable spindle signal display (EEG filtered in spindle band) \n'...
-'  E: enable/disable display of pre-readin Events, if processed already \n'...
-'  Q: delete previously made marking \n'...
-'  R: enable/disable Ruler (aka "the Score-ship") \n'...
-'  J: enable/disable spindle marking \n'...
-'  K: enable/[polartity-switch]/disable K-Complex \n'...
-'     or Slow oscillation marking \n'...
-'  B: enable/[polartity-switch]/disable heart rate \n'...
-'     indication and coloring \n'...
-'  G: enable/disable display of the time grid \n'...
-'  Z: enable/disable zooming (double-click = return to full view) \n'...
-'     left-click: zoom in \n'...
-'     Alt + left-click zoom out \n'...
-'     double-click: fully zoom out \n'...
-'  A: switch to next artifact marking type \n'...
-'  Ctrl + 1..9 OR Alt + 1..9: skip to next artifact type 1..9 \n'...
-' Saving/Export:\n'...
-'  Shift + S: Save Session (dialog) \n'...
-'  Shift + O: Open Session (dialog) \n'...
-'  Shift + I: Import Hypnogram (dialog) \n'...
-'  Shift + E: Export Hypnogram (dialog) \n'...
-' Non-Scoring:\n'...
-'  Shift + Left-arrow: decrease epoch length\n'...
-'  Shift + Right-arrow: increase epoch length\n'...
-'  H: Horizontal scaling \n'...
-'  (S: switch highlighting/marking style, deprecated)\n'...
-];
+    '\nKEYBOARD SHORTCUTS ONLY WILL WORK \n' ...
+    'IF MOUSE WAS CLICKED IN DISPLAY AREA!\n\n' ...
+    'Keyboard shortcuts for... \n' ...
+    ' Scoring:\n'...
+    '  0 or W: Wake (W) \n'...
+    '  1: Stage 1 (S1/N1) \n'...
+    '  2: Stage 2 (S2/N2) \n'...
+    '  3: Stage 3 (S3/N3) \n'...
+    '  4: Stage 4 (S4) \n'...
+    '  5 or R: REM (R)\n'...
+    '  7 or D: Delete Stage \n'...
+    '  8: Movement Time (MT) \n'...
+    '  9 or W: Movement Arousal/Epoch with artifact(s) (MA, additional) \n'...
+    ' Control:\n'...
+    '  Left-arrow: go to previous epoch \n'...
+    '  Right-arrow: go to next epoch \n'...
+    '  Up-arrow: decrease scaling (zoom in all channels) \n'...
+    '  Down-arrow: increase scaling (zoom out all channels) \n'...
+    '  Y: Vertical Y-scaling basis (equivalent to scaling factor = 1) (dialog) \n'...
+    '  Shift + C: Channel settings \n' ...
+    '             select, color, scaling, order, foci (EEG, EMG, EOG) \n'...
+    '  Shift + Up-arrow: skip up through undisplayed channels \n'...
+    '  Shift + Down-arrow: skip down through undisplayed channels \n'...
+    '  Shift + Q: Quit Program \n'...
+    '  P: Power spectrum of the current epoch \n'...
+    '  F: Time-frequency plot of the current EEG scoring channel \n'...
+    '  X: Hide/Display menue bar \n'...
+    '  T: Select epoch to jump to (dialog) \n'...
+    '  Shift + T and Ctrl + T: toggle and un-toggle epoch start-marker\n'...
+    '  L: Set Thresholds (dialog) \n'...
+    '  Shift + H: Shortcut help \n'...
+    ' Scoring aids:\n'...
+    '  M: enable/disable marking, cummulative time \n'...
+    '  N: enable/disable spindle signal display (EEG filtered in spindle band) \n'...
+    '  V: enable/disable display of pre-readin Events, if processed already \n'...
+    '  Q: delete previously made marking \n'...
+    '  E: enable/disable Ruler (aka "the Score-ship") \n'...
+    '  J: enable/disable spindle marking \n'...
+    '  K: enable/[polartity-switch]/disable K-Complex \n'...
+    '     or Slow oscillation marking \n'...
+    '  B: enable/[polartity-switch]/disable heart rate \n'...
+    '     indication and coloring \n'...
+    '  G: enable/disable display of the time grid \n'...
+    '  Z: enable/disable zooming (double-click = return to full view) \n'...
+    '     left-click: zoom in \n'...
+    '     Alt + left-click zoom out \n'...
+    '     double-click: fully zoom out \n'...
+    '  A: switch to next artifact marking type \n'...
+    '  Ctrl + 1..9 OR Alt + 1..9: skip to next artifact type 1..9 \n'...
+    ' Saving/Export:\n'...
+    '  Shift + S: Save Session (dialog) \n'...
+    '  Shift + O: Open Session (dialog) \n'...
+    '  Shift + I: Import Hypnogram (dialog) \n'...
+    '  Shift + E: Export Hypnogram (dialog) \n'...
+    ' Non-Scoring:\n'...
+    '  Shift + Left-arrow: decrease epoch length\n'...
+    '  Shift + Right-arrow: increase epoch length\n'...
+    '  H: Horizontal scaling \n'...
+    '  (S: switch highlighting/marking style, deprecated)\n'...
+    ];
 end
 
 
@@ -1643,7 +1677,7 @@ switch key
                     opt.markingstatus = 'on';
                     %opt.marks = [];
                     %opt.markSecondClick = 0;
-                     if isfield(opt,'zoomstatus')
+                    if isfield(opt,'zoomstatus')
                         opt.zoomstatus = 'off';
                         zoom(h,opt.zoomstatus)
                     end
@@ -1695,32 +1729,38 @@ switch key
         end
         %FW begin
     case {'shift+1' 'shift+2' 'shift+3' 'shift+4' 'shift+5' 'shift+6' 'shift+7' 'shift+8' 'shift+9'}
-            % go to previous artifact
-            %opt.ftsel = str2double(key(end));
-            numart = size(opt.artdata.trial{1}, 1);
-            if opt.ftsel > numart
-              fprintf('data has no artifact type %i \n', opt.ftsel)
-            else
-              cursam = opt.trlvis(opt.trlop,1);
-              artsam = find(opt.artdata.trial{1}(opt.ftsel,1:cursam-1), 1, 'last');
-              if isempty(artsam)
+        % go to previous artifact
+        %opt.ftsel = str2double(key(end));
+        numart = size(opt.artdata.trial{1}, 1);
+        if opt.ftsel > numart
+            fprintf('data has no artifact type %i \n', opt.ftsel)
+        else
+            cursam = opt.trlvis(opt.trlop,1);
+            artsam = find(opt.artdata.trial{1}(opt.ftsel,1:cursam-1), 1, 'last');
+            if isempty(artsam)
                 fprintf('no earlier "%s" artifact found\n', opt.artdata.label{opt.ftsel});
-              else
+            else
                 fprintf('going to previous "%s" artifact\n', opt.artdata.label{opt.ftsel});
                 if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
-                  arttrl = nearest(opt.trlvis(:,1),artsam);
+                    arttrl = nearest(opt.trlvis(:,1),artsam);
                 else
-                  arttrl = nearest(opt.trlvis(:,1),artsam)-1;
+                    arttrl = nearest(opt.trlvis(:,1),artsam)-1;
                 end
                 opt.trlop = arttrl;
                 setappdata(h, 'opt', opt);
                 setappdata(h, 'cfg', cfg);
                 redraw_cb(h, eventdata);
-              end
             end
-    case {'0' '1' '2' '3' '4' '5' '8' '9' 'd'}
+        end
+    case {'0' '1' '2' '3' '4' '5' '7' '8' '9' 'd' 'r' 'w'}
         %profile on
         if strcmp(cfg.doSleepScoring,'yes')
+            switch key
+	        case 'r'
+	            key = '5'
+	        case 'w'
+	            key = '0'
+            end
             
             curr_epoch = opt.trlop;
             
@@ -1730,7 +1770,7 @@ switch key
                 curr_epoch = curr_epoch - 1;
             end
             curr_hypn = cfg.hypn(curr_epoch,:);
-                     
+            
             switch key
                 case {'0' '1' '2' '3' '4' '5' '8'}
                     h1 = str2num(key);
@@ -1738,7 +1778,7 @@ switch key
                 case '9'
                     h1 = curr_hypn(:,1);
                     h2 = 1;
-                case 'd'
+                case {'d' '7'}
                     h1 = -1;
                     h2 = 0;
             end
@@ -1750,36 +1790,85 @@ switch key
             [stagestring h1_str h2_str] = getStageStringByHypnValue(h1,h2);
             opt.curr_stage = stagestring;
             
-            if (cfg.toggle_epoch_marker ~= 0) && (cfg.toggle_epoch_marker <= curr_epoch)
-                for iTempEpoch = cfg.toggle_epoch_marker:curr_epoch
-                    cfg.hypn(iTempEpoch,:) = [h1 h2];
-                    
-                    hyp_begsample = cfg.hyp_epochLengthSamples*(cfg.toggle_epoch_marker-1)+1; % opt.trlvis(opt.trlop,1);
-            
+            next_low_conf_epoch = [];
+            if cfg.confidence_skip_to_lower_than_threshold ~= 0
+                if size(cfg.hypn,2) > 2
+                    if curr_epoch < size(cfg.hypn,1)
+                        next_low_conf_epoch = find(cfg.hypn((curr_epoch+1):end,3) < cfg.confidence_skip_to_lower_than_threshold,1,'first');
+                        if ~isempty(next_low_conf_epoch)
+                            next_low_conf_epoch = curr_epoch + next_low_conf_epoch;
+                            temp_skip_to_next_epoch = true;
+                        end
+                    end
                 end
-                temp_hyp_part = cfg.hypn(cfg.toggle_epoch_marker:curr_epoch,:);
-            else
-                    hyp_begsample = cfg.hyp_epochLengthSamples*(curr_epoch-1)+1; % opt.trlvis(opt.trlop,1);
-                    temp_hyp_part = [h1 h2];
-                    cfg.hypn(curr_epoch,:) = temp_hyp_part;
-
+            end
+            
+            
+            opt.prev_stages = getPrevStageString_stage(cfg.hypn,curr_epoch,6);
+            opt.next_stages = getNextStageString_stage(cfg.hypn,curr_epoch,6);
+            
+            
+            
+            if isfield(cfg, 'hypn_mult')
+                if ~isempty(cfg.hypn_mult)
+                    for iHypMult = 1:numel(cfg.hypn_mult)
+                        opt.curr_stage_mult{iHypMult} = getStageStringByHypnValue(cfg.hypn_mult{iHypMult}(curr_epoch,1),cfg.hypn_mult{iHypMult}(curr_epoch,2));
+                        %                 opt.prev_stages_mult{iHypMult}
+                        %                 opt.next_stages_mult{iHypMult}
+                        %                 opt.curr_stage_mult = '?';
+                    end
+                end
             end
             
             
             
-
+            
+            if (cfg.toggle_epoch_marker ~= 0) && (cfg.toggle_epoch_marker <= curr_epoch)
+                for iTempEpoch = cfg.toggle_epoch_marker:curr_epoch
+                    if size(cfg.hypn,2) > 2
+                        cfg.hypn(iTempEpoch,:) = [h1 h2 1];
+                    else
+                        cfg.hypn(iTempEpoch,:) = [h1 h2];
+                    end
+                    hyp_begsample = cfg.hyp_epochLengthSamples*(cfg.toggle_epoch_marker-1)+1; % opt.trlvis(opt.trlop,1);
+                    
+                end
+                temp_hyp_part = cfg.hypn(cfg.toggle_epoch_marker:curr_epoch,:);
+            else
+                hyp_begsample = cfg.hyp_epochLengthSamples*(curr_epoch-1)+1; % opt.trlvis(opt.trlop,1);
+                if size(cfg.hypn,2) > 2
+                    temp_hyp_part = [h1 h2 1];
+                else
+                    temp_hyp_part = [h1 h2];
+                end
+                cfg.hypn(curr_epoch,:) = temp_hyp_part;
+                
+            end
+            
+            
+            
+            
             hyp_begsample_this_epoch = cfg.hyp_epochLengthSamples*(curr_epoch-1)+1; % opt.trlvis(opt.trlop,1);
             hyp_endsample = cfg.hyp_epochLengthSamples*(curr_epoch);% opt.trlvis(opt.trlop,2);
-            [curr_ep_hypn_plot_interpol curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot(temp_hyp_part,length(hyp_begsample_this_epoch:hyp_endsample),cfg.plot_MA_offset);
+            [curr_ep_hypn_plot_interpol, curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot(temp_hyp_part,length(hyp_begsample_this_epoch:hyp_endsample),cfg.plot_MA_offset);
             
             cfg.toggle_epoch_marker = 0;
-
-        
+            
+            
             cfg.hypn_plot_interpol(hyp_begsample:hyp_endsample) = curr_ep_hypn_plot_interpol;
             cfg.hypn_plot_interpol_MA(hyp_begsample:hyp_endsample) = curr_ep_hypn_plot_interpol_MA;
             
+            if ~isempty(cfg.hypn_plot_interpol_confidence)
+                [temp_dummy, curr_ep_hypn_plot_interpol_confidence] = interpolate_hypn_for_plot(temp_hyp_part(:,2:3),length(hyp_begsample_this_epoch:hyp_endsample),cfg.plot_confidence_offset);
+                cfg.hypn_plot_interpol_confidence(hyp_begsample:hyp_endsample) = curr_ep_hypn_plot_interpol_confidence;
+            end
+            
             if temp_skip_to_next_epoch
-                opt.trlop = min(opt.trlop + 1, size(opt.trlvis,1)); % should not be larger than the number of trials
+                if ~isempty(next_low_conf_epoch)
+                    opt.trlop = min(next_low_conf_epoch, size(opt.trlvis,1)); % should not be larger than the number of trials
+                else
+                    opt.trlop = min(opt.trlop + 1, size(opt.trlvis,1)); % should not be larger than the number of trials
+                end
                 if isfield(opt,'marks')
                     opt.marks = [];
                 end
@@ -1922,7 +2011,7 @@ switch key
         setappdata(h, 'opt', opt);
         setappdata(h, 'cfg', cfg);
         cleanup_cb(h);
-    case 'x' 
+    case 'x'
         status = get(h,'MenuBar');
         if strcmp(status,'figure')
             set(h,'MenuBar','none');
@@ -1930,7 +2019,7 @@ switch key
             set(h,'MenuBar','figure');
         end
         redraw_cb(h, eventdata);
-    case 'r'
+    case 'e'
         if strcmp(cfg.doSleepScoring,'yes')
             if ~isfield(cfg,'use_ruler')
                 cfg.use_ruler = 'yes';
@@ -1971,7 +2060,7 @@ switch key
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
         end
-        case 'j'
+    case 'j'
         if strcmp(cfg.doSleepScoring,'yes')
             if ~isfield(cfg,'markSpindles')
                 cfg.markSpindles = 'yes';
@@ -1987,7 +2076,7 @@ switch key
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
         end
-        case 'o'
+    case 'o'
         if strcmp(cfg.doSleepScoring,'yes')
             if ~isfield(cfg,'underlaySOSignal')
                 cfg.underlaySOSignal = 'yes';
@@ -2002,7 +2091,7 @@ switch key
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
         end
-        case 'n'
+    case 'n'
         if strcmp(cfg.doSleepScoring,'yes')
             if ~isfield(cfg,'underlaySpindleSignal')
                 cfg.underlaySpindleSignal = 'yes';
@@ -2017,7 +2106,7 @@ switch key
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
         end
-      case 'e'
+    case 'v'
         if strcmp(cfg.doSleepScoring,'yes')
             if ~isfield(cfg,'displayEvents')
                 cfg.displayEvents = 'yes';
@@ -2049,7 +2138,7 @@ switch key
             redraw_cb(h, eventdata);
         end
     case 'f'
-         if strcmp(cfg.doSleepScoring,'yes')
+        if strcmp(cfg.doSleepScoring,'yes')
             if ~isfield(cfg,'display_time_frequency')
                 cfg.display_time_frequency = 'yes';
             else
@@ -2062,7 +2151,7 @@ switch key
             setappdata(h, 'opt', opt);
             setappdata(h, 'cfg', cfg);
             redraw_cb(h, eventdata);
-         end
+        end
     case 'b'
         % toggle heart (b)eat detection
         if cfg.has_ECG
@@ -2130,7 +2219,7 @@ switch key
             end
         end
     case 'shift+h'
-          helpdlg(sprintf(help_text()),'Shortcut help');
+        helpdlg(sprintf(help_text()),'Shortcut help');
     case 'l'
         if strcmp(cfg.doSleepScoring,'yes')
             try
@@ -2141,7 +2230,8 @@ switch key
                     'SO min Freq Display [Hz]:','SO max Freq Display [Hz]:'...
                     'SO threshold amplitude Ruler/Detection [potential]:'...
                     'EMG threshold amplitude Ruler [potential]:'...
-                    'Autosave hypnogram, #changes needed to autosave (0 = disabled):'};
+                    'Autosave hypnogram, #changes needed to autosave (0 = disabled):'...
+                    'Confidence skip to lower than [0...1] (0 = disabled):'};
                 dlg_title = 'Thresholds';
                 num_lines = 1;
                 defaultans = {num2str(cfg.sp_minFreq),num2str(cfg.sp_maxFreq),...
@@ -2151,12 +2241,13 @@ switch key
                     num2str(cfg.so_filter_minFreq),num2str(cfg.so_filter_maxFreq),...
                     num2str(cfg.so_thresholdAmplitudeForDetection),...
                     num2str(cfg.emg_thresholdAmplitudeForDetection),...
-                    num2str(cfg.autosave_hypnogram_every_number_change)};
+                    num2str(cfg.autosave_hypnogram_every_number_change),...
+                    num2str(cfg.confidence_skip_to_lower_than_threshold)};
                 response = inputdlg(prompt,dlg_title,num_lines,defaultans);
                 
                 
                 if ~isempty(response)
-                    if numel(response)==13
+                    if numel(response)==14
                         cfg.sp_minFreq = str2num(['[' response{1} ']']);
                         cfg.sp_maxFreq = str2num(['[' response{2} ']']);
                         cfg.sp_thresholdForDetectionBeginEnd = str2num(['[' response{3} ']']);
@@ -2175,8 +2266,9 @@ switch key
                         
                         cfg.autosave_hypnogram_every_number_change = str2num(['[' response{13} ']']);
                         
+                        cfg.confidence_skip_to_lower_than_threshold = str2num(['[' response{14} ']']);
                     else
-                        error('not 13 elements')
+                        error('not 14 elements')
                     end
                     
                     cfg = update_filters(cfg);
@@ -2214,23 +2306,25 @@ switch key
             redraw_cb(h, eventdata);
         end
     case 'shift+c'
-%         % select channels
-%         select = match_str(opt.hdr.label, cfg.channel);
-%         select = select_channel_list(opt.hdr.label, select);
-%         cfg.channel = opt.hdr.label(select);
-%         setappdata(h, 'opt', opt);
-%         setappdata(h, 'cfg', cfg);
-%         delete(findobj(h,'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
-%         redraw_cb(h, eventdata);
+        %         % select channels
+        %         select = match_str(opt.hdr.label, cfg.channel);
+        %         select = select_channel_list(opt.hdr.label, select);
+        %         cfg.channel = opt.hdr.label(select);
+        %         setappdata(h, 'opt', opt);
+        %         setappdata(h, 'cfg', cfg);
+        %         delete(findobj(h,'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
+        %         redraw_cb(h, eventdata);
         
         temp_all_channels = opt.hdr.label;
         select = match_str(temp_all_channels, cfg.channel);
         [selected_channels, cfg, opt] = channelDialog(temp_all_channels,select,cfg,opt);
-        cfg.channel = selected_channels;
-        setappdata(h, 'opt', opt);
-        setappdata(h, 'cfg', cfg);
-        delete(findobj(h,'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
-        redraw_cb(h, eventdata);
+        if ~isempty(selected_channels)
+            cfg.channel = selected_channels;
+            setappdata(h, 'opt', opt);
+            setappdata(h, 'cfg', cfg);
+            delete(findobj(h,'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
+            redraw_cb(h, eventdata);
+        end
         
     case 'i'
         if strcmp(cfg.viewmode, 'butterfly')
@@ -2282,45 +2376,14 @@ switch key
         end
     case 'shift+o'
         if strcmp(cfg.doSleepScoring,'yes')
-            
             try
-            temppath = [cfg.outputfilespath];
-            
-            [hyp_file_name hyp_file_path hyp_file_filterindex] = uigetfile(...
-                {'*.mat','MAT-files (*.mat)';...
-                '*.*',  'All Files (*.*)'},...
-                'Open session',...
-                temppath);
-            
-            if hyp_file_filterindex ~= 0
-                if ~isfield(cfg,'hhyp')
-                    cfg.hhyp = figure;
+                [h,opt,cfg,hyp_file_filterindex] = loadSession(h,opt,cfg);
+                setappdata(h, 'opt', opt);
+                setappdata(h, 'cfg', cfg);
+                redraw_cb(h, eventdata);
+                if hyp_file_filterindex ~= 0
+                    msgbox('Opening session successful!' ,'Opening successful','modal');
                 end
-                figure(cfg.hhyp)
-                set(cfg.hhyp, 'WindowButtonDownFcn',   {@select_sleep_stage_cb, 'h_main',h});
-                set(cfg.hhyp, 'NumberTitle', 'off');
-                cfg.hhypfigax = gca;
-                
-                hhyp = cfg.hhyp;
-                hhypfigax = cfg.hhypfigax;
-                
-                tempfilepath = [hyp_file_path hyp_file_name];
-                load(tempfilepath,'cfg','opt')
-                
-                cfg.hhyp = hhyp;
-                cfg.hhypfigax = hhypfigax;
-            else
-                error('');
-            end
-            
-           
-            
-            setappdata(h, 'opt', opt);
-            setappdata(h, 'cfg', cfg);
-            redraw_cb(h, eventdata);
-            if hyp_file_filterindex ~= 0
-                msgbox('Opening session successful!' ,'Opening successful','modal');
-            end
             catch err
                 msgbox('Open the session failed!' ,'Open failed','error','modal');
             end
@@ -2328,72 +2391,260 @@ switch key
     case 'shift+i'
         if strcmp(cfg.doSleepScoring,'yes')
             
+            loaded_hypnogram_from_file = false;
+            
+            %%% first ask if to remove another additional hypnogram
+            if numel(cfg.hypn_mult) > 0
+                try
+                    hypn_list_request = cellstr(num2str((1:numel(cfg.hypn_mult))'))';
+                    [selection,ok] = listdlg('PromptString',['Choose hypnogram to Remove'],...
+                        'SelectionMode','single',...
+                        'InitialValue',numel(cfg.hypn_mult),...
+                        'ListString',hypn_list_request,...
+                        'OkString','Delete/Replace',...
+                        'CancelString','Add');
+                    if ok
+                        
+                        answer_hyp_replace = questdlg('Do you want to replace the primary hypnogram with the deleted one?', ...
+                            'Replace Primary with deleted?', ...
+                            'Yes','No','No');
+                        switch answer_hyp_replace
+                            case 'Yes'
+                                
+                                cfg.hypn = cfg.hypn_mult{selection};
+                                cfg.hypn_plot_interpol = cfg.hypn_plot_interpol_mult{selection};
+                                cfg.hypn_plot_interpol_MA = cfg.hypn_plot_interpol_MA_mult{selection};
+                                cfg.hypn_plot_interpol_confidence = cfg.hypn_plot_interpol_confidence_mult{selection};
+
+                                if isfield(cfg,'autosave_hypfilepath')
+                                    temp_ArtifactPath = [cfg.autosave_hypfilepath '.artifacts.csv'];
+                                    if exist(temp_ArtifactPath) == 2
+                                        [o, c] = readArtifactFile(temp_ArtifactPath,opt,cfg,cfg.artifact_export_delimiter);
+                                        opt = o;
+                                        cfg = c;
+                                        c = [];
+                                        o = [];
+                                    end
+                                    
+                                    [temp_pathstr,temp_name,temp_ext] = fileparts(cfg.autosave_hypfilepath);
+                                    
+                                    iAutosave = 0;
+                                    cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
+                                    while exist(cfg.autosave_hypfilepath) == 2
+                                        iAutosave = iAutosave + 1;
+                                        cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
+                                    end
+                                end
+                        end
+                        
+                        [cfg] = removeAdditionalHypnogram(selection,cfg);
+                        opt.hyp_figure_reload = true;
+                        setappdata(h, 'cfg', cfg);
+                        redraw_cb(h, eventdata);
+                        return
+                    end
+                    
+                catch err
+                    msgbox('Remmoval of a hypnogram failed!' ,'Import failed','error','modal');
+                    return
+                end
+            end
+            if numel(cfg.hypn_mult) >= 4
+                msgbox('Can only load 4 hypnograms at a time. Please remove one first before adding new' ,'Hypngoram limit reached','error','modal');
+                return
+            end
+            
+            
             try
-                temppath = [cfg.outputfilespath];
-                
-                [hyp_file_name hyp_file_path hyp_file_filterindex] = uigetfile(...
-                    {'*.txt;*.csv','Import formats (*.txt,*.csv)';...
-                    '*.txt','Text - Tab delimited (*.txt)';...
-                    '*.csv','Comma Separated Values (*.csv)';...
-                    % '*.m', 'program files (*.m)';...
-                    % '*.fig','Figures (*.fig)';...
-                    % '*.mat','MAT-files (*.mat)';...
-                    '*.*',  'All Files (*.*)'},...
-                    'Import Hypnogram',...
-                    temppath);
-                
-                if hyp_file_filterindex ~= 0
-                    temp_hypnogramPath = [hyp_file_path hyp_file_name];
-                    
-                    begsample = opt.trlvis(opt.trlop,1);
-                    endsample = opt.trlvis(opt.trlop,2);
-                    temp_epochLengthSamples = endsample - begsample + 1;
-                    
-                    
-                    [temp_hypn dummyhypnStages dummyhypnEpochs dummyhypnEpochsBeginsSamples dummyhypnEpochsEndsSamples] = readInSleepHypnogram(temp_hypnogramPath,temp_epochLengthSamples);
-                    
-                    temp_epochLengthSamples = opt.trlvis(1, 2) - opt.trlvis(1, 1) + 1;
-                    nEpochs = floor(size(opt.orgdata.trial{1},2)/temp_epochLengthSamples);
-                    
-                    if (size(temp_hypn,1) > nEpochs)
-                        msgbox(sprintf(['Wrong Hypnogram?\n' 'It is too long!\n' ' data: ' num2str(nEpochs) ' ep\n' ' import: ' num2str(size(temp_hypn,1)) ' ep\n' 'hypnogram will be truncated to data by cutting its tail']) ,'Wrong Hypnogram imported?', 'warn','modal');
-                    end
-                    cfg.hypn = temp_hypn(1:nEpochs,:);
-                    
-                    
-                    [curr_ep_hypn_plot_interpol curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot(cfg.hypn,cfg.hyp_epochLengthSamples,cfg.plot_MA_offset);
-                    
-                    cfg.hypn_plot_interpol = curr_ep_hypn_plot_interpol;
-                    cfg.hypn_plot_interpol_MA = curr_ep_hypn_plot_interpol_MA;
-                    
-                    opt.hyp_figure_reload = true;
-                    
-                    temp_ArtifactPath = [temp_hypnogramPath '.artifacts.csv'];
-                    if exist(temp_ArtifactPath) == 2
-                        [o, c] = readArtifactFile(temp_ArtifactPath,opt,cfg,cfg.artifact_export_delimiter);
-                        opt = o;
-                        cfg = c;
-                        c = [];
-                        o = [];
-                    end
-                    
-                    [temp_pathstr,temp_name,temp_ext] = fileparts(temp_hypnogramPath);
-                    
-                    iAutosave = 0;
-                    cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
-                    while exist(cfg.autosave_hypfilepath) == 2
-                        iAutosave = iAutosave + 1;
-                        cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
-                    end
-                    
+                import_success = false;
+                answer_hyp_type = questdlg('File or Automatic?', ...
+                    'Read in Hypnogram?', ...
+                    'From file','From Z3Score','From file');
+                switch answer_hyp_type
+                    case 'From file'
+                        temppath = [cfg.outputfilespath];
+                        
+                        [hyp_file_name hyp_file_path hyp_file_filterindex] = uigetfile(...
+                            {'*.txt;*.csv','Import formats (*.txt,*.csv)';...
+                            '*.txt','Text - Tab delimited (*.txt)';...
+                            '*.csv','Comma Separated Values (*.csv)';...
+                            % '*.m', 'program files (*.m)';...
+                            % '*.fig','Figures (*.fig)';...
+                            % '*.mat','MAT-files (*.mat)';...
+                            '*.*',  'All Files (*.*)'},...
+                            'Import Hypnogram',...
+                            temppath);
+                        
+                        if hyp_file_filterindex ~= 0
+                            import_success = true;
+                        end
+                        
+                        begsample = opt.trlvis(opt.trlop,1);
+                        endsample = opt.trlvis(opt.trlop,2);
+                        temp_epochLengthSamples = endsample - begsample + 1;
+                        
+                        temp_hypnogramPath = [hyp_file_path hyp_file_name];
+                        [temp_hypn dummyhypnStages dummyhypnEpochs dummyhypnEpochsBeginsSamples dummyhypnEpochsEndsSamples] = readInSleepHypnogram(temp_hypnogramPath,temp_epochLengthSamples);
+                        loaded_hypnogram_from_file = true;
+                        
+                        
+                    case 'From Z3Score'
+                        ask_again = true;
+                        while ask_again
+                            cfg = [];
+                            sca = AutoSleepScoringZ3score(opt.orgdata,cfg);
+                            answer_temp = questdlg(sca.status(),'Automatic Scoring Status', ...
+                                'OK','OK');
+                            
+                            %%sca = sca.update_channel();
+                            answer_sca = questdlg('Perform Scoring?', ...
+                                'Sure to try Automatic Sleep Scoring now?', ...
+                                'Yes','Change','Cancel','Cancel');
+                            switch answer_sca
+                                case 'Yes'
+                                    sca = sca.score();
+                                    temp_hypn = sca.hypnogram;
+                                    temp_hypn(:,3) = sca.hypnogram_confidence;
+                                    import_success = true;
+                                    ask_again = false;
+                                case 'Change'
+                                    ask_again = true;
+                                case 'Cancel'
+                                    ask_again = false;
+                                    return
+                            end
+                        end
                 end
                 
                 
                 
+                
+                
+                answer_hyp = questdlg('Import as additional hypnogram?', ...
+                    'Hypnogram import', ...
+                    'No, replace primary', ...
+                    'Yes, create additional',...
+                    'Cancel','No, replace primary');
+                
+                
+                
+                if ~import_success
+                    msgbox('Importing the hypnogram failed!' ,'Import failed','error','modal');
+                    return
+                end
+                
+                
+                
+                temp_epochLengthSamples = opt.trlvis(1, 2) - opt.trlvis(1, 1) + 1;
+                nEpochs = floor(size(opt.orgdata.trial{1},2)/temp_epochLengthSamples);
+                
+                if (size(temp_hypn,1) > nEpochs)
+                    msgbox(sprintf(['Wrong Hypnogram?\n' 'It is too long!\n' ' data: ' num2str(nEpochs) ' ep\n' ' import: ' num2str(size(temp_hypn,1)) ' ep\n' 'hypnogram will be truncated to data by cutting its tail']) ,'Wrong Hypnogram imported?', 'warn','modal');
+                    temp_hypn = temp_hypn(1:nEpochs,:);
+                end
+                
+                
+                
+                if size(temp_hypn,1) < nEpochs
+                    missingEpochs = nEpochs - size(temp_hypn,1);
+                    %hypn(end+1:end+missingEpochs,:) = [ones(1,missingEpochs,1)*-1 zeros(0,missingEpochs,1)];
+                    hypn_missing = zeros(missingEpochs,size(temp_hypn,2));
+                    hypn_missing(:,1) = -1;
+                    temp_hypn = [temp_hypn ; hypn_missing];
+                end
+                
+                
+                % Handle response
+                switch answer_hyp
+                    case 'No, replace primary'
+                        
+                        cfg.hypn = temp_hypn;
+                        
+                        [curr_ep_hypn_plot_interpol curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot(cfg.hypn,cfg.hyp_epochLengthSamples,cfg.plot_MA_offset);
+                        
+                        cfg.hypn_plot_interpol = curr_ep_hypn_plot_interpol;
+                        cfg.hypn_plot_interpol_MA = curr_ep_hypn_plot_interpol_MA;
+                        
+                        %has confidence ratings
+                        cfg.hypn_plot_interpol_confidence = [];
+                        if size(cfg.hypn,2) > 2
+                            if (max(cfg.hypn(:,3)) <= 1) && (min(cfg.hypn(:,3)) >=0)
+                                [dummy_temp curr_ep_hypn_plot_interpol_confidence] = interpolate_hypn_for_plot(cfg.hypn(:,2:3),cfg.hyp_epochLengthSamples,cfg.plot_confidence_offset);
+                                cfg.hypn_plot_interpol_confidence = curr_ep_hypn_plot_interpol_confidence;
+                            end
+                        end
+                        
+                        if loaded_hypnogram_from_file
+                            
+                            temp_ArtifactPath = [temp_hypnogramPath '.artifacts.csv'];
+                            if exist(temp_ArtifactPath) == 2
+                                [o, c] = readArtifactFile(temp_ArtifactPath,opt,cfg,cfg.artifact_export_delimiter);
+                                opt = o;
+                                cfg = c;
+                                c = [];
+                                o = [];
+                            end
+                            
+                            [temp_pathstr,temp_name,temp_ext] = fileparts(temp_hypnogramPath);
+                            
+                            iAutosave = 0;
+                            cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
+                            while exist(cfg.autosave_hypfilepath) == 2
+                                iAutosave = iAutosave + 1;
+                                cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
+                            end
+                        end
+                        
+                        
+                    case 'Yes, create additional'
+                        
+                        if ~isfield(cfg,'hypn_mult')
+                            cfg.hypn_mult = {};
+                            cfg.hypn_plot_interpol_mult = {};
+                            cfg.hypn_plot_interpol_MA_mult = {};
+                             cfg.hypn_plot_interpol_confidence_mult = {};
+                            cfg.hypn_mult_idx = 1;
+                        end
+                        if ~isfield(cfg,'hypn_mult_idx')
+                            cfg.hypn_mult_idx = 1;
+                        end
+                        
+                        if cfg.hypn_mult_idx > 4
+                            if numel(cfg.hypn_mult) >= 4
+                                msgbox('Importing the hypnogram failed!' ,'Only 4 Hypnograms allowed','error','modal');
+                                return
+                            end
+                        end
+                        %cfg.hypn_mult_idx = cfg.hypn_mult_idx+1;
+                        
+                        
+                        
+                        cfg.hypn_mult{cfg.hypn_mult_idx} = temp_hypn;
+                        
+                        [curr_ep_hypn_plot_interpol curr_ep_hypn_plot_interpol_MA] = interpolate_hypn_for_plot(cfg.hypn_mult{cfg.hypn_mult_idx},cfg.hyp_epochLengthSamples,cfg.plot_MA_offset);
+                        
+                        curr_ep_hypn_plot_interpol_confidence = [];
+                        if size(cfg.hypn_mult{cfg.hypn_mult_idx},2) > 2
+                            if (max(cfg.hypn_mult{cfg.hypn_mult_idx}(:,3)) <= 1) && (min(cfg.hypn_mult{cfg.hypn_mult_idx}(:,3)) >=0)
+                                [dummy_temp curr_ep_hypn_plot_interpol_confidence] = interpolate_hypn_for_plot(cfg.hypn_mult{cfg.hypn_mult_idx}(:,2:3),cfg.hyp_epochLengthSamples,cfg.plot_confidence_offset);
+                            end
+                        end
+                        
+                        cfg.hypn_plot_interpol_mult{cfg.hypn_mult_idx} = curr_ep_hypn_plot_interpol;
+                        cfg.hypn_plot_interpol_MA_mult{cfg.hypn_mult_idx} = curr_ep_hypn_plot_interpol_MA;
+                        cfg.hypn_plot_interpol_confidence_mult{cfg.hypn_mult_idx} = curr_ep_hypn_plot_interpol_confidence;
+                        cfg.hypn_mult_idx = cfg.hypn_mult_idx+1;
+                        
+                    case 'Cancel'
+                        return
+                end
+                
+                opt.hyp_figure_reload = true;
+                
                 setappdata(h, 'opt', opt);
                 setappdata(h, 'cfg', cfg);
                 redraw_cb(h, eventdata);
-                if hyp_file_filterindex ~= 0
+                if import_success
                     msgbox('Importing the hypnogram successful!' ,'Import successful','modal');
                 end
             catch err
@@ -2432,7 +2683,7 @@ switch key
                     writeArtifactFile(temp_ArtifactPath,opt,cfg.artifact_export_delimiter);
                     
                     
-                    [temp_pathstr,temp_name,temp_ext] = fileparts(temp_hypnogramPath);                    
+                    [temp_pathstr,temp_name,temp_ext] = fileparts(temp_hypnogramPath);
                     iAutosave = 0;
                     cfg.autosave_hypfilepath = [temp_pathstr filesep temp_name '_autosave' num2str(iAutosave) temp_ext];
                     while exist(cfg.autosave_hypfilepath) == 2
@@ -2442,7 +2693,7 @@ switch key
                     
                     
                     
-
+                    
                     
                     setappdata(h, 'cfg', cfg);
                     msgbox('Exporting the hypnogram successful!' ,'Export successful','modal');
@@ -2451,49 +2702,49 @@ switch key
                 msgbox('Exporting the hypnogram failed!' ,'Export failed','error','modal');
             end
         end
-%     case 'alt+e'
-%         if strcmp(cfg.doSleepScoring,'yes')
-%             
-%             % select one channel
-%             cfg.score_channel_eeg_number = select_channel_list(opt.hdr.label, cfg.score_channel_eeg_number,'select one channel');
-%             cfg.score_channel_eeg_number = cfg.score_channel_eeg_number(1);
-%             ft_uilayout(h, 'tag', 'scoptbuttons_focusEEG', 'string', ['Focus EEG: ' opt.hdr.label{cfg.score_channel_eeg_number}]);
-%             setappdata(h, 'opt', opt);
-%             setappdata(h, 'cfg', cfg);
-%             redraw_cb(h, eventdata);
-%         end
-%     case 'alt+o'
-%         if strcmp(cfg.doSleepScoring,'yes')
-%             
-%             % select one channel
-%             cfg.score_channel_eog_number = select_channel_list(opt.hdr.label, cfg.score_channel_eog_number,'select one channel');
-%             cfg.score_channel_eog_number = cfg.score_channel_eog_number(1);
-%             ft_uilayout(h, 'tag', 'scoptbuttons_focusEOG', 'string', ['Focus EOG: ' opt.hdr.label{cfg.score_channel_eog_number}]);
-%             setappdata(h, 'opt', opt);
-%             setappdata(h, 'cfg', cfg);
-%             redraw_cb(h, eventdata);
-%         end
-%     case 'alt+m'
-%         if strcmp(cfg.doSleepScoring,'yes')
-%             
-%             % select one channel
-%             cfg.score_channel_emg_number = select_channel_list(opt.hdr.label, cfg.score_channel_emg_number,'select one channel');
-%             cfg.score_channel_emg_number = cfg.score_channel_emg_number(1);
-%             ft_uilayout(h, 'tag', 'scoptbuttons_focusEMG', 'string', ['Focus EMG: ' opt.hdr.label{cfg.score_channel_emg_number}]);
-%             setappdata(h, 'opt', opt);
-%             setappdata(h, 'cfg', cfg);
-%             redraw_cb(h, eventdata);
-%         end
+        %     case 'alt+e'
+        %         if strcmp(cfg.doSleepScoring,'yes')
+        %
+        %             % select one channel
+        %             cfg.score_channel_eeg_number = select_channel_list(opt.hdr.label, cfg.score_channel_eeg_number,'select one channel');
+        %             cfg.score_channel_eeg_number = cfg.score_channel_eeg_number(1);
+        %             ft_uilayout(h, 'tag', 'scoptbuttons_focusEEG', 'string', ['Focus EEG: ' opt.hdr.label{cfg.score_channel_eeg_number}]);
+        %             setappdata(h, 'opt', opt);
+        %             setappdata(h, 'cfg', cfg);
+        %             redraw_cb(h, eventdata);
+        %         end
+        %     case 'alt+o'
+        %         if strcmp(cfg.doSleepScoring,'yes')
+        %
+        %             % select one channel
+        %             cfg.score_channel_eog_number = select_channel_list(opt.hdr.label, cfg.score_channel_eog_number,'select one channel');
+        %             cfg.score_channel_eog_number = cfg.score_channel_eog_number(1);
+        %             ft_uilayout(h, 'tag', 'scoptbuttons_focusEOG', 'string', ['Focus EOG: ' opt.hdr.label{cfg.score_channel_eog_number}]);
+        %             setappdata(h, 'opt', opt);
+        %             setappdata(h, 'cfg', cfg);
+        %             redraw_cb(h, eventdata);
+        %         end
+        %     case 'alt+m'
+        %         if strcmp(cfg.doSleepScoring,'yes')
+        %
+        %             % select one channel
+        %             cfg.score_channel_emg_number = select_channel_list(opt.hdr.label, cfg.score_channel_emg_number,'select one channel');
+        %             cfg.score_channel_emg_number = cfg.score_channel_emg_number(1);
+        %             ft_uilayout(h, 'tag', 'scoptbuttons_focusEMG', 'string', ['Focus EMG: ' opt.hdr.label{cfg.score_channel_emg_number}]);
+        %             setappdata(h, 'opt', opt);
+        %             setappdata(h, 'cfg', cfg);
+        %             redraw_cb(h, eventdata);
+        %         end
     case 's'
         % toggle between selectmode options: switch from 'markartifact', to 'markpeakevent' to 'marktroughevent' and back with on screen feedback
-%         curstate = find(strcmp(cfg.selectmode, {'markartifact', 'markpeakevent', 'marktroughevent'}));
-%         if curstate == 1
-%             cfg.selectmode = 'markpeakevent';
-%         elseif curstate == 2
-%             cfg.selectmode = 'marktroughevent';
-%         elseif curstate == 3
-              cfg.selectmode = 'markartifact';
-%         end
+        %         curstate = find(strcmp(cfg.selectmode, {'markartifact', 'markpeakevent', 'marktroughevent'}));
+        %         if curstate == 1
+        %             cfg.selectmode = 'markpeakevent';
+        %         elseif curstate == 2
+        %             cfg.selectmode = 'marktroughevent';
+        %         elseif curstate == 3
+        cfg.selectmode = 'markartifact';
+        %         end
         
         fprintf('switching to selectmode = %s\n',cfg.selectmode);
         setappdata(h, 'opt', opt);
@@ -2512,135 +2763,135 @@ switch key
 end
 
 if strcmp(cfg.doSleepScoring,'yes')
-if strcmp(cfg.markSO,'yes')
-    ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'BackgroundColor',  cfg.slowoscillation_mark_color);
-    ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'FontWeight', 'bold');
-    if cfg.SOdetection_orientation == 1;
-        ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'string', '(+)_.·\_.·\_.·');
+    if strcmp(cfg.markSO,'yes')
+        ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'BackgroundColor',  cfg.slowoscillation_mark_color);
+        ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'FontWeight', 'bold');
+        if cfg.SOdetection_orientation == 1;
+            ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'string', '(+)_.·\_.·\_.·');
+        else
+            ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'string', '(-)`·/¯`·/¯`·/');
+        end
     else
-        ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'string', '(-)`·/¯`·/¯`·/');
+        ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'BackgroundColor', [0.5 0.5 0.5]);
+        ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'FontWeight', 'normal');
+        %ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'string', 'off');
     end
-else
-    ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'BackgroundColor', [0.5 0.5 0.5]);
-    ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'FontWeight', 'normal');
-    %ft_uilayout(h, 'tag', 'scoptbuttons_SOdet', 'string', 'off');
-end
-
-if strcmp(cfg.markSpindles,'yes')
-    ft_uilayout(h, 'tag', 'scoptbuttons_SPdet', 'BackgroundColor', cfg.spindle_mark_color);
-    ft_uilayout(h, 'tag', 'scoptbuttons_SPdet', 'FontWeight', 'bold');
     
-else
-    ft_uilayout(h, 'tag', 'scoptbuttons_SPdet', 'BackgroundColor', [0.5 0.5 0.5]);
-    ft_uilayout(h, 'tag', 'scoptbuttons_SPdet', 'FontWeight', 'normal');
+    if strcmp(cfg.markSpindles,'yes')
+        ft_uilayout(h, 'tag', 'scoptbuttons_SPdet', 'BackgroundColor', cfg.spindle_mark_color);
+        ft_uilayout(h, 'tag', 'scoptbuttons_SPdet', 'FontWeight', 'bold');
+        
+    else
+        ft_uilayout(h, 'tag', 'scoptbuttons_SPdet', 'BackgroundColor', [0.5 0.5 0.5]);
+        ft_uilayout(h, 'tag', 'scoptbuttons_SPdet', 'FontWeight', 'normal');
+        
+    end
     
-end
-
-if strcmp(cfg.underlaySpindleSignal,'yes')
-    ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'BackgroundColor', cfg.underlaySpindleSignal_color);
-    ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'FontWeight', 'bold');
+    if strcmp(cfg.underlaySpindleSignal,'yes')
+        ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'BackgroundColor', cfg.underlaySpindleSignal_color);
+        ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'FontWeight', 'bold');
+        
+    else
+        ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'BackgroundColor', [0.5 0.5 0.5]);
+        ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'FontWeight', 'normal');
+        
+    end
     
-else
-    ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'BackgroundColor', [0.5 0.5 0.5]);
-    ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'FontWeight', 'normal');
+    if strcmp(cfg.underlaySOSignal,'yes')
+        ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'BackgroundColor', cfg.underlaySOSignal_color);
+        ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'FontWeight', 'bold');
+        
+    else
+        ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'BackgroundColor', [0.5 0.5 0.5]);
+        ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'FontWeight', 'normal');
+    end
     
-end
-
-if strcmp(cfg.underlaySOSignal,'yes')
-    ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'BackgroundColor', cfg.underlaySOSignal_color);
-    ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'FontWeight', 'bold');
+    if strcmp(cfg.markECG,'yes') && (cfg.ECG_signalMultiplicator == 1)
+        ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'string', ['+<3+<3+<3']);
+        ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'FontWeight', 'bold')
+        ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'BackgroundColor', cfg.score_channel_ecg_color);
+        
+    elseif strcmp(cfg.markECG,'yes') && (cfg.ECG_signalMultiplicator == -1)
+        ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'string', ['-<3-<3-<3']);
+        ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'FontWeight', 'bold')
+        ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'BackgroundColor', cfg.score_channel_ecg_color);
+    else
+        ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'string', ['<3 <3 <3']);
+        ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'FontWeight', 'normal')
+        ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'BackgroundColor', [0.5 0.5 0.5]);
+    end
     
-else
-    ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'BackgroundColor', [0.5 0.5 0.5]);
-    ft_uilayout(h, 'tag', 'scoptbuttons_SOdisp', 'FontWeight', 'normal');   
-end
-
-if strcmp(cfg.markECG,'yes') && (cfg.ECG_signalMultiplicator == 1)
-       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'string', ['+<3+<3+<3']);
-       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'FontWeight', 'bold')
-       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'BackgroundColor', cfg.score_channel_ecg_color);
-
-elseif strcmp(cfg.markECG,'yes') && (cfg.ECG_signalMultiplicator == -1)
-       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'string', ['-<3-<3-<3']);
-       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'FontWeight', 'bold')
-       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'BackgroundColor', cfg.score_channel_ecg_color);
-else
-       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'string', ['<3 <3 <3']);
-       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'FontWeight', 'normal')
-       ft_uilayout(h, 'tag', 'scoptbuttons_HRdisp', 'BackgroundColor', [0.5 0.5 0.5]);
-end
-
-
-if strcmp(cfg.displayEvents,'yes')
-    %ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'BackgroundColor', cfg.underlaySpindleSignal_color);
-    ft_uilayout(h, 'tag', 'scoptbuttons_EvDisp', 'FontWeight', 'bold');
-    ft_uilayout(h, 'tag', 'scoptbuttons_EvDisp', 'string', 'EVENTS');
     
-else
-    %ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'BackgroundColor', [0.5 0.5 0.5]);
-    ft_uilayout(h, 'tag', 'scoptbuttons_EvDisp', 'FontWeight', 'normal');
+    if strcmp(cfg.displayEvents,'yes')
+        %ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'BackgroundColor', cfg.underlaySpindleSignal_color);
+        ft_uilayout(h, 'tag', 'scoptbuttons_EvDisp', 'FontWeight', 'bold');
+        ft_uilayout(h, 'tag', 'scoptbuttons_EvDisp', 'string', 'EVENTS');
+        
+    else
+        %ft_uilayout(h, 'tag', 'scoptbuttons_SPdisp', 'BackgroundColor', [0.5 0.5 0.5]);
+        ft_uilayout(h, 'tag', 'scoptbuttons_EvDisp', 'FontWeight', 'normal');
         ft_uilayout(h, 'tag', 'scoptbuttons_EvDisp', 'string', 'events');
-
-end
-
-if strcmp(opt.zoomstatus,'on')
-    ft_uilayout(h, 'tag', 'scoptbuttons_zoom', 'string', ['zOOm']);
-else
-    ft_uilayout(h, 'tag', 'scoptbuttons_zoom', 'string', ['zoom']);
-    zoom(h,'out')
-end
-if strcmp(opt.markingstatus,'on')
-    set(h, 'WindowButtonMotionFcn',   {@mouse_move_cb, 'h_main',h});
-    set(h, 'WindowButtonDownFcn',   {@select_marks_cb, 'h_main',h,'event','WindowButtonDownFcn'});
-    set(h, 'WindowButtonUpFcn',   {@select_marks_cb, 'h_main',h,'event','WindowButtonUpFcn'});
-    
-    ft_uilayout(h, 'tag', 'scoptbuttons_mark', 'string', ['MARK']);
-    
-else
-    if strcmp(cfg.use_ruler,'no')
-        set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonMotionFcn'});
+        
     end
-    set(h, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonDownFcn'});
-    set(h, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonUpFcn'});
-    ft_uilayout(h, 'tag', 'scoptbuttons_mark', 'string', ['mark']);
     
-end
-
-if strcmp(cfg.use_ruler,'yes')
-    set(h, 'WindowButtonMotionFcn',   {@mouse_move_cb, 'h_main',h});
-    ft_uilayout(h, 'tag', 'scoptbuttons_ruler', 'string', ['RULER']);
-else
-    delete(findobj(h, 'tag', 'scale_help'));
-    
-    if strcmp(opt.markingstatus,'off')
-        set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonMotionFcn'});
+    if strcmp(opt.zoomstatus,'on')
+        ft_uilayout(h, 'tag', 'scoptbuttons_zoom', 'string', ['zOOm']);
+    else
+        ft_uilayout(h, 'tag', 'scoptbuttons_zoom', 'string', ['zoom']);
+        zoom(h,'out')
     end
-    ft_uilayout(h, 'tag', 'scoptbuttons_ruler', 'string', ['ruler']);
-end
-
-
-if strcmp(cfg.drawgrid,'yes')
-    ft_uilayout(h, 'tag', 'scoptbuttons_grid', 'string', ['|gr:id|']);
-else
-    ft_uilayout(h, 'tag', 'scoptbuttons_grid', 'string', ['grid']);
-end
-
-if strcmp(cfg.display_power_spectrum,'yes')
-    ft_uilayout(h, 'tag', 'scoptbuttons_pow', 'string', ['POW']);
-else
-    ft_uilayout(h, 'tag', 'scoptbuttons_pow', 'string', ['pow']);
-end
-
-if strcmp(cfg.display_time_frequency,'yes')
-    ft_uilayout(h, 'tag', 'scoptbuttons_tfr', 'string', ['TFR']);
-else
-    ft_uilayout(h, 'tag', 'scoptbuttons_tfr', 'string', ['tfr']);
-end
-
-
-
-ft_uilayout(h, 'tag', 'artifactui_button', 'string', ['artfct(' opt.artdata.label{opt.ftsel} ')']);
-
+    if strcmp(opt.markingstatus,'on')
+        set(h, 'WindowButtonMotionFcn',   {@mouse_move_cb, 'h_main',h});
+        set(h, 'WindowButtonDownFcn',   {@select_marks_cb, 'h_main',h,'event','WindowButtonDownFcn'});
+        set(h, 'WindowButtonUpFcn',   {@select_marks_cb, 'h_main',h,'event','WindowButtonUpFcn'});
+        
+        ft_uilayout(h, 'tag', 'scoptbuttons_mark', 'string', ['MARK']);
+        
+    else
+        if strcmp(cfg.use_ruler,'no')
+            set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonMotionFcn'});
+        end
+        set(h, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonDownFcn'});
+        set(h, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonUpFcn'});
+        ft_uilayout(h, 'tag', 'scoptbuttons_mark', 'string', ['mark']);
+        
+    end
+    
+    if strcmp(cfg.use_ruler,'yes')
+        set(h, 'WindowButtonMotionFcn',   {@mouse_move_cb, 'h_main',h});
+        ft_uilayout(h, 'tag', 'scoptbuttons_ruler', 'string', ['RULER']);
+    else
+        delete(findobj(h, 'tag', 'scale_help'));
+        
+        if strcmp(opt.markingstatus,'off')
+            set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonMotionFcn'});
+        end
+        ft_uilayout(h, 'tag', 'scoptbuttons_ruler', 'string', ['ruler']);
+    end
+    
+    
+    if strcmp(cfg.drawgrid,'yes')
+        ft_uilayout(h, 'tag', 'scoptbuttons_grid', 'string', ['|gr:id|']);
+    else
+        ft_uilayout(h, 'tag', 'scoptbuttons_grid', 'string', ['grid']);
+    end
+    
+    if strcmp(cfg.display_power_spectrum,'yes')
+        ft_uilayout(h, 'tag', 'scoptbuttons_pow', 'string', ['POW']);
+    else
+        ft_uilayout(h, 'tag', 'scoptbuttons_pow', 'string', ['pow']);
+    end
+    
+    if strcmp(cfg.display_time_frequency,'yes')
+        ft_uilayout(h, 'tag', 'scoptbuttons_tfr', 'string', ['TFR']);
+    else
+        ft_uilayout(h, 'tag', 'scoptbuttons_tfr', 'string', ['tfr']);
+    end
+    
+    
+    
+    ft_uilayout(h, 'tag', 'artifactui_button', 'string', ['artfct(' opt.artdata.label{opt.ftsel} ')']);
+    
 end
 uiresume(h);
 end
@@ -2692,173 +2943,234 @@ if cfg.black_background
 end
 
 if strcmp(cfg.doSleepScoring,'yes')
-if isfield(cfg,'plotHyp')
-    if isfield(cfg,'hhyp') 
+    if isfield(cfg,'plotHyp')
+        if isfield(cfg,'hhyp')
+            %figure(cfg.hhyp);
+        else
+            cfg.hhyp = figure;
+            figure(cfg.hhyp)
+            set(cfg.hhyp, 'WindowButtonDownFcn',   {@select_sleep_stage_cb, 'h_main',h});
+            set(cfg.hhyp, 'NumberTitle', 'off');
+            cfg.hhypfigax = gca;
+            %cfg.hhypfig = gcf;
+        end
+        if ~ishandle(cfg.hhyp)
+            figure(cfg.hhyp)
+            set(cfg.hhyp, 'WindowButtonDownFcn',   {@select_sleep_stage_cb, 'h_main',h});
+            set(cfg.hhyp, 'NumberTitle', 'off');
+            cfg.hhypfigax = gca;
+        end
+        
+        if cfg.black_background
+            whitebg(cfg.hhyp,'k');
+            set(cfg.hhyp,'color',[0 0 0]);
+        else
+            set(cfg.hhyp,'color',[1 1 1]);
+        end
+        
+        
+        set(cfg.hhypfigax,'Fontsize',8,'FontUnits','normalized');
         %figure(cfg.hhyp);
-    else
-        cfg.hhyp = figure;
-        figure(cfg.hhyp)
-        set(cfg.hhyp, 'WindowButtonDownFcn',   {@select_sleep_stage_cb, 'h_main',h});
-        set(cfg.hhyp, 'NumberTitle', 'off');
-        cfg.hhypfigax = gca;
-        %cfg.hhypfig = gcf;
+        %h.hhyp = getparent(cfg.hhyp);
+        temp_max_y = 1.25;
+        if ~(isfield(cfg,'hyp_x_time') && isfield(cfg,'hyp_x_time_hyp'))
+            opt.hyp_figure_reload = true;
+        end
+        
+        
+        curr_epoch = opt.trlop;
+        
+        temp_epochLengthSamples = opt.trlvis(1, 2) - opt.trlvis(1, 1) + 1;
+        nEpochs = floor(size(opt.orgdata.trial{1},2)/temp_epochLengthSamples);
+        if curr_epoch > nEpochs
+            curr_epoch = curr_epoch - 1;
+        end
+        
+        hyp_begsample = cfg.hyp_epochLengthSamples*(curr_epoch-1)+1; % opt.trlvis(opt.trlop,1);
+        hyp_endsample = cfg.hyp_epochLengthSamples*(curr_epoch);% opt.trlvis(opt.trlop,2);
+        
+        if opt.hyp_figure_reload
+            beg_time = opt.orgdata.time{1,1}(1);
+            end_time = opt.orgdata.time{1,1}(end);
+            cfg.hyp_x_time = linspace(beg_time,end_time,ceil((end_time-beg_time)*cfg.hyp_fample));
+            cfg.hyp_x_time = cfg.hyp_x_time/60;
+            %cfg.hypn_plot_interpol = cfg.hypn_plot_interpol(1:min(length(cfg.hypn_plot_interpol),length(cfg.hyp_x_time)));
+            %cfg.hypn_plot_interpol_MA = cfg.hypn_plot_interpol_MA(1:min(length(cfg.hypn_plot_interpol_MA),length(cfg.hyp_x_time)));
+            cfg.hyp_x_time_hyp = cfg.hyp_x_time(1:min(length(cfg.hypn_plot_interpol),length(cfg.hyp_x_time)));
+            %x_time_hyp = x_time(1:min(length(x_time),length(cfg.hypn_plot_interpol)));
+            opt.hyp_figure_reload = false;
+        end
+        axh = cfg.hhypfigax;
+        
+        if cfg.black_background
+            tempcolor = [1 1 1];
+        else
+            tempcolor = [0 0 0];
+        end
+        
+        %%% plot primary hypnogram
+        plot(axh,cfg.hyp_x_time_hyp(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol))),cfg.hypn_plot_interpol(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol))),'Color',tempcolor)
+        hold(axh,'all');
+        
+        xlim(axh,[0 max(cfg.hyp_x_time)]);
+        ylabel(axh,'Stages');
+        ylim(axh,[cfg.plot_MA_offset temp_max_y])
+        
+        plot(axh,cfg.hyp_x_time_hyp(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol_MA))),cfg.hypn_plot_interpol_MA(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol_MA))),'Color',[1 0 0])
+        
+        temp_x_other_artifact = ~(cfg.hypn_plot_interpol_MA > -4.5);
+        if any(~temp_x_other_artifact)
+            temp_hypn_plot_interpol_MA = cfg.hypn_plot_interpol_MA;
+            temp_hypn_plot_interpol_MA(temp_x_other_artifact) = -4.45;
+            %temp_x_other_artifact_index = [temp_x_other_artifact; temp_x_other_artifact+1];
+            %temp_x_other_artifact_index = temp_x_other_artifact_index(1:end-1);
+            %temp_x_other_artifact_index = sort(temp_x_other_artifact_index);
+            plot(axh,cfg.hyp_x_time_hyp(1:min(length(cfg.hyp_x_time_hyp),length(temp_hypn_plot_interpol_MA))),temp_hypn_plot_interpol_MA(1:min(length(cfg.hyp_x_time_hyp),length(temp_hypn_plot_interpol_MA))),'Color',[0.75 0.75 0.75])
+        end
+        
+        temp_do_plot_confidence = false;
+        if ~isempty(cfg.hypn_plot_interpol_confidence)
+            temp_do_plot_confidence = true;
+            plot(axh,cfg.hyp_x_time_hyp(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol_confidence))),cfg.hypn_plot_interpol_confidence(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol_confidence))),'Color',[0 0 0])
+        end
+        
+        %%% end plot primary hypnogram
+        
+        %%% plot secondary hypnograms
+        
+        if ~isempty(cfg.hypn_mult)
+            
+            hyp_mult_colors = jet(4);
+            hyp_mult_colors_MA = hyp_mult_colors;
+            tempHypCol_ridx = 1;
+            y_shift_step = 0.05;
+            for iHypMult = 1:numel(cfg.hypn_mult)
+                
+                tempcolor = hyp_mult_colors(tempHypCol_ridx,:);
+                
+                plot(axh,cfg.hyp_x_time_hyp(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol_mult{iHypMult}))),cfg.hypn_plot_interpol_mult{iHypMult}(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol_mult{iHypMult})))-iHypMult*y_shift_step,'Color',tempcolor)
+                hold(axh,'all');
+                
+                xlim(axh,[0 max(cfg.hyp_x_time)]);
+                ylabel(axh,'Stages');
+                ylim(axh,[cfg.plot_MA_offset temp_max_y])
+                
+                plot(axh,cfg.hyp_x_time_hyp(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol_MA_mult{iHypMult}))),cfg.hypn_plot_interpol_MA_mult{iHypMult}(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol_MA_mult{iHypMult})))-iHypMult*y_shift_step,'Color',tempcolor)
+                
+                temp_x_other_artifact = ~((cfg.hypn_plot_interpol_MA_mult{iHypMult}-iHypMult*y_shift_step) > -4.5);
+                if any(~temp_x_other_artifact)
+                    temp_hypn_plot_interpol_MA = cfg.hypn_plot_interpol_MA_mult{iHypMult};
+                    temp_hypn_plot_interpol_MA(temp_x_other_artifact) = -4.45-iHypMult*y_shift_step;
+                    %temp_x_other_artifact_index = [temp_x_other_artifact; temp_x_other_artifact+1];
+                    %temp_x_other_artifact_index = temp_x_other_artifact_index(1:end-1);
+                    %temp_x_other_artifact_index = sort(temp_x_other_artifact_index);
+                    plot(axh,cfg.hyp_x_time_hyp(1:min(length(cfg.hyp_x_time_hyp),length(temp_hypn_plot_interpol_MA))),temp_hypn_plot_interpol_MA(1:min(length(cfg.hyp_x_time_hyp),length(temp_hypn_plot_interpol_MA)))-iHypMult*y_shift_step,'Color',tempcolor)
+                end
+                
+                %             cfg.hypn_mult = {};
+                %             cfg.hypn_plot_interpol_mult = {};
+                %             cfg.hypn_plot_interpol_MA_mult = {};
+                %             cfg.hypn_mult_idx = 1;
+                
+                if ~isempty(cfg.hypn_plot_interpol_confidence_mult{iHypMult})
+                    temp_do_plot_confidence = true;
+                    plot(axh,cfg.hyp_x_time_hyp(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol_confidence_mult{iHypMult}))),cfg.hypn_plot_interpol_confidence_mult{iHypMult}(1:min(length(cfg.hyp_x_time_hyp),length(cfg.hypn_plot_interpol_confidence_mult{iHypMult})))-iHypMult*y_shift_step,'Color',tempcolor)
+                end
+                
+                tempHypCol_ridx = tempHypCol_ridx+1;
+                if tempHypCol_ridx > size(hyp_mult_colors,1)
+                    tempHypCol_ridx = 1;
+                end
+            end
+            
+        end
+        %%% end plot secondary hypnograms
+        
+        
+        if temp_do_plot_confidence
+            yTick = [0.75 0.25 0 -0.5 -1 -2 -3 -4 cfg.plot_MA_offset+1 cfg.plot_MA_offset+0.5];
+            yTickLabel = {'max conf' 'min conf' 'W' 'REM' 'S1' 'S2' 'S3' 'S4' 'MT' 'MA'};
+        else
+            yTick = [0 -0.5 -1 -2 -3 -4 cfg.plot_MA_offset+1 cfg.plot_MA_offset+0.5];
+            yTickLabel = {'W' 'REM' 'S1' 'S2' 'S3' 'S4' 'MT' 'MA'};
+        end
+        if strcmp(cfg.displayEvents,'yes')
+            
+            ev1_offset = 0.9;
+            ev2_offset = 0.8;
+            
+            if isfield(cfg,'begin_end_events2')
+                yTick = [ev2_offset yTick];
+                yTickLabel = {'Ev2' yTickLabel{:}};
+                for channelIndex = 1:length(chanindx)
+                    curr_begins_ends = cfg.begin_end_events2{chanindx(channelIndex)};
+                    if strcmp(cfg.viewmode, 'component')
+                        color = 'k';
+                    else
+                        %color = opt.chancolors(chanindx(i),:);
+                        color = opt.chancolors(chanindx(channelIndex),:);
+                    end
+                    
+                    temp_x = (curr_begins_ends(:,1)/opt.fsample)/60;
+                    temp_y = repmat(ev2_offset,size(curr_begins_ends,1),1);
+                    plot(axh,[temp_x temp_x]',[temp_y-0.04 temp_y+0.04]','Color',color)
+                    %scatter(axh,(curr_begins_ends(:,1)/opt.fsample)/60,repmat(ev1_offset,1,size(curr_begins_ends,1)),'MarkerEdgeColor',color)
+                end
+            end
+            
+            if isfield(cfg,'begin_end_events')
+                yTick = [ev1_offset yTick];
+                yTickLabel = {'Ev1' yTickLabel{:}};
+                for channelIndex = 1:length(chanindx)
+                    curr_begins_ends = cfg.begin_end_events{chanindx(channelIndex)};
+                    if strcmp(cfg.viewmode, 'component')
+                        color = 'k';
+                    else
+                        %color = opt.chancolors(chanindx(i),:);
+                        color = opt.chancolors(chanindx(channelIndex),:);
+                    end
+                    
+                    temp_x = (curr_begins_ends(:,1)/opt.fsample)/60;
+                    temp_y = repmat(ev1_offset,size(curr_begins_ends,1),1);
+                    plot(axh,[temp_x temp_x]',[temp_y-0.05 temp_y+0.05]','Color',color)
+                    %scatter(axh,(curr_begins_ends(:,1)/opt.fsample)/60,repmat(ev1_offset,1,size(curr_begins_ends,1)),'MarkerEdgeColor',color)
+                end
+            end
+            
+            
+        end
+        
+        yTick = [1 yTick];
+        yTickLabel = {'?' yTickLabel{:}};
+        
+        set(axh, 'yTick', flip(yTick));
+        set(axh, 'yTickLabel', flip(yTickLabel));
+        set(axh,'TickDir','out');
+        xTick = [0:20:max(cfg.hyp_x_time)];
+        set(axh, 'xTick', xTick);
+        x_pos_begin = cfg.hyp_x_time(hyp_begsample);
+        x_pos_end = cfg.hyp_x_time(hyp_endsample);
+        x_pos = [x_pos_begin x_pos_end x_pos_end x_pos_begin];
+        y_pos = [cfg.plot_MA_offset cfg.plot_MA_offset 1 1];
+        pos_now = patch(x_pos,y_pos,[0.5 0.25 1],'parent',axh);
+        set(pos_now,'FaceAlpha',0.4);
+        set(pos_now,'EdgeColor','none');
+        
+        if cfg.toggle_epoch_marker
+            x_pos_begin_toggle_epoch_marker = cfg.hyp_x_time(cfg.hyp_epochLengthSamples*(cfg.toggle_epoch_marker-1)+1); % opt.trlvis(opt.trlop,1);
+            line([x_pos_begin_toggle_epoch_marker x_pos_begin_toggle_epoch_marker],[cfg.plot_MA_offset temp_max_y],'color',[0.25 1 0.125],'LineWidth',2,'parent',axh);
+        end
+        
+        line([x_pos_begin x_pos_begin],[cfg.plot_MA_offset temp_max_y],'color',[0.25 0.125 1],'LineWidth',2,'parent',axh);
+        
+        
+        
+        set(cfg.hhyp, 'Name', sprintf('Hypnogram datasetnum %d',cfg.datasetnum));
+        set(axh, 'box', 'off');
+        
+        hold(axh,'off');
+        
     end
-    if ~ishandle(cfg.hhyp)
-        figure(cfg.hhyp)
-        set(cfg.hhyp, 'WindowButtonDownFcn',   {@select_sleep_stage_cb, 'h_main',h});
-        set(cfg.hhyp, 'NumberTitle', 'off');
-        cfg.hhypfigax = gca;
-    end
-
-    if cfg.black_background
-        whitebg(cfg.hhyp,'k');
-        set(cfg.hhyp,'color',[0 0 0]);
-    else
-        set(cfg.hhyp,'color',[1 1 1]);
-    end
-    
-    
-    set(cfg.hhypfigax,'Fontsize',8,'FontUnits','normalized');
-    %figure(cfg.hhyp);
-    %h.hhyp = getparent(cfg.hhyp);
-    temp_max_y = 1.25;
-    if ~(isfield(cfg,'hyp_x_time') && isfield(cfg,'hyp_x_time_hyp'))
-        opt.hyp_figure_reload = true;
-    end
-    
-    
-    curr_epoch = opt.trlop;
-    
-    temp_epochLengthSamples = opt.trlvis(1, 2) - opt.trlvis(1, 1) + 1;
-    nEpochs = floor(size(opt.orgdata.trial{1},2)/temp_epochLengthSamples);
-    if curr_epoch > nEpochs
-        curr_epoch = curr_epoch - 1;
-    end
-    
-    hyp_begsample = cfg.hyp_epochLengthSamples*(curr_epoch-1)+1; % opt.trlvis(opt.trlop,1);
-    hyp_endsample = cfg.hyp_epochLengthSamples*(curr_epoch);% opt.trlvis(opt.trlop,2);
-    
-    if opt.hyp_figure_reload
-        beg_time = opt.orgdata.time{1,1}(1);
-        end_time = opt.orgdata.time{1,1}(end);
-        cfg.hyp_x_time = linspace(beg_time,end_time,ceil((end_time-beg_time)*cfg.hyp_fample));
-        cfg.hyp_x_time = cfg.hyp_x_time/60;
-        cfg.hyp_x_time_hyp = cfg.hyp_x_time(1:length(cfg.hypn_plot_interpol));
-        %x_time_hyp = x_time(1:min(length(x_time),length(cfg.hypn_plot_interpol)));
-        opt.hyp_figure_reload = false;
-    end
-    axh = cfg.hhypfigax;
-    
-    if cfg.black_background
-        tempcolor = [1 1 1];
-    else
-        tempcolor = [0 0 0];
-    end
-    
-    plot(axh,cfg.hyp_x_time_hyp,cfg.hypn_plot_interpol,'Color',tempcolor)
-    hold(axh,'all');
-    
-    xlim(axh,[0 max(cfg.hyp_x_time)]);
-    ylabel(axh,'Stages');
-    ylim(axh,[cfg.plot_MA_offset temp_max_y])
-    
-    plot(axh,cfg.hyp_x_time_hyp,cfg.hypn_plot_interpol_MA,'Color',[1 0 0])
-    
-    temp_x_other_artifact = ~(cfg.hypn_plot_interpol_MA > -4.5);
-    if any(~temp_x_other_artifact)
-        temp_hypn_plot_interpol_MA = cfg.hypn_plot_interpol_MA;
-        temp_hypn_plot_interpol_MA(temp_x_other_artifact) = -4.45;
-        %temp_x_other_artifact_index = [temp_x_other_artifact; temp_x_other_artifact+1];
-        %temp_x_other_artifact_index = temp_x_other_artifact_index(1:end-1);
-        %temp_x_other_artifact_index = sort(temp_x_other_artifact_index);
-        plot(axh,cfg.hyp_x_time_hyp,temp_hypn_plot_interpol_MA,'Color',[0.75 0.75 0.75])
-    end
-    
-   
-    
-    
-    
-
-    yTick = [0 -0.5 -1 -2 -3 -4 cfg.plot_MA_offset+1 cfg.plot_MA_offset+0.5];
-    yTickLabel = {'W' 'REM' 'S1' 'S2' 'S3' 'S4' 'MT' 'MA'};
-    
-     if strcmp(cfg.displayEvents,'yes')
-
-     ev1_offset = 0.7;
-     ev2_offset = 0.4;
-     
-      if isfield(cfg,'begin_end_events2')
-         yTick = [ev2_offset yTick];
-        yTickLabel = {'Ev2' yTickLabel{:}};
-         for channelIndex = 1:length(chanindx)
-             curr_begins_ends = cfg.begin_end_events2{chanindx(channelIndex)};
-             if strcmp(cfg.viewmode, 'component')
-                 color = 'k';
-             else
-                 %color = opt.chancolors(chanindx(i),:);
-                 color = opt.chancolors(chanindx(channelIndex),:);
-             end
-             
-             temp_x = (curr_begins_ends(:,1)/opt.fsample)/60;
-             temp_y = repmat(ev2_offset,size(curr_begins_ends,1),1);
-             plot(axh,[temp_x temp_x]',[temp_y-0.05 temp_y+0.05]','Color',color)
-             %scatter(axh,(curr_begins_ends(:,1)/opt.fsample)/60,repmat(ev1_offset,1,size(curr_begins_ends,1)),'MarkerEdgeColor',color)
-         end
-     end
-     
-     if isfield(cfg,'begin_end_events')
-          yTick = [ev1_offset yTick];
-        yTickLabel = {'Ev1' yTickLabel{:}};
-         for channelIndex = 1:length(chanindx)
-             curr_begins_ends = cfg.begin_end_events{chanindx(channelIndex)};
-             if strcmp(cfg.viewmode, 'component')
-                 color = 'k';
-             else
-                 %color = opt.chancolors(chanindx(i),:);
-                 color = opt.chancolors(chanindx(channelIndex),:);
-             end
-             
-             temp_x = (curr_begins_ends(:,1)/opt.fsample)/60;
-             temp_y = repmat(ev1_offset,size(curr_begins_ends,1),1);
-             plot(axh,[temp_x temp_x]',[temp_y-0.05 temp_y+0.05]','Color',color)
-             %scatter(axh,(curr_begins_ends(:,1)/opt.fsample)/60,repmat(ev1_offset,1,size(curr_begins_ends,1)),'MarkerEdgeColor',color)
-         end
-     end
-     
-     
-     end
-    
-    yTick = [1 yTick];
-    yTickLabel = {'?' yTickLabel{:}};
-    
-    set(axh, 'yTick', flip(yTick));
-    set(axh, 'yTickLabel', flip(yTickLabel));
-    set(axh,'TickDir','out');
-    xTick = [0:20:max(cfg.hyp_x_time)];
-    set(axh, 'xTick', xTick);
-    x_pos_begin = cfg.hyp_x_time(hyp_begsample);
-    x_pos_end = cfg.hyp_x_time(hyp_endsample);
-    x_pos = [x_pos_begin x_pos_end x_pos_end x_pos_begin];
-    y_pos = [cfg.plot_MA_offset cfg.plot_MA_offset 1 1];
-    pos_now = patch(x_pos,y_pos,[0.5 0.25 1],'parent',axh);
-    set(pos_now,'FaceAlpha',0.4);
-    set(pos_now,'EdgeColor','none');
-    
-    if cfg.toggle_epoch_marker
-        x_pos_begin_toggle_epoch_marker = cfg.hyp_x_time(cfg.hyp_epochLengthSamples*(cfg.toggle_epoch_marker-1)+1); % opt.trlvis(opt.trlop,1);
-        line([x_pos_begin_toggle_epoch_marker x_pos_begin_toggle_epoch_marker],[cfg.plot_MA_offset temp_max_y],'color',[0.25 1 0.125],'LineWidth',2,'parent',axh);
-    end
-    
-    line([x_pos_begin x_pos_begin],[cfg.plot_MA_offset temp_max_y],'color',[0.25 0.125 1],'LineWidth',2,'parent',axh);
-    
-    
-    
-    set(cfg.hhyp, 'Name', sprintf('Hypnogram datasetnum %d',cfg.datasetnum));
-    set(axh, 'box', 'off');
-    
-    hold(axh,'off');
-   
-end
 end
 % FW end
 
@@ -3048,203 +3360,203 @@ if strcmp(cfg.doSleepScoring,'yes')
             
             %%%%%% Time-frequency #####
             
-           % if     isfield(cfg,'display_power_spectrum') && isfield(cfg,'display_time_frequency')
-                if strcmp(cfg.display_power_spectrum,'yes') || strcmp(cfg.display_time_frequency,'yes')
+            % if     isfield(cfg,'display_power_spectrum') && isfield(cfg,'display_time_frequency')
+            if strcmp(cfg.display_power_spectrum,'yes') || strcmp(cfg.display_time_frequency,'yes')
+                
+                
+                data_det_signal_eeg_data_tfr = data_det_signal_eeg_data;
+                
+                minFreq = 0.5;
+                maxFreq = 30;
+                FreqSteps = 0.5;
+                TimeSteps = 0.1;
+                Xtick = fix(minFreq):2:fix(maxFreq);
+                cfg_tfr = [];
+                cfg_tfr.method    = 'wavelet';%single number (in unit of time, typically seconds) of the required snippets
+                cfg_tfr.output   = 'pow';%single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
+                cfg_tfr.foi = [minFreq:FreqSteps:maxFreq];%
+                cfg_tfr.width = 4;%7
+                cfg_tfr.pad = 'maxperlen';
+                cfg_tfr.feedback = 'no';
+                cfg_tfr.keeptrials = 'no';
+                cfg_tfr.toi = [min(cellfun(@min,data_det_signal_eeg_data_tfr.time)):TimeSteps:max(cellfun(@max,data_det_signal_eeg_data_tfr.time))];
+                data_tfr = ft_freqanalysis(cfg_tfr,data_det_signal_eeg_data_tfr);
+                
+                
+                if strcmp(cfg.display_power_spectrum,'yes')
                     
-                    
-                    data_det_signal_eeg_data_tfr = data_det_signal_eeg_data;
-                    
-                    minFreq = 0.5;
-                    maxFreq = 30;
-                    FreqSteps = 0.5;
-                    TimeSteps = 0.1;
-                    Xtick = fix(minFreq):2:fix(maxFreq);
-                    cfg_tfr = [];
-                    cfg_tfr.method    = 'wavelet';%single number (in unit of time, typically seconds) of the required snippets
-                    cfg_tfr.output   = 'pow';%single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
-                    cfg_tfr.foi = [minFreq:FreqSteps:maxFreq];%
-                    cfg_tfr.width = 4;%7
-                    cfg_tfr.pad = 'maxperlen';
-                    cfg_tfr.feedback = 'no';
-                    cfg_tfr.keeptrials = 'no';
-                    cfg_tfr.toi = [min(cellfun(@min,data_det_signal_eeg_data_tfr.time)):TimeSteps:max(cellfun(@max,data_det_signal_eeg_data_tfr.time))];
-                    data_tfr = ft_freqanalysis(cfg_tfr,data_det_signal_eeg_data_tfr);
-                    
-                    
-                    if strcmp(cfg.display_power_spectrum,'yes')
-                        
-                        if isfield(cfg,'f_ps')
-                            figure(cfg.f_ps);
-                        else
-                            cfg.f_ps = figure;
-                            figure(cfg.f_ps)
-                            
-                        end
-                        
-                        
-                        if isfield(cfg, 'f_ps_gca')
-                            if ishandle(cfg.f_ps_gca)
-                                delete(cfg.f_ps_gca);
-                            end
-                        end
-                        powerspectrum = nanmean(squeeze(data_tfr.powspctrm),2);
-                        freq = data_tfr.freq;
-                        bars_y = 0;
-                        for iFreq =  1:size(cfg.freq_borders,1)
-                            temp_freq_border_left = cfg.freq_borders(iFreq,1);
-                            temp_freq_border_right = cfg.freq_borders(iFreq,2);
-                            temp_mean_power = 10*log10(nanmean(powerspectrum((temp_freq_border_left <= freq) & (freq <= temp_freq_border_right))));
-                            rectangle('Position',[temp_freq_border_left,bars_y,temp_freq_border_right-temp_freq_border_left,temp_mean_power],'FaceColor',cfg.freq_colors(iFreq,:),'EdgeColor','k','LineWidth',1)
-                            if iFreq == 1 && ~ishold
-                                hold all
-                            end
-                        end
-                        plot(freq,10*log10(powerspectrum),'color','k','LineWidth',2);
-                        ylabel('Power [dB]');
-                        xlabel('Frequency [Hz]');
-                        chname = data_tfr.label{1};
-                        cfg.f_ps_gca = gca;
-                        title(cfg.f_ps_gca,['EEG log power Spectrum (' chname ')' ],'interpreter','none');
-                        set(cfg.f_ps_gca, 'TickDir', 'out','Xtick', Xtick);
-                        set(cfg.f_ps, 'Name', 'Power Spectrum');
-                        hold off
-
+                    if isfield(cfg,'f_ps')
+                        figure(cfg.f_ps);
+                    else
+                        cfg.f_ps = figure;
+                        figure(cfg.f_ps)
                         
                     end
                     
-                    if strcmp(cfg.display_time_frequency,'yes')
-                        
-                        if isfield(cfg,'f_tfr')
-                            figure(cfg.f_tfr);
-                        else
-                            cfg.f_tfr = figure;
-                            figure(cfg.f_tfr)
-                            %set(cfg.f_tfr, 'WindowButtonDownFcn',   {@select_sleep_stage_cb, 'h_main',h});
-                            %set(cfg.f_tfr, 'NumberTitle', 'off');
-                            cfg.f_tfr_gca = gca;
-                            %cfg.hhypfig = gcf;
-                        end
-                        
-                        
-                        
-                        
-                        
-                        data_tfr.powspctrm(isnan(data_tfr.powspctrm(:))) = 10E-12;
-                        
-                        time_bins_epoch = (lengthEpochSamples/data_det_signal_eeg_data_tfr.fsample)/TimeSteps;
-                        time_bins_to_substract_left = (fix(cfg.nEpochsBuffer*lengthEpochSamples)/data_det_signal_eeg_data_tfr.fsample)/TimeSteps;
-                        time_bins_to_substract_right = time_bins_to_substract_left;
-                        
-                        
-                        if ~isempty(padd_samples_left)
-                            temp_index_display_tfr_time_points = 1:time_bins_epoch;
-                        else%if ~isempty(padd_samples_right)
-                            temp_index_display_tfr_time_points = (time_bins_to_substract_left+1):(time_bins_to_substract_left+time_bins_epoch);
-                            %             else
-                            %                 temp_index_display_tfr_time_points = (time_bins_to_substract_left+1):(time_bins_to_substract_left+time_bins_to_substract_right+time_bins_epoch);
-                        end
-                        
-                        temp_index_display_tfr_time_points = fix(temp_index_display_tfr_time_points);
-                        
-                        
-                        
-                        
-                        
-                        temp_curr_tfr_channel_signal_ylim = cfg.ylim/cfg.chanscale(cfg.score_channel_eeg_number);
-                        temp_curr_tfr_channel_signal_ylim = temp_curr_tfr_channel_signal_ylim*2;
-                        
-                        Ysteps = (max(temp_curr_tfr_channel_signal_ylim)-min(temp_curr_tfr_channel_signal_ylim))/5;
-                        
-                        Ytick1 = [minFreq 4:4:maxFreq];
-                        Ytick2 = [min(temp_curr_tfr_channel_signal_ylim):Ysteps:max(temp_curr_tfr_channel_signal_ylim)];
-                        Ztick = -8:4:8;
-                        cfg_tfr = [];
-                        temp_time_interval_display = [min(data_tfr.time(temp_index_display_tfr_time_points)) max(data_tfr.time(temp_index_display_tfr_time_points))];
-                        cfg_tfr.baseline     = temp_time_interval_display;%normalized with reference to average power in +-0.9 s interval
-                        cfg_tfr.baselinetype = 'db'; % power in dB = 10*log_10(pwr/mean) 10*log10(data ./ meanVals);
-                        cfg_tfr.zlim         = [min(Ztick) max(Ztick)];
-                        cfg_tfr.xlim         = temp_time_interval_display;
-                        cfg_tfr.ylim         = [minFreq maxFreq];
-                        
-                        x2 = data_det_signal_eeg_data_tfr.time{:}; %(-spindle_trough_prestim_actual <= timelock.events.time & timelock.events.time <= spindle_trough_poststim_actual);
-                        cfg_tfr.x2range = temp_time_interval_display;
-                        
-                        
-                        y2 = [];
-                        y2(1,:) = data_det_signal_eeg_data_tfr.trial{1};
-                        %y2(2,:) = timelock.nonevents.avg * 1000000;
-                        
-                        cfg_tfr.y2range = [min(Ytick2) max(Ytick2)];
-                        cfg_tfr.y2label = 'signal units';
-                        cfg_tfr.y2colors = [[1 1 1]];%color for second y axis default 'b'
-                        cfg_tfr.y2linestyles = ['-'];%linestylw for second y axis default '-'
-                        cfg_tfr.y2linewidths = [1.5];%lable for second y axis default 1
-                        cfg_tfr.y2alphas = [0.55];%lable for second y axis default 1
-                        
-                        %       cfg_tfr.y2colors = [[1 1 1]; [.8 .8 .8]];%color for second y axis default 'b'
-                        %       cfg_tfr.y2linestyles = ['-';'-'];%linestylw for second y axis default '-'
-                        %       cfg_tfr.y2linewidths = [3 ; 1];%lable for second y axis default 1
-                        %       cfg_tfr.y2alphas = [0.55 ; 0.55];%lable for second y axis default 1
-                        
-                        cfg_tfr.colormap = jet(128);%individual_color_map_insertion(min(Ztick),max(Ztick),{stat.critval(1), stat.critval(2)},[1 1 1],jet(256)); %excludes a little bit more t-values due to imprecicion errors
-                        %cfg.colormap = cfg.colormap(end:-1:1,:);
-                        cfg_tfr.interactive = 'no';
-                        
-                        if isfield(cfg, 'f_tfr_p1gca')
-                            if ishandle(cfg.f_tfr_p1gca)
-                                delete(cfg.f_tfr_p1gca);
-                            end
-                            if ishandle(cfg.f_tfr_p2gca)
-                                delete(cfg.f_tfr_p2gca);
-                            end
-                            %delete(cfg.f_tfr_p1gccb);
-                        end
-                        figure(cfg.f_tfr)
-                        
-                        %set(0,'DefaultFigureVisible','off');
-                        %cfg_tfr.colorbar = 'no';
-                        [tempcfg p1gca p2gca p1gccb] = ft_fw_singleplotTFR_yy(cfg_tfr, data_tfr,x2,y2);%ft_singleplotTFR edit ft_freqbaseline
-%                         tfr_fig = gcf;
-%                         %set(0,'DefaultFigureVisible','on');
-%                         tt = figure
-%                         s1 = copyobj(p1gca,tt) 
-%                         s2 = copyobj(p2gca,tt) 
-%                         close(tfr_fig)
-
-                        
-                        cfg.f_tfr_p1gca = p1gca;
-                        cfg.f_tfr_p2gca = p2gca;
-                        cfg.f_tfr_p1gccb = p1gccb;
-                        chname = data_tfr.label{1};
-                        title(cfg.f_tfr_p1gca,['EEG log power (' chname ') normalized to average in time window' ]);
-                        xlabel(cfg.f_tfr_p1gca,'Time [sec]');
-                        ylabel(cfg.f_tfr_p1gca,'Frequency [Hz]');
-                        nticks = 11;
-                        xTick = round(linspace(temp_time_interval_display(1), temp_time_interval_display(2), nticks));
-                        temp_fontsize = 10;
-                        set(cfg.f_tfr_p1gca,'Fontsize',temp_fontsize,'FontUnits','normalized', 'TickDir', 'out', 'Xtick', xTick, 'Ytick', Ytick1);
-                        set(cfg.f_tfr_p1gccb ,'Fontsize',temp_fontsize,'FontUnits','normalized', 'TickDir','out','Ytick',Ztick);
-                        ylabel(cfg.f_tfr_p1gccb ,'Power/mean(power) [dB]');
-                        set(cfg.f_tfr_p2gca,'Fontsize',temp_fontsize,'FontUnits','normalized', 'TickDir', 'out','Ytick', Ytick2);
-                        set(cfg.f_tfr, 'Name', 'Time-frequency of EEG, normalized');
-                        
-                        %myaa(4)
-                        
-                        %figure_width = 12;    % Width in inches
-                        %figure_height = 5;    % Height in inches
-                        
-                        %pos = get(cfg.f_tfr, 'Position');
-                        %set(cfg.f_tfr, 'Position', [pos(1) pos(2) figure_width*100, figure_height*100]); %<- Set size
-                        
-                    end
                     
-                    figure(h); % ensure that the calling figure is in the front
+                    if isfield(cfg, 'f_ps_gca')
+                        if ishandle(cfg.f_ps_gca)
+                            delete(cfg.f_ps_gca);
+                        end
+                    end
+                    powerspectrum = nanmean(squeeze(data_tfr.powspctrm),2);
+                    freq = data_tfr.freq;
+                    bars_y = 0;
+                    for iFreq =  1:size(cfg.freq_borders,1)
+                        temp_freq_border_left = cfg.freq_borders(iFreq,1);
+                        temp_freq_border_right = cfg.freq_borders(iFreq,2);
+                        temp_mean_power = 10*log10(nanmean(powerspectrum((temp_freq_border_left <= freq) & (freq <= temp_freq_border_right))));
+                        rectangle('Position',[temp_freq_border_left,bars_y,temp_freq_border_right-temp_freq_border_left,temp_mean_power],'FaceColor',cfg.freq_colors(iFreq,:),'EdgeColor','k','LineWidth',1)
+                        if iFreq == 1 && ~ishold
+                            hold all
+                        end
+                    end
+                    plot(freq,10*log10(powerspectrum),'color','k','LineWidth',2);
+                    ylabel('Power [dB]');
+                    xlabel('Frequency [Hz]');
+                    chname = data_tfr.label{1};
+                    cfg.f_ps_gca = gca;
+                    title(cfg.f_ps_gca,['EEG log power Spectrum (' chname ')' ],'interpreter','none');
+                    set(cfg.f_ps_gca, 'TickDir', 'out','Xtick', Xtick);
+                    set(cfg.f_ps, 'Name', 'Power Spectrum');
+                    hold off
+                    
+                    
                 end
+                
+                if strcmp(cfg.display_time_frequency,'yes')
+                    
+                    if isfield(cfg,'f_tfr')
+                        figure(cfg.f_tfr);
+                    else
+                        cfg.f_tfr = figure;
+                        figure(cfg.f_tfr)
+                        %set(cfg.f_tfr, 'WindowButtonDownFcn',   {@select_sleep_stage_cb, 'h_main',h});
+                        %set(cfg.f_tfr, 'NumberTitle', 'off');
+                        cfg.f_tfr_gca = gca;
+                        %cfg.hhypfig = gcf;
+                    end
+                    
+                    
+                    
+                    
+                    
+                    data_tfr.powspctrm(isnan(data_tfr.powspctrm(:))) = 10E-12;
+                    
+                    time_bins_epoch = (lengthEpochSamples/data_det_signal_eeg_data_tfr.fsample)/TimeSteps;
+                    time_bins_to_substract_left = (fix(cfg.nEpochsBuffer*lengthEpochSamples)/data_det_signal_eeg_data_tfr.fsample)/TimeSteps;
+                    time_bins_to_substract_right = time_bins_to_substract_left;
+                    
+                    
+                    if ~isempty(padd_samples_left)
+                        temp_index_display_tfr_time_points = 1:time_bins_epoch;
+                    else%if ~isempty(padd_samples_right)
+                        temp_index_display_tfr_time_points = (time_bins_to_substract_left+1):(time_bins_to_substract_left+time_bins_epoch);
+                        %             else
+                        %                 temp_index_display_tfr_time_points = (time_bins_to_substract_left+1):(time_bins_to_substract_left+time_bins_to_substract_right+time_bins_epoch);
+                    end
+                    
+                    temp_index_display_tfr_time_points = fix(temp_index_display_tfr_time_points);
+                    
+                    
+                    
+                    
+                    
+                    temp_curr_tfr_channel_signal_ylim = cfg.ylim/cfg.chanscale(cfg.score_channel_eeg_number);
+                    temp_curr_tfr_channel_signal_ylim = temp_curr_tfr_channel_signal_ylim*2;
+                    
+                    Ysteps = (max(temp_curr_tfr_channel_signal_ylim)-min(temp_curr_tfr_channel_signal_ylim))/5;
+                    
+                    Ytick1 = [minFreq 4:4:maxFreq];
+                    Ytick2 = [min(temp_curr_tfr_channel_signal_ylim):Ysteps:max(temp_curr_tfr_channel_signal_ylim)];
+                    Ztick = -8:4:8;
+                    cfg_tfr = [];
+                    temp_time_interval_display = [min(data_tfr.time(temp_index_display_tfr_time_points)) max(data_tfr.time(temp_index_display_tfr_time_points))];
+                    cfg_tfr.baseline     = temp_time_interval_display;%normalized with reference to average power in +-0.9 s interval
+                    cfg_tfr.baselinetype = 'db'; % power in dB = 10*log_10(pwr/mean) 10*log10(data ./ meanVals);
+                    cfg_tfr.zlim         = [min(Ztick) max(Ztick)];
+                    cfg_tfr.xlim         = temp_time_interval_display;
+                    cfg_tfr.ylim         = [minFreq maxFreq];
+                    
+                    x2 = data_det_signal_eeg_data_tfr.time{:}; %(-spindle_trough_prestim_actual <= timelock.events.time & timelock.events.time <= spindle_trough_poststim_actual);
+                    cfg_tfr.x2range = temp_time_interval_display;
+                    
+                    
+                    y2 = [];
+                    y2(1,:) = data_det_signal_eeg_data_tfr.trial{1};
+                    %y2(2,:) = timelock.nonevents.avg * 1000000;
+                    
+                    cfg_tfr.y2range = [min(Ytick2) max(Ytick2)];
+                    cfg_tfr.y2label = 'signal units';
+                    cfg_tfr.y2colors = [[1 1 1]];%color for second y axis default 'b'
+                    cfg_tfr.y2linestyles = ['-'];%linestylw for second y axis default '-'
+                    cfg_tfr.y2linewidths = [1.5];%lable for second y axis default 1
+                    cfg_tfr.y2alphas = [0.55];%lable for second y axis default 1
+                    
+                    %       cfg_tfr.y2colors = [[1 1 1]; [.8 .8 .8]];%color for second y axis default 'b'
+                    %       cfg_tfr.y2linestyles = ['-';'-'];%linestylw for second y axis default '-'
+                    %       cfg_tfr.y2linewidths = [3 ; 1];%lable for second y axis default 1
+                    %       cfg_tfr.y2alphas = [0.55 ; 0.55];%lable for second y axis default 1
+                    
+                    cfg_tfr.colormap = jet(128);%individual_color_map_insertion(min(Ztick),max(Ztick),{stat.critval(1), stat.critval(2)},[1 1 1],jet(256)); %excludes a little bit more t-values due to imprecicion errors
+                    %cfg.colormap = cfg.colormap(end:-1:1,:);
+                    cfg_tfr.interactive = 'no';
+                    
+                    if isfield(cfg, 'f_tfr_p1gca')
+                        if ishandle(cfg.f_tfr_p1gca)
+                            delete(cfg.f_tfr_p1gca);
+                        end
+                        if ishandle(cfg.f_tfr_p2gca)
+                            delete(cfg.f_tfr_p2gca);
+                        end
+                        %delete(cfg.f_tfr_p1gccb);
+                    end
+                    figure(cfg.f_tfr)
+                    
+                    %set(0,'DefaultFigureVisible','off');
+                    %cfg_tfr.colorbar = 'no';
+                    [tempcfg p1gca p2gca p1gccb] = ft_fw_singleplotTFR_yy(cfg_tfr, data_tfr,x2,y2);%ft_singleplotTFR edit ft_freqbaseline
+                    %                         tfr_fig = gcf;
+                    %                         %set(0,'DefaultFigureVisible','on');
+                    %                         tt = figure
+                    %                         s1 = copyobj(p1gca,tt)
+                    %                         s2 = copyobj(p2gca,tt)
+                    %                         close(tfr_fig)
+                    
+                    
+                    cfg.f_tfr_p1gca = p1gca;
+                    cfg.f_tfr_p2gca = p2gca;
+                    cfg.f_tfr_p1gccb = p1gccb;
+                    chname = data_tfr.label{1};
+                    title(cfg.f_tfr_p1gca,['EEG log power (' chname ') normalized to average in time window' ]);
+                    xlabel(cfg.f_tfr_p1gca,'Time [sec]');
+                    ylabel(cfg.f_tfr_p1gca,'Frequency [Hz]');
+                    nticks = 11;
+                    xTick = round(linspace(temp_time_interval_display(1), temp_time_interval_display(2), nticks));
+                    temp_fontsize = 10;
+                    set(cfg.f_tfr_p1gca,'Fontsize',temp_fontsize,'FontUnits','normalized', 'TickDir', 'out', 'Xtick', xTick, 'Ytick', Ytick1);
+                    set(cfg.f_tfr_p1gccb ,'Fontsize',temp_fontsize,'FontUnits','normalized', 'TickDir','out','Ytick',Ztick);
+                    ylabel(cfg.f_tfr_p1gccb ,'Power/mean(power) [dB]');
+                    set(cfg.f_tfr_p2gca,'Fontsize',temp_fontsize,'FontUnits','normalized', 'TickDir', 'out','Ytick', Ytick2);
+                    set(cfg.f_tfr, 'Name', 'Time-frequency of EEG, normalized');
+                    
+                    %myaa(4)
+                    
+                    %figure_width = 12;    % Width in inches
+                    %figure_height = 5;    % Height in inches
+                    
+                    %pos = get(cfg.f_tfr, 'Position');
+                    %set(cfg.f_tfr, 'Position', [pos(1) pos(2) figure_width*100, figure_height*100]); %<- Set size
+                    
+                end
+                
+                figure(h); % ensure that the calling figure is in the front
+            end
             %end
             
-           
+            
             %%%%%% Time-frequncy end #####
-
+            
             
             %cfg_emg_redef_channel = [];
             %cfg_emg_redef_channel.channel = cfg.score_channel_emg_number;
@@ -3354,7 +3666,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                 %     end
                 %     so_cand_pairsamples = so_cand_pairsamples(unique([so_candidateIndex_include1; so_candidateIndex_include2; setdiff(1:size(so_cand_pairsamples,1),so_candidateIndex_exclude)]),:);
                 
-                  
+                
                 
                 iCand = 1;
                 while iCand < size(so_cand_pairsamples,1)
@@ -3501,10 +3813,10 @@ if strcmp(cfg.doSleepScoring,'yes')
                 
                 h_so_event_begin_end = temp_ax;
                 for k=1:numel(evbeg)
-                   
+                    
                     h_so_event_begin_end = ft_plot_box([tim(evbeg(k)) tim(evend(k)) temp_so_y_offset1 temp_so_y_offset2],'facealpha',0.38, 'facecolor', cfg.slowoscillation_mark_color, 'edgecolor', 'none', 'tag', 'mark_slowosci',  ...
                         'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'axis', h_so_event_begin_end);
-                   
+                    
                 end
                 temp_ax = h_so_event_begin_end;
                 
@@ -3520,27 +3832,27 @@ if strcmp(cfg.doSleepScoring,'yes')
                 so_points_for_display_ends = [];
                 so_points_for_display_pairs = [];
                 if ~isempty(so_cand_pairsamples)
-                so_points_for_display_begins = so_cand_pairsamples(((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,1)) & ...
-                    (so_cand_pairsamples(:,1) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
-                so_points_for_display_ends = so_cand_pairsamples(((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,2)) & ...
-                    (so_cand_pairsamples(:,2) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
-                so_points_for_display_pairs = so_cand_pairsamples((((cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,1)) & ...
-                    (so_cand_pairsamples(:,2) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
+                    so_points_for_display_begins = so_cand_pairsamples(((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,1)) & ...
+                        (so_cand_pairsamples(:,1) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
+                    so_points_for_display_ends = so_cand_pairsamples(((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,2)) & ...
+                        (so_cand_pairsamples(:,2) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
+                    so_points_for_display_pairs = so_cand_pairsamples((((cfg.nEpochsBuffer*lengthEpochSamples+1) <= so_cand_pairsamples(:,1)) & ...
+                        (so_cand_pairsamples(:,2) <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))),:) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
                 end
-%                 temp_prevbeg = -1;
-%                 temp_count_overlapp = 0;
-%                 for k=1:size(so_points_for_display_pairs,1)
-%                     if (temp_prevbeg == so_points_for_display_pairs(k,1))
-%                         temp_count_overlapp = temp_count_overlapp + 1;
-%                     else
-%                         temp_count_overlapp = 0;
-%                     end
-%                     h_so_event_begin_end = ft_plot_box([tim(so_points_for_display_pairs(k,1)) tim(so_points_for_display_pairs(k,2)) (0.8-temp_count_overlapp*0.1) (0.9-temp_count_overlapp*0.1)],'facealpha',0.6, 'facecolor', [0 0 1], 'edgecolor', 'none', 'tag', 'mark_slowosci',  ...
-%                         'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
-%                     h_so_event_begin_end = ft_plot_box([tim(so_points_for_display_pairs(k,2))-0.1 tim(so_points_for_display_pairs(k,2)) (0.8-temp_count_overlapp*0.1) (0.9-temp_count_overlapp*0.1)],'facealpha',0.6, 'facecolor', [1 0 0], 'edgecolor', 'none', 'tag', 'mark_slowosci',  ...
-%                         'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
-%                     temp_prevbeg = so_points_for_display_pairs(k,1);
-%                 end
+                %                 temp_prevbeg = -1;
+                %                 temp_count_overlapp = 0;
+                %                 for k=1:size(so_points_for_display_pairs,1)
+                %                     if (temp_prevbeg == so_points_for_display_pairs(k,1))
+                %                         temp_count_overlapp = temp_count_overlapp + 1;
+                %                     else
+                %                         temp_count_overlapp = 0;
+                %                     end
+                %                     h_so_event_begin_end = ft_plot_box([tim(so_points_for_display_pairs(k,1)) tim(so_points_for_display_pairs(k,2)) (0.8-temp_count_overlapp*0.1) (0.9-temp_count_overlapp*0.1)],'facealpha',0.6, 'facecolor', [0 0 1], 'edgecolor', 'none', 'tag', 'mark_slowosci',  ...
+                %                         'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
+                %                     h_so_event_begin_end = ft_plot_box([tim(so_points_for_display_pairs(k,2))-0.1 tim(so_points_for_display_pairs(k,2)) (0.8-temp_count_overlapp*0.1) (0.9-temp_count_overlapp*0.1)],'facealpha',0.6, 'facecolor', [1 0 0], 'edgecolor', 'none', 'tag', 'mark_slowosci',  ...
+                %                         'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
+                %                     temp_prevbeg = so_points_for_display_pairs(k,1);
+                %                 end
                 
                 temp_epochLengthSamples = endsample - begsample + 1;
                 cfg.curr_displayed_detected_slowosci_perc_display_ind = so_display_ind(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples));
@@ -3552,7 +3864,7 @@ if strcmp(cfg.doSleepScoring,'yes')
             end
             
             if strcmp(cfg.underlaySOSignal,'yes')
-
+                
                 cfg_eeg_so = [];
                 cfg_eeg_so = cfg.core_cfg;
                 cfg_eeg_so.hpfilter = 'yes';
@@ -3585,7 +3897,7 @@ if strcmp(cfg.doSleepScoring,'yes')
                 SOdispsignal = [ padd_samples_left data_det_signal_eeg_so_disp2.trial{1} padd_samples_right];
                 
                 cfg.so_signal_display = SOdispsignal(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples));
-
+                
             end
             
             if strcmp(cfg.markSpindles,'yes') || strcmp(cfg.underlaySpindleSignal,'yes')
@@ -3607,96 +3919,96 @@ if strcmp(cfg.doSleepScoring,'yes')
                 cfg_eeg_sp.feedback = 'no';
                 
                 data_det_signal_eeg_sp = ft_fw_preprocessing(cfg_eeg_sp,data_det_signal_eeg_data);
-                                
+                
                 frqBndPssSignal = [ padd_samples_left data_det_signal_eeg_sp.trial{1} padd_samples_right];
                 
                 cfg.spindsignal_display = frqBndPssSignal(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples));
                 
-                if strcmp(cfg.markSpindles,'yes') 
+                if strcmp(cfg.markSpindles,'yes')
                     
-                lengthSignal = length(frqBndPssSignal);
-                
-                smplsRMSTimeWndw = 0.2*FrqOfSmpl;
-                smplsMovAvgTimeWndw = 0.2*FrqOfSmpl;
-                envelope = [];
-                if strcmp(EnvelopeMethod,'hilbertEnv')
-                    envelope = abs(hilbert(frqBndPssSignal))';
-                    %     elseif strcmp(EnvelopeMethod,'smoothedRMSwd')
-                    %         envelope = smoothRMSwd(frqBndPssSignal,smplsRMSTimeWndw);
-                    %         if exist('smooth','file') == 2
-                    %             envelope = smooth(envelope,smplsMovAvgTimeWndw);
-                    %         else
-                    %             envelope = smoothwd(envelope,smplsMovAvgTimeWndw)';
-                    %         end
-                end
-                
-                cfg.spindsignal_envelope_display = envelope(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples));
-                
-                [begins, ends] = getBeginsAndCorrespondingEndsIndicesAboveThreshold(envelope,cfg.sp_thresholdForDetectionBeginEnd/2);
-                ind_valid_criterion = [];
-                sp_events = [];
-                for iBeg = 1:numel(begins)
-                    envmax = max(envelope(begins(iBeg):ends(iBeg)));
-                    if ((cfg.sp_thresholdForDetectionCriterion/2) <= envmax)
-                        ind_valid_criterion = [ind_valid_criterion;iBeg];
-                        sp_events = [sp_events; begins(iBeg) + find(envelope(begins(iBeg):ends(iBeg)) == envmax,1,'first') - 1];
+                    lengthSignal = length(frqBndPssSignal);
+                    
+                    smplsRMSTimeWndw = 0.2*FrqOfSmpl;
+                    smplsMovAvgTimeWndw = 0.2*FrqOfSmpl;
+                    envelope = [];
+                    if strcmp(EnvelopeMethod,'hilbertEnv')
+                        envelope = abs(hilbert(frqBndPssSignal))';
+                        %     elseif strcmp(EnvelopeMethod,'smoothedRMSwd')
+                        %         envelope = smoothRMSwd(frqBndPssSignal,smplsRMSTimeWndw);
+                        %         if exist('smooth','file') == 2
+                        %             envelope = smooth(envelope,smplsMovAvgTimeWndw);
+                        %         else
+                        %             envelope = smoothwd(envelope,smplsMovAvgTimeWndw)';
+                        %         end
                     end
-                end
-                
-                begins = begins(ind_valid_criterion);
-                ends = ends(ind_valid_criterion);
-                
-                tempCandidatesLengths = ends - begins + 1;
-                
-                indicesCandiates = find((tempCandidatesLengths >= smplsMinDetectionLength) & (tempCandidatesLengths <= smplsMaxDetectionLength));
-                begins = begins(indicesCandiates);
-                ends = ends(indicesCandiates);
-                sp_events = sp_events(indicesCandiates);
-                curr_nDetected_spindels = length(indicesCandiates);
-                
-                
-                
-                sp_events_for_display = sp_events((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= sp_events) & (sp_events <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
-                
-                cfg.curr_displayed_detected_spindels_number = numel(sp_events_for_display);
-               
-                if cfg.SOdetection_orientation == 1
-                     temp_sp_y_offset1 = -1;
-                    temp_sp_y_offset2 = -0.9;
-                else
-                    temp_sp_y_offset1 = 0.9;
-                    temp_sp_y_offset2 = 1;
-                end
-                
-                temp_ax = [];
-                if curr_nDetected_spindels > 0
-                    sp_display_ind = zeros(1,lengthSignal);
+                    
+                    cfg.spindsignal_envelope_display = envelope(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples));
+                    
+                    [begins, ends] = getBeginsAndCorrespondingEndsIndicesAboveThreshold(envelope,cfg.sp_thresholdForDetectionBeginEnd/2);
+                    ind_valid_criterion = [];
+                    sp_events = [];
                     for iBeg = 1:numel(begins)
-                        sp_display_ind(begins(iBeg):ends(iBeg)) = 1;
+                        envmax = max(envelope(begins(iBeg):ends(iBeg)));
+                        if ((cfg.sp_thresholdForDetectionCriterion/2) <= envmax)
+                            ind_valid_criterion = [ind_valid_criterion;iBeg];
+                            sp_events = [sp_events; begins(iBeg) + find(envelope(begins(iBeg):ends(iBeg)) == envmax,1,'first') - 1];
+                        end
                     end
                     
+                    begins = begins(ind_valid_criterion);
+                    ends = ends(ind_valid_criterion);
+                    
+                    tempCandidatesLengths = ends - begins + 1;
+                    
+                    indicesCandiates = find((tempCandidatesLengths >= smplsMinDetectionLength) & (tempCandidatesLengths <= smplsMaxDetectionLength));
+                    begins = begins(indicesCandiates);
+                    ends = ends(indicesCandiates);
+                    sp_events = sp_events(indicesCandiates);
+                    curr_nDetected_spindels = length(indicesCandiates);
                     
                     
-                    tmp = diff([0 sp_display_ind(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples)) 0]);
-                    evbeg = find(tmp==+1);
-                    evend = find(tmp==-1) - 1;
                     
-                    h_sp_event_begin_end = temp_ax;
-                    for k=1:numel(evbeg)
-                        h_sp_event_begin_end = ft_plot_box([tim(evbeg(k)) tim(evend(k)) temp_sp_y_offset1 temp_sp_y_offset2],'facealpha',0.38, 'facecolor', cfg.spindle_mark_color, 'edgecolor', 'none', 'tag', 'mark_spind',  ...
-                            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'axis',h_sp_event_begin_end);
+                    sp_events_for_display = sp_events((fix(cfg.nEpochsBuffer*lengthEpochSamples+1) <= sp_events) & (sp_events <= fix((cfg.nEpochsBuffer+1)*lengthEpochSamples))) - fix(cfg.nEpochsBuffer*lengthEpochSamples);
+                    
+                    cfg.curr_displayed_detected_spindels_number = numel(sp_events_for_display);
+                    
+                    if cfg.SOdetection_orientation == 1
+                        temp_sp_y_offset1 = -1;
+                        temp_sp_y_offset2 = -0.9;
+                    else
+                        temp_sp_y_offset1 = 0.9;
+                        temp_sp_y_offset2 = 1;
                     end
-                    temp_ax = h_sp_event_begin_end;
                     
-                end
-                h_sp_event = temp_ax;
-                for iEv = 1:numel(sp_events_for_display)
-                    h_sp_event = ft_plot_line([tim(sp_events_for_display(iEv)) tim(sp_events_for_display(iEv))], [temp_sp_y_offset1 temp_sp_y_offset2],'facealpha',0.8, 'color', cfg.spindle_mark_color, 'edgecolor', 'none', 'tag', 'mark_spind','linewidth',2,  ...
-                        'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', h_sp_event);
+                    temp_ax = [];
+                    if curr_nDetected_spindels > 0
+                        sp_display_ind = zeros(1,lengthSignal);
+                        for iBeg = 1:numel(begins)
+                            sp_display_ind(begins(iBeg):ends(iBeg)) = 1;
+                        end
+                        
+                        
+                        
+                        tmp = diff([0 sp_display_ind(fix(cfg.nEpochsBuffer*lengthEpochSamples+1):fix((cfg.nEpochsBuffer+1)*lengthEpochSamples)) 0]);
+                        evbeg = find(tmp==+1);
+                        evend = find(tmp==-1) - 1;
+                        
+                        h_sp_event_begin_end = temp_ax;
+                        for k=1:numel(evbeg)
+                            h_sp_event_begin_end = ft_plot_box([tim(evbeg(k)) tim(evend(k)) temp_sp_y_offset1 temp_sp_y_offset2],'facealpha',0.38, 'facecolor', cfg.spindle_mark_color, 'edgecolor', 'none', 'tag', 'mark_spind',  ...
+                                'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'axis',h_sp_event_begin_end);
+                        end
+                        temp_ax = h_sp_event_begin_end;
+                        
+                    end
+                    h_sp_event = temp_ax;
+                    for iEv = 1:numel(sp_events_for_display)
+                        h_sp_event = ft_plot_line([tim(sp_events_for_display(iEv)) tim(sp_events_for_display(iEv))], [temp_sp_y_offset1 temp_sp_y_offset2],'facealpha',0.8, 'color', cfg.spindle_mark_color, 'edgecolor', 'none', 'tag', 'mark_spind','linewidth',2,  ...
+                            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', h_sp_event);
+                        
+                    end
+                    temp_ax = h_sp_event;
                     
-                end
-                temp_ax = h_sp_event;
-                
                 end
             end
             
@@ -3704,7 +4016,7 @@ if strcmp(cfg.doSleepScoring,'yes')
             
         end
         
- 
+        
     end
     
     if cfg.has_ECG
@@ -3793,6 +4105,20 @@ if strcmp(cfg.doSleepScoring,'yes')
     h2 = curr_hypn(:,2);
     [stagestring h1_str h2_str] = getStageStringByHypnValue(h1,h2);
     opt.curr_stage = stagestring;
+    
+    opt.prev_stages = getPrevStageString_stage(cfg.hypn,curr_epoch,6);
+    opt.next_stages = getNextStageString_stage(cfg.hypn,curr_epoch,6);
+    
+    if isfield(cfg, 'hypn_mult')
+        if ~isempty(cfg.hypn_mult)
+            for iHypMult = 1:numel(cfg.hypn_mult)
+                opt.curr_stage_mult{iHypMult} = getStageStringByHypnValue(cfg.hypn_mult{iHypMult}(curr_epoch,1),cfg.hypn_mult{iHypMult}(curr_epoch,2));
+                %                 opt.prev_stages_mult{iHypMult}
+                %                 opt.next_stages_mult{iHypMult}
+                %                 opt.curr_stage_mult = '?';
+            end
+        end
+    end
 end
 
 
@@ -3818,24 +4144,98 @@ if strcmp(cfg.doSleepScoring,'yes')
         h_scorechan_eeg_middle_line = ft_plot_line([tim(1) tim(end)],[0 0], 'color', cfg.score_channel_eeg_color , 'linewidth', 1, 'tag', 'scorechan_eeg',  ...
             'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', temp_ax);
         temp_ax = h_scorechan_eeg_middle_line;
-%        ft_plot_matrix([tim(1) tim(end)],[-1 1],datamatrix, 'clim',[-1,1], 'tag', 'TFR',  ...
-%             'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
-
+        %        ft_plot_matrix([tim(1) tim(end)],[-1 1],datamatrix, 'clim',[-1,1], 'tag', 'TFR',  ...
+        %             'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1]);
         
+        
+        
+        %         if ~isfield(opt,'curr_stage')
+        %             opt.curr_stage = '?';
+        %         end
+        %
+        %
+        %         temp_curr_channels_displayed = numel(opt.laytime.label);
+        %
+        %         h_curr_stage = ft_plot_text(tim(floor(end/2)), 0, opt.curr_stage, 'tag', 'curr_stage', 'Color', [0.9 0.9 0.9], 'FontSize', 64, 'FontUnits',  'normalized', ...
+        %             'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none', 'axis', temp_ax);
+        %         temp_ax = h_curr_stage;
+        
+        
+    end
+    
+    %half channel hight
+    temp_channel_number_in_curr_display = ceil(numel(chanindx)/2);
+    
+    %temp_ax = [];
+    
+    for iChanDisplayed = temp_channel_number_in_curr_display;
+        
+        if numel(cfg.hypn_mult) > 0
+            if isfield(opt,'curr_stage_mult')
+                temp_col = jet(4);
+                for iHypMult = 1:numel(opt.curr_stage_mult)
+                    
+                    h_curr_stage = ft_plot_text(tim(floor(end/2)), 0, opt.curr_stage_mult{iHypMult}, 'tag', 'curr_stage', 'Color', temp_col(iHypMult,:), 'FontSize', 64-iHypMult*12, 'FontUnits',  'normalized', 'FontName', 'FixedWidth', ...
+                        'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none', 'axis', temp_ax);
+                    temp_ax = h_curr_stage;
+                    
+                    
+                    %                 temp_iChanDisplayed = iChanDisplayed;%iChanDisplayed-1;
+                    %                 if temp_iChanDisplayed < 1
+                    %                     temp_iChanDisplayed = 1;
+                    %                 end
+                    %                 h_prev_stage = ft_plot_text(tim(floor(end/2)), 0, [opt.prev_stages_mult{iHypMult} '                    ' opt.next_stages_mult{iHypMult}], 'tag', 'curr_stage', 'Color', [0.9 0.9 0.9]-iHypMult*0.2, 'FontSize', 24-iHypMult*2, 'FontUnits',  'normalized', ...
+                    %                     'hpos', opt.laytime.pos(temp_iChanDisplayed,1), 'vpos', opt.laytime.pos(temp_iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(temp_iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none', 'axis', temp_ax);
+                    %                 temp_ax = h_prev_stage;
+                    %
+                end
+            end
+        end
         
         if ~isfield(opt,'curr_stage')
             opt.curr_stage = '?';
         end
         
+        if ~isfield(opt,'prev_stages')
+            opt.prev_stages = '';
+        end
         
-        temp_curr_channels_displayed = numel(opt.laytime.label);
+        if ~isfield(opt,'next_stages')
+            opt.next_stages = '';
+        end
         
-        h_curr_stage = ft_plot_text(tim(floor(end/2)), 0, opt.curr_stage, 'tag', 'curr_stage', 'Color', [0.9 0.9 0.9], 'FontSize', 64, 'FontUnits',  'normalized', ...
+        
+        %temp_curr_channels_displayed = numel(opt.laytime.label);
+        
+        h_curr_stage = ft_plot_text(tim(floor(end/2)), 0, opt.curr_stage, 'tag', 'curr_stage', 'Color', cfg.color_text_on_bg , 'FontSize', 64, 'FontUnits',  'normalized', 'FontName', 'FixedWidth', ...
             'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none', 'axis', temp_ax);
         temp_ax = h_curr_stage;
-
-
+        
+        
+        temp_iChanDisplayed = iChanDisplayed;%iChanDisplayed-1;
+        if temp_iChanDisplayed < 1
+            temp_iChanDisplayed = 1;
+        end
+        temp_prev_stages = opt.prev_stages;
+        temp_next_stages = opt.next_stages;
+        if length(temp_prev_stages) < 6
+            temp_prev_stages = [temp_prev_stages [repmat(' ',1,6-length(temp_prev_stages))]];
+        end
+        if length(temp_next_stages) < 6
+            temp_next_stages = [[repmat(' ',1,6-length(temp_next_stages))] temp_next_stages];
+        end
+        
+        h_prev_stage = ft_plot_text(tim(floor(end/2)), 0, [temp_prev_stages '                     ' temp_next_stages], 'tag', 'curr_stage', 'Color', cfg.color_text_on_bg, 'FontSize', 24, 'FontUnits',  'normalized', 'FontName', 'FixedWidth', ...
+            'hpos', opt.laytime.pos(temp_iChanDisplayed,1), 'vpos', opt.laytime.pos(temp_iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(temp_iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none', 'axis', temp_ax);
+        temp_ax = h_prev_stage;
+        
+        
+        
+        
+        
     end
+    
+    
     
     
     
@@ -3869,17 +4269,17 @@ if strcmp(cfg.doSleepScoring,'yes')
     delete(findobj(h, 'tag', 'scorechan_ecg'));
     
     if cfg.has_ECG
-    
-    temp_channel_number_in_curr_display = find(chanindx == cfg.score_channel_ecg_number);
-    
-    for iChanDisplayed = temp_channel_number_in_curr_display;
         
-        h_scorechan_ecg = ft_plot_box([tim(1) tim(end) -1 1],'facealpha',0.3, 'facecolor', cfg.score_channel_ecg_color , 'edgecolor', 'none', 'tag', 'scorechan_ecg',  ...
-            'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', temp_ax);
-        temp_ax = h_scorechan_ecg;
+        temp_channel_number_in_curr_display = find(chanindx == cfg.score_channel_ecg_number);
         
-    end
-    
+        for iChanDisplayed = temp_channel_number_in_curr_display;
+            
+            h_scorechan_ecg = ft_plot_box([tim(1) tim(end) -1 1],'facealpha',0.3, 'facecolor', cfg.score_channel_ecg_color , 'edgecolor', 'none', 'tag', 'scorechan_ecg',  ...
+                'hpos', opt.laytime.pos(iChanDisplayed,1), 'vpos', opt.laytime.pos(iChanDisplayed,2), 'width', opt.width, 'height', opt.laytime.height(iChanDisplayed), 'hlim', opt.hlim, 'vlim', [-1 1], 'axis', temp_ax);
+            temp_ax = h_scorechan_ecg;
+            
+        end
+        
     end
 end
 
@@ -3894,7 +4294,7 @@ if strcmp(cfg.drawgrid,'yes')
                 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1],'axis',h_curr_gridline);
         end
     end
-   % hold off
+    % hold off
 end
 
 
@@ -4066,10 +4466,10 @@ end
 delete(findobj(h,'tag', 'toggle_marker'));
 
 if strcmp(cfg.doSleepScoring,'yes')
- if cfg.toggle_epoch_marker == opt.trlop
-   h_top = ft_plot_line([tim(1) tim(end)],[1 1], 'color', [0.25 1 0.125] , 'linewidth', 8, 'tag', 'toggle_marker',  ...
+    if cfg.toggle_epoch_marker == opt.trlop
+        h_top = ft_plot_line([tim(1) tim(end)],[1 1], 'color', [0.25 1 0.125] , 'linewidth', 8, 'tag', 'toggle_marker',  ...
             'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.width, 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', [-1 1]);
- end
+    end
 end
 
 delete(findobj(h,'tag', 'title_time'));
@@ -4092,7 +4492,7 @@ end
 temp_ylim = get(gca, 'ylim');
 temp_xlim = get(gca, 'xlim');
 delete(findobj(h,'tag', 'title_time'));
-text(temp_xlim(end)-0.01*range(temp_xlim),temp_ylim(end)-0.005*range(temp_ylim),str,'HorizontalAlignment','right','VerticalAlignment','top','color',[0.8 0.8 0.8],'tag','title_time','FontSize', 12, 'FontUnits',  'points','interpreter','none')
+text(temp_xlim(end)-0.01*range(temp_xlim),temp_ylim(end)-0.005*range(temp_ylim),str,'HorizontalAlignment','right','VerticalAlignment','top','color',cfg.color_text_on_bg,'tag','title_time','FontSize', 12, 'FontUnits',  'points','interpreter','none')
 
 
 
@@ -4153,7 +4553,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
             % this is a cheap quick fix. If it causes error in plotting components, do this conditional on viewmode
             if numel(findobj(h,'tag', 'chanlabel'))<numel(chanindx)
                 if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
-                    h_chanlabel = ft_plot_text(tim(1)+range(tim)*0.0125, 0.5, opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'Color', [0.85 0.85 0.85], 'FontSize', 0.9/2/numel(chanindx), 'FontUnits',  'normalized','HorizontalAlignment', 'left', ...
+                    h_chanlabel = ft_plot_text(tim(1)+range(tim)*0.0125, 0.5, opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'Color', cfg.color_text_on_bg, 'FontSize', 0.9/2/numel(chanindx), 'FontUnits',  'normalized','HorizontalAlignment', 'left', ...
                         'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.width, 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none');
                     
                     %ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none','FontUnits','normalized','FontSize',0.9/2/numel(chanindx));
@@ -4161,39 +4561,39 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
             end
             
             if strcmp(cfg.doSleepScoring,'yes')
-              
-            if laysel == find(chanindx == cfg.score_channel_eeg_number);
                 
-                if strcmp(cfg.underlaySpindleSignal,'yes')
-                    if isfield(cfg,'spindsignal_envelope_display')
+                if laysel == find(chanindx == cfg.score_channel_eeg_number);
+                    
+                    if strcmp(cfg.underlaySpindleSignal,'yes')
+                        if isfield(cfg,'spindsignal_envelope_display')
+                            
+                            ft_plot_vector(tim(1:numel(cfg.spindsignal_envelope_display)), cfg.spindsignal_envelope_display, 'box', false, 'color', cfg.underlaySpindleSignal_color, 'tag', 'spindle_timecourse', ...
+                                'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+                            ft_plot_vector(tim(1:numel(cfg.spindsignal_envelope_display)), -cfg.spindsignal_envelope_display, 'box', false, 'color', cfg.underlaySpindleSignal_color, 'tag', 'spindle_timecourse', ...
+                                'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+                            
+                        end
                         
-                        ft_plot_vector(tim(1:numel(cfg.spindsignal_envelope_display)), cfg.spindsignal_envelope_display, 'box', false, 'color', cfg.underlaySpindleSignal_color, 'tag', 'spindle_timecourse', ...
-                            'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
-                        ft_plot_vector(tim(1:numel(cfg.spindsignal_envelope_display)), -cfg.spindsignal_envelope_display, 'box', false, 'color', cfg.underlaySpindleSignal_color, 'tag', 'spindle_timecourse', ...
-                            'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+                        if isfield(cfg,'spindsignal_display')
+                            ft_plot_vector(tim(1:numel(cfg.spindsignal_display)), cfg.spindsignal_display , 'box', false, 'color', [0.75 0.75 0.75], 'tag', 'spindle_timecourse', ...
+                                'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+                            
+                        end
+                    end
+                    
+                    if strcmp(cfg.underlaySOSignal,'yes')
+                        
+                        if isfield(cfg,'so_signal_display')
+                            ft_plot_vector(tim(1:numel(cfg.so_signal_display)), cfg.so_signal_display , 'box', false, 'color', cfg.underlaySOSignal_color, 'tag', 'so_timecourse', ...
+                                'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+                            
+                        end
                         
                     end
                     
-                    if isfield(cfg,'spindsignal_display')
-                        ft_plot_vector(tim(1:numel(cfg.spindsignal_display)), cfg.spindsignal_display , 'box', false, 'color', [0.75 0.75 0.75], 'tag', 'spindle_timecourse', ...
-                            'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
-                        
-                    end
-                end
-                
-                if strcmp(cfg.underlaySOSignal,'yes')
-      
-                    if isfield(cfg,'so_signal_display')
-                        ft_plot_vector(tim(1:numel(cfg.so_signal_display)), cfg.so_signal_display , 'box', false, 'color', cfg.underlaySOSignal_color, 'tag', 'so_timecourse', ...
-                            'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
-                        
-                    end
+                    
                     
                 end
-                
-                
-                
-            end
             end
             
             %the time course of channels
@@ -4208,14 +4608,14 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
                         
                         if strcmp(cfg.markECG,'yes')
                             
-%                             %rgb_ind = 1+fix(fw_normalize(cfg.ECG_instHRsmin, min(cfg.ECG_instHRsmin), max(cfg.ECG_instHRsmin), 0, 127));
-%                             %rgb_ind(isnan(rgb_ind)) = 1;
-%                             %rgb = flip(autumn(128),1);
-%                             %ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', rgb(rgb_ind,:), 'tag', 'ecg_HR_timecourse', ...
-%                             ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', 'k', 'tag', 'ecg_HR_timecourse', ...
-%                             'linewidth', 1.5, ...
-%                                 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
-%                             
+                            %                             %rgb_ind = 1+fix(fw_normalize(cfg.ECG_instHRsmin, min(cfg.ECG_instHRsmin), max(cfg.ECG_instHRsmin), 0, 127));
+                            %                             %rgb_ind(isnan(rgb_ind)) = 1;
+                            %                             %rgb = flip(autumn(128),1);
+                            %                             %ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', rgb(rgb_ind,:), 'tag', 'ecg_HR_timecourse', ...
+                            %                             ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', 'k', 'tag', 'ecg_HR_timecourse', ...
+                            %                             'linewidth', 1.5, ...
+                            %                                 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+                            %
                             if ~isempty(cfg.ECG_instHRsmin_SignalPeaksSamples)
                                 rgb_ind = 1+fix(fw_normalize(cfg.ECG_instHRsmin(cfg.ECG_instHRsmin_SignalPeaksSamples), min(cfg.ECG_instHRsmin), max(cfg.ECG_instHRsmin), 0, 127));
                                 rgb_ind(isnan(rgb_ind)) = 1;
@@ -4252,7 +4652,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
                 yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
                     opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)]);
                 %FW begin
-                temp_tick = [.25 .75] .* range(opt.vlim./curr_scale(i)) + opt.vlim(1)./curr_scale(i);
+                temp_tick = [.25 .75] .* range(opt.vlim./curr_scale(i)) + opt.vlim(1)./abs(curr_scale(i));
                 yTickLabel_temp = cellfun(@str2num,cellfun(@(x) num2str(x,'%1.2f'),{temp_tick(1) temp_tick(2)},'UniformOutput',false));
                 yTickLabel = [yTickLabel {yTickLabel_temp}];
                 %yTickLabel = [yTickLabel {[.25 .75] .* temp_factor}];
@@ -4260,7 +4660,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
             else
                 %FW begin
                 % two ticks per channel
-                temp_tick = [0 .25 .75 1] .* range(opt.vlim./curr_scale(i)) + opt.vlim(1)./curr_scale(i);
+                temp_tick = [0 .25 .75 1] .* range(opt.vlim./curr_scale(i)) + opt.vlim(1)./abs(curr_scale(i));
                 yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/2); ...
                     opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
                     opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4); ...
@@ -4603,19 +5003,19 @@ for iChanDisplayed = temp_channel_number_in_curr_display;
         else
             mark_display_ind(ind_1:ind_2) = 1;
         end
-    end        
-                
+    end
+    
     cfg.curr_displayed_detected_slowosci_perc_cumulative = num2str(100*sum(cfg.curr_displayed_detected_slowosci_perc_display_ind | mark_display_ind)/temp_epochLengthSamples,3);
     cfg.curr_displayed_detected_slowosci_perc_substractive = num2str(100*sum(cfg.curr_displayed_detected_slowosci_perc_display_ind & ~mark_display_ind)/temp_epochLengthSamples,3);
     cfg.curr_displayed_marking = num2str(100*sum(mark_display_ind)/temp_epochLengthSamples,3);
-
-%     ft_uilayout(h, 'tag', 'scindlabelSOperc', 'string', ['SO%: ' num2str(100*cfg.curr_displayed_detected_slowosci_perc,3) ...
-%         ' /+ ' cfg.curr_displayed_detected_slowosci_perc_cumulative  ...
-%         ' /- ' cfg.curr_displayed_detected_slowosci_perc_substractive ...
-%         ]);
-%     
-%     ft_uilayout(h, 'tag', 'scindlabelMarkperc', 'string', ['Mark%: ' cfg.curr_displayed_marking ]);
-
+    
+    %     ft_uilayout(h, 'tag', 'scindlabelSOperc', 'string', ['SO%: ' num2str(100*cfg.curr_displayed_detected_slowosci_perc,3) ...
+    %         ' /+ ' cfg.curr_displayed_detected_slowosci_perc_cumulative  ...
+    %         ' /- ' cfg.curr_displayed_detected_slowosci_perc_substractive ...
+    %         ]);
+    %
+    %     ft_uilayout(h, 'tag', 'scindlabelMarkperc', 'string', ['Mark%: ' cfg.curr_displayed_marking ]);
+    
     setappdata(h, 'cfg',cfg);
     updateLabels(h)
 end
@@ -4743,37 +5143,75 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [stagestring h1_str h2_str] = getStageStringByHypnValue(h1,h2)
-h1_str = '';
-h2_str = '';
-switch h1
-    case 0
-        h1_str = 'W';
-    case {1 2 3 4}
-        h1_str = ['S' num2str(h1)];
-    case 5
-        h1_str = 'REM';
-    case 5
-        h1_str = 'REM';
-    case 8
-        h1_str = 'MT';
-    otherwise
-        h1_str = '?';
-end
-
+function [MAstr] = getStageStringByHypnValue_MA(h2)
+MAstr = '';
 switch h2
     case 0
-        h2_str = '';
+        MAstr = '';
     case {1 2}
-        h2_str = ' MA';
+        MAstr = ' A';
     case 3
-        h2_str = ' A';
+        MAstr = ' a';
     otherwise
-        h2_str = ' ?A?';
+        MAstr = ' ?A?';
+end
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [stagestring] = getStageStringByHypnValue_stage(h1)
+stagestring = '';
+switch h1
+    case 0
+        stagestring = 'W';
+    case {1 2 3 4}
+        stagestring = ['' num2str(h1)];
+    case 5
+        stagestring = 'R';
+    case 8
+        stagestring = 'M';
+    otherwise
+        stagestring = '?';
+end
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [stagestring h1_str h2_str] = getStageStringByHypnValue(h1,h2)
+h1_str = getStageStringByHypnValue_stage(h1);
+h2_str = getStageStringByHypnValue_MA(h2);
 stagestring = [h1_str h2_str];
 
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [stagesstring] = getPrevStageString_stage(hypn,curr_epoch,n)
+idx = max(1,curr_epoch-n):max(0,(curr_epoch-1));
+hv = hypn(idx,1);
+if isempty(hv)
+    stagesstring = '';
+else
+    stagesstring = [arrayfun(@(h)getStageStringByHypnValue_stage(h),hv')];
+end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [stagesstring] = getNextStageString_stage(hypn,curr_epoch,n)
+idx = min(size(hypn,1),curr_epoch+1):min(size(hypn,1),(curr_epoch+n));
+hv = hypn(idx,1);
+if isempty(hv)
+    stagesstring = '';
+else
+    stagesstring = [arrayfun(@(h)getStageStringByHypnValue_stage(h),hv')];
+end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4916,22 +5354,22 @@ set(panel1,'Position',[0 0 0.95 1]);
 set(panel2,'Position',[0 1-vertical_size_total 1 vertical_size_total]);
 set(gca,'Parent',panel2);
 if vertical_size_total > 1
-slider = uicontrol('Style','Slider','Parent',dlg,...
-      'Units','normalized','Position',[0.95 0 0.05 1],...
-      'Value',1,'Callback',{@(src,eventdata,nch,vsizech,vsize,panel) slider_callback1(src,eventdata,nch,vsizech,vsize,panel), Nchannels, vertical_size_row_pre, vertical_size_total, panel2});
-      %'Value',1,'Callback',{@(src,eventdata,arg1,arg2) set(arg1,'Position',[0 -get(src,'Value')*Nchannels/(1/vertical_size_row_pre) 1 arg2]), panel2, vertical_size_total});
-
+    slider = uicontrol('Style','Slider','Parent',dlg,...
+        'Units','normalized','Position',[0.95 0 0.05 1],...
+        'Value',1,'Callback',{@(src,eventdata,nch,vsizech,vsize,panel) slider_callback1(src,eventdata,nch,vsizech,vsize,panel), Nchannels, vertical_size_row_pre, vertical_size_total, panel2});
+    %'Value',1,'Callback',{@(src,eventdata,arg1,arg2) set(arg1,'Position',[0 -get(src,'Value')*Nchannels/(1/vertical_size_row_pre) 1 arg2]), panel2, vertical_size_total});
+    
 end
 indices_selected = indices_selected(:)';     % ensure that it is a row array
 
 % userdata.label    = channels;
 % userdata.select   = index_selected;
 index_unselected = setdiff(1:length(channels), indices_selected);
-% set(dlg, 'userdata', userdata); 
+% set(dlg, 'userdata', userdata);
 % uicontrol(dlg, 'style', 'text',       'position', [ 10 240+20 80  20], 'string', 'unselected');
 % uicontrol(dlg, 'style', 'text',       'position', [200 240+20 80  20], 'string', 'selected  ');
-% uicontrol(dlg, 'style', 'listbox',    'position', [ 10  40+20 80 200], 'min', 0, 'max', 2, 'tag', 'lbunsel') 
-% uicontrol(dlg, 'style', 'listbox',    'position', [200  40+20 80 200], 'min', 0, 'max', 2, 'tag', 'lbsel') 
+% uicontrol(dlg, 'style', 'listbox',    'position', [ 10  40+20 80 200], 'min', 0, 'max', 2, 'tag', 'lbunsel')
+% uicontrol(dlg, 'style', 'listbox',    'position', [200  40+20 80 200], 'min', 0, 'max', 2, 'tag', 'lbsel')
 % uicontrol(dlg, 'style', 'pushbutton', 'position', [105 175+20 80  20], 'string', 'add all >'   , 'callback', @label_addall);
 % uicontrol(dlg, 'style', 'pushbutton', 'position', [105 145+20 80  20], 'string', 'add >'       , 'callback', @label_add);
 % uicontrol(dlg, 'style', 'pushbutton', 'position', [105 115+20 80  20], 'string', '< remove'    , 'callback', @label_remove);
@@ -4954,8 +5392,8 @@ bg_EOG = uibuttongroup('Visible','off', 'units', 'normalized','Position',[line_x
 bg_EMG = uibuttongroup('Visible','off', 'units', 'normalized','Position',[line_x_offsets(8) 1-(numel(channels)+1)*vertical_size_row line_x_width(8), vertical_size_row*numel(channels)],'tag',['rdg_EMG'],'backgroundcolor', cfg.score_channel_emg_color,'parent',panel2);
 
 if cfg.has_ECG
-uicontrol(panel2, 'style', 'text', 'units', 'normalized','HorizontalAlignment','left', 'position', [line_x_offsets(9) 1-1*vertical_size_row line_x_width(9), vertical_size_row], 'string', 'ECG','tag',['heading9'],'backgroundcolor', cfg.score_channel_ecg_color);
-bg_ECG = uibuttongroup('Visible','off', 'units', 'normalized','Position',[line_x_offsets(9) 1-(numel(channels)+1)*vertical_size_row line_x_width(9), vertical_size_row*numel(channels)],'tag',['rdg_ECG'],'backgroundcolor', cfg.score_channel_ecg_color,'parent',panel2);
+    uicontrol(panel2, 'style', 'text', 'units', 'normalized','HorizontalAlignment','left', 'position', [line_x_offsets(9) 1-1*vertical_size_row line_x_width(9), vertical_size_row], 'string', 'ECG','tag',['heading9'],'backgroundcolor', cfg.score_channel_ecg_color);
+    bg_ECG = uibuttongroup('Visible','off', 'units', 'normalized','Position',[line_x_offsets(9) 1-(numel(channels)+1)*vertical_size_row line_x_width(9), vertical_size_row*numel(channels)],'tag',['rdg_ECG'],'backgroundcolor', cfg.score_channel_ecg_color,'parent',panel2);
 end
 
 uicontrol(panel2, 'style', 'pushbutton', 'units', 'normalized', 'position', [line_x_offsets(10) 1-1*vertical_size_row line_x_width(10), vertical_size_row], 'string', 'OK','tag',['button_OK'],'Callback','uiresume');
@@ -4965,7 +5403,7 @@ uicontrol(panel2, 'style', 'pushbutton', 'units', 'normalized', 'position', [lin
 
 uicontrol(panel2, 'style', 'text', 'units', 'normalized','HorizontalAlignment','left', 'position', [line_x_offsets(10) 1-4*vertical_size_row line_x_width(10), vertical_size_row], 'string', 'all chan.?','tag',['text_all_chan']);
 uicontrol(panel2, 'style', 'checkbox', 'units', 'normalized', 'position', [line_x_offsets(10) 1-5*vertical_size_row+vertical_size_row/2 line_x_width(10), vertical_size_row],'tag',['enabled_all_chan'],'Callback',{@cb_channelDialog_all_channels});
-    
+
 
 
 for iCh = 1:numel(channels)
@@ -4975,12 +5413,12 @@ for iCh = 1:numel(channels)
     %uicontrol(panel2, 'style', 'edit', 'units', 'normalized', 'position', [line_x_offsets(4) 1-(iCh+1)*vertical_size_row line_x_width(4), vertical_size_row], 'string', '','tag',['order_chan' num2str(iCh)],'Min',1);
     uicontrol(panel2, 'style', 'pushbutton', 'units', 'normalized', 'position', [line_x_offsets(4) 1-(iCh+1)*vertical_size_row line_x_width(4), vertical_size_row], 'string', 'color','ForegroundColor',opt.chancolors(iCh,:),'tag',['color_chan' num2str(iCh)],'Callback',{@cb_channelDialog_Colorchooser,opt.chancolors(iCh,:)});
     uicontrol(panel2, 'style', 'edit', 'units', 'normalized', 'position', [line_x_offsets(5) 1-(iCh+1)*vertical_size_row line_x_width(5), vertical_size_row], 'string', num2str(iCh),'tag',['order_chan' num2str(iCh)],'Min',0);
-
+    
     uicontrol(panel2, 'style', 'radiobutton', 'units', 'normalized', 'position', [0.1 1-(iCh)*vertical_size_row/(vertical_size_row*numel(channels))+vertical_size_row*0.25 1-0.1 vertical_size_row ], 'string', '','tag',['radiobutton_focusEEG' num2str(iCh)],'parent',bg_EEG,'backgroundcolor', cfg.score_channel_eeg_color);
     uicontrol(panel2, 'style', 'radiobutton', 'units', 'normalized', 'position', [0.1 1-(iCh)*vertical_size_row/(vertical_size_row*numel(channels))+vertical_size_row*0.25 1-0.1 vertical_size_row ], 'string', '','tag',['radiobutton_focusEOG' num2str(iCh)],'parent',bg_EOG,'backgroundcolor', cfg.score_channel_eog_color);
-    uicontrol(panel2, 'style', 'radiobutton', 'units', 'normalized', 'position', [0.1 1-(iCh)*vertical_size_row/(vertical_size_row*numel(channels))+vertical_size_row*0.25 1-0.1 vertical_size_row ], 'string', '','tag',['radiobutton_focusEMG' num2str(iCh)],'parent',bg_EMG,'backgroundcolor', cfg.score_channel_emg_color); 
+    uicontrol(panel2, 'style', 'radiobutton', 'units', 'normalized', 'position', [0.1 1-(iCh)*vertical_size_row/(vertical_size_row*numel(channels))+vertical_size_row*0.25 1-0.1 vertical_size_row ], 'string', '','tag',['radiobutton_focusEMG' num2str(iCh)],'parent',bg_EMG,'backgroundcolor', cfg.score_channel_emg_color);
     if cfg.has_ECG
-        uicontrol(panel2, 'style', 'radiobutton', 'units', 'normalized', 'position', [0.1 1-(iCh)*vertical_size_row/(vertical_size_row*numel(channels))+vertical_size_row*0.25 1-0.1 vertical_size_row ], 'string', '','tag',['radiobutton_focusECG' num2str(iCh)],'parent',bg_ECG,'backgroundcolor', cfg.score_channel_ecg_color); 
+        uicontrol(panel2, 'style', 'radiobutton', 'units', 'normalized', 'position', [0.1 1-(iCh)*vertical_size_row/(vertical_size_row*numel(channels))+vertical_size_row*0.25 1-0.1 vertical_size_row ], 'string', '','tag',['radiobutton_focusECG' num2str(iCh)],'parent',bg_ECG,'backgroundcolor', cfg.score_channel_ecg_color);
     end
     
     if ismember(iCh,indices_selected)
@@ -5015,12 +5453,12 @@ if ishandle(dlg)
     % the user pressed OK, return the selection from the dialog
     %   userdata = get(dlg, 'userdata');
     %   select = userdata.select;
-   
-
+    
+    
     channel_order = (1:numel(channels))';
     channel_order_compare = channel_order;
     for iCh = 1:numel(channels)
-        value = str2num( get(findobj(get(dlg,'children'),'tag',['order_chan' num2str(iCh)]),'String') ); 
+        value = str2num( get(findobj(get(dlg,'children'),'tag',['order_chan' num2str(iCh)]),'String') );
         if ~isempty(value)
             channel_order(iCh) = value;
         end
@@ -5035,7 +5473,7 @@ if ishandle(dlg)
     
     
     [dummy_chanOrder curr_chanIndexOrder] = sort(channel_order);
-
+    
     chanNum_focusEEG = 1;
     for iCh = 1:numel(channels)
         if strcmp(get(get(bg_EEG,'SelectedObject'),'Tag'),['radiobutton_focusEEG' num2str(iCh)])
@@ -5069,32 +5507,32 @@ if ishandle(dlg)
             end
         end
     end
-
     
     
-            cfg.score_channel_eeg_number = find(curr_chanIndexOrder == chanNum_focusEEG,1,'first');
-            %ft_uilayout(h, 'tag', 'scoptbuttons_focusEEG', 'string', ['Focus EEG: ' opt.hdr.label{cfg.score_channel_eeg_number}]);
-
-            cfg.score_channel_eog_number = find(curr_chanIndexOrder == chanNum_focusEOG,1,'first');
-            %ft_uilayout(h, 'tag', 'scoptbuttons_focusEOG', 'string', ['Focus EOG: ' opt.hdr.label{cfg.score_channel_eog_number}]);
-           
-            cfg.score_channel_emg_number = find(curr_chanIndexOrder == chanNum_focusEMG,1,'first');
-            %ft_uilayout(h, 'tag', 'scoptbuttons_focusEMG', 'string', ['Focus EMG: ' opt.hdr.label{cfg.score_channel_emg_number}]);
-
-            if cfg.has_ECG
-            	cfg.score_channel_ecg_number = find(curr_chanIndexOrder == chanNum_focusECG,1,'first');
-            end
-            
-            if isfield(cfg,'begin_end_events')
-                cfg.times_ind_per_channel = cfg.times_ind_per_channel(curr_chanIndexOrder);
-                cfg.begin_end_events = cfg.begin_end_events(curr_chanIndexOrder);
-            end
-            
-            if isfield(cfg,'begin_end_events2')
-                cfg.times_ind_per_channel2 = cfg.times_ind_per_channel2(curr_chanIndexOrder);
-                cfg.begin_end_events2 = cfg.begin_end_events2(curr_chanIndexOrder);
-            end
-            
+    
+    cfg.score_channel_eeg_number = find(curr_chanIndexOrder == chanNum_focusEEG,1,'first');
+    %ft_uilayout(h, 'tag', 'scoptbuttons_focusEEG', 'string', ['Focus EEG: ' opt.hdr.label{cfg.score_channel_eeg_number}]);
+    
+    cfg.score_channel_eog_number = find(curr_chanIndexOrder == chanNum_focusEOG,1,'first');
+    %ft_uilayout(h, 'tag', 'scoptbuttons_focusEOG', 'string', ['Focus EOG: ' opt.hdr.label{cfg.score_channel_eog_number}]);
+    
+    cfg.score_channel_emg_number = find(curr_chanIndexOrder == chanNum_focusEMG,1,'first');
+    %ft_uilayout(h, 'tag', 'scoptbuttons_focusEMG', 'string', ['Focus EMG: ' opt.hdr.label{cfg.score_channel_emg_number}]);
+    
+    if cfg.has_ECG
+        cfg.score_channel_ecg_number = find(curr_chanIndexOrder == chanNum_focusECG,1,'first');
+    end
+    
+    if isfield(cfg,'begin_end_events')
+        cfg.times_ind_per_channel = cfg.times_ind_per_channel(curr_chanIndexOrder);
+        cfg.begin_end_events = cfg.begin_end_events(curr_chanIndexOrder);
+    end
+    
+    if isfield(cfg,'begin_end_events2')
+        cfg.times_ind_per_channel2 = cfg.times_ind_per_channel2(curr_chanIndexOrder);
+        cfg.begin_end_events2 = cfg.begin_end_events2(curr_chanIndexOrder);
+    end
+    
     index_selected_channels = [];
     for iCh = 1:numel(channels)
         if get(findobj(get(dlg,'children'),'tag',['enabled_chan' num2str(iCh)]),'value')
@@ -5103,7 +5541,7 @@ if ishandle(dlg)
     end
     
     for iCh = 1:numel(channels)
-        value = str2num( get(findobj(get(dlg,'children'),'tag',['scale_chan' num2str(iCh)]),'String') ); 
+        value = str2num( get(findobj(get(dlg,'children'),'tag',['scale_chan' num2str(iCh)]),'String') );
         if ~isempty(value)
             cfg.chanscale(find(curr_chanIndexOrder == iCh,1,'first')) = value;
         end
@@ -5112,7 +5550,7 @@ if ishandle(dlg)
     selected_channels = channels(index_selected_channels);
     
     for iCh = 1:numel(channels)
-        color = get(findobj(get(dlg,'children'),'tag',['color_chan' num2str(iCh)]),'ForegroundColor'); 
+        color = get(findobj(get(dlg,'children'),'tag',['color_chan' num2str(iCh)]),'ForegroundColor');
         if ~isempty(value)
             opt.chancolors(find(curr_chanIndexOrder == iCh,1,'first'),:) = color;
         end
@@ -5121,8 +5559,8 @@ if ishandle(dlg)
     close(dlg);
     return
 else
-  % the user pressed Cancel or closed the dialog, return the initial selection
-  return
+    % the user pressed Cancel or closed the dialog, return the initial selection
+    return
 end
 
 
@@ -5176,7 +5614,7 @@ for obj = findobj('tag',['button_Color'])
         case 'white'
             cols = white(nChan);
         case 'mono'
-            color_new = uisetcolor([0.5 0.5 0.5],'Color for all channels'); 
+            color_new = uisetcolor([0.5 0.5 0.5],'Color for all channels');
             cols = repmat(color_new,nChan,1);
             newColScheme = num2str(round(color_new*255));
     end
@@ -5199,12 +5637,12 @@ end
 % function cb_channelDialog_OK(src,eventdata,arg1,arg2)
 % uiresume
 % end
-% 
+%
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % SUBFUNCTION
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function cb_channelDialog_Cancel(src,eventdata,arg1,arg2)
-% 
+%
 % end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5212,7 +5650,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_channelDialog_Colorchooser(src,eventdata,arg1)
 color = arg1;
-color_new = uisetcolor(color,'new channel color'); 
+color_new = uisetcolor(color,'new channel color');
 set(src,'ForegroundColor',color_new);
 end
 
@@ -5258,8 +5696,20 @@ end
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function writeHypnogramFile(filepath,hypn,delimiter)
 hyp_export = fopen(filepath, 'wt');
-for iRow = 1:size(hypn,1)
-    fprintf(hyp_export, ['%i' delimiter '%i\n'], hypn(iRow,:));
+if size(hypn,2) > 2
+    for iRow = 1:size(hypn,1)
+        fprintf(hyp_export, ['%i' delimiter '%i' [repmat([delimiter '%f'],1,size(hypn,2)-2)]], hypn(iRow,:));
+        if iRow ~= size(hypn,1)
+            fprintf(hyp_export,['\n']);
+        end
+    end
+else
+    for iRow = 1:size(hypn,1)
+        fprintf(hyp_export, ['%i' delimiter '%i'], hypn(iRow,:));
+        if iRow ~= size(hypn,1)
+            fprintf(hyp_export,['\n']);
+        end
+    end
 end
 fclose(hyp_export);
 end
@@ -5282,7 +5732,7 @@ for iArtType = 1:numel(artTypes)
     for iArt = 1:size(artifactSamples,1)
         beginsample = artifactSamples(iArt,1);
         endsample = artifactSamples(iArt,2);
-    fprintf(art_export, ['%s' delimiter '%f' delimiter '%f\n'], artType, beginsample/opt.fsample, endsample/opt.fsample);
+        fprintf(art_export, ['%s' delimiter '%f' delimiter '%f\n'], artType, beginsample/opt.fsample, endsample/opt.fsample);
     end
 end
 fclose(art_export);
@@ -5291,61 +5741,138 @@ end
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % SUBFUNCTION
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [cfg] = removeAdditionalHypnogram(hypn_mult_idx,cfg)
+if ~isempty(cfg.hypn_mult) && (hypn_mult_idx <= numel(cfg.hypn_mult))
+    idx = 1:numel(cfg.hypn_mult);
+    cfg.hypn_mult = cfg.hypn_mult(idx ~= hypn_mult_idx);
+    cfg.hypn_plot_interpol_mult = cfg.hypn_plot_interpol_mult(idx ~= hypn_mult_idx);
+    cfg.hypn_plot_interpol_MA_mult = cfg.hypn_plot_interpol_MA_mult(idx ~= hypn_mult_idx);
+    cfg.hypn_mult_idx = numel(cfg.hypn_mult)+1;
+end
+end
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % SUBFUNCTION
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [opt, cfg] = readArtifactFile(filepath,opt,cfg,delimiter)
 
 af = dataset('File',[filepath],'Delimiter',delimiter);
 if ~isempty(af)
-%unique(af.artifact)
-af.begin_seconds = round(af.begin_seconds*opt.fsample);
-af.end_seconds = round(af.end_seconds*opt.fsample);
-
-
-
-
-
-% collect the artifacts that have been detected from cfg.artfctdef.xxx.artifact
-artlabel = unique(af.artifact);
-sel      = zeros(size(artlabel));
-artifact = cell(size(artlabel));
-
-for i=1:length(artlabel)
-    temp_idx = strcmp(artlabel(i),af.artifact);
-    artifact{i} = [af.begin_seconds(temp_idx) af.end_seconds(temp_idx)];
-    fprintf('detected %3d %s artifacts\n', size(artifact{i}, 1), artlabel{i});
+    %unique(af.artifact)
+    af.begin_seconds = round(af.begin_seconds*opt.fsample);
+    af.end_seconds = round(af.end_seconds*opt.fsample);
+    
+    
+    
+    
+    
+    % collect the artifacts that have been detected from cfg.artfctdef.xxx.artifact
+    artlabel = unique(af.artifact);
+    sel      = zeros(size(artlabel));
+    artifact = cell(size(artlabel));
+    
+    for i=1:length(artlabel)
+        temp_idx = strcmp(artlabel(i),af.artifact);
+        artifact{i} = [af.begin_seconds(temp_idx) af.end_seconds(temp_idx)];
+        fprintf('detected %3d %s artifacts\n', size(artifact{i}, 1), artlabel{i});
+    end
+    
+    cfg.selectfeature = artlabel(1);
+    opt.ftsel       = find(strcmp(artlabel,cfg.selectfeature)); % current artifact/feature being selected
+    
+    if length(artlabel) > 9
+        error(['only up to 9 artifacts groups supported, but ' num2str(length(artlabel)) ' found'])
+    end
+    
+    % make artdata representing all artifacts in a "raw data" format
+    datendsample = max(opt.trlorg(:,2));
+    
+    artdata = [];
+    artdata.trial{1}       = convert_event(artifact, 'boolvec', 'endsample', datendsample); % every artifact is a "channel"
+    artdata.time{1}        = offset2time(0, opt.fsample, datendsample);
+    artdata.label          = artlabel;
+    artdata.fsample        = opt.fsample;
+    artdata.cfg.trl        = [1 datendsample 0];
+    
+    
+    % % legend artifacts/features
+    % for iArt = 1:length(artlabel)
+    %     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', artlabel{iArt}, 'userdata', num2str(iArt), 'position', [0.91, 0.9 - ((iArt-1)*0.09), 0.08, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
+    %     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.91, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
+    %     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.96, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
+    %     uicontrol('tag', 'artifactui_button', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', ['artifact(' opt.artdata.label{opt.ftsel} ')'], 'userdata', 'a', 'position', [0.01, temp_lower_line_y2 - ((iArt-1)*0.09), 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
+    %     uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.01, temp_lower_line_y - ((iArt-1)*0.09), 0.02, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
+    %     uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.03, temp_lower_line_y - ((iArt-1)*0.09), 0.02, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
+    %
+    % end
+    
+    
+    
+    opt.artdata = artdata;
 end
 
-cfg.selectfeature = artlabel(1);
-opt.ftsel       = find(strcmp(artlabel,cfg.selectfeature)); % current artifact/feature being selected
-
-if length(artlabel) > 9
-    error(['only up to 9 artifacts groups supported, but ' num2str(length(artlabel)) ' found'])
 end
 
-% make artdata representing all artifacts in a "raw data" format
-datendsample = max(opt.trlorg(:,2));
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % SUBFUNCTION
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [h, opt, cfg, hyp_file_filterindex] = loadSession(h,opt,cfg)
+temppath = [cfg.outputfilespath];
 
-artdata = [];
-artdata.trial{1}       = convert_event(artifact, 'boolvec', 'endsample', datendsample); % every artifact is a "channel"
-artdata.time{1}        = offset2time(0, opt.fsample, datendsample);
-artdata.label          = artlabel;
-artdata.fsample        = opt.fsample;
-artdata.cfg.trl        = [1 datendsample 0];
+[hyp_file_name hyp_file_path hyp_file_filterindex] = uigetfile(...
+    {'*.mat','MAT-files (*.mat)';...
+    '*.*',  'All Files (*.*)'},...
+    'Open session',...
+    temppath);
 
+if hyp_file_filterindex ~= 0
+    if ~isfield(cfg,'hhyp')
+        cfg.hhyp = figure;
+    end
+    figure(cfg.hhyp)
+    set(cfg.hhyp, 'WindowButtonDownFcn',   {@select_sleep_stage_cb, 'h_main',h});
+    set(cfg.hhyp, 'NumberTitle', 'off');
+    cfg.hhypfigax = gca;
+    
+    hhyp = cfg.hhyp;
+    hhypfigax = cfg.hhypfigax;
+    
+    tempfilepath = [hyp_file_path hyp_file_name];
+    tempcfg = load(tempfilepath,'cfg');
+    
+    if isfield(tempcfg.cfg,'browserversion')
+        temp_saved_version = tempcfg.cfg.browserversion;
+    else
+        temp_saved_version = 'lower than 2.3.8';
+        tempcfg.cfg.browserversion = 'lower than 2.3.8';
+    end
+    if strcmp(temp_saved_version,cfg.browserversion)
+    else
+        answer_open = questdlg(['Opening this session might fail!, This version ' cfg.browserversion ' does not match the one of the saved session ' temp_saved_version], ...
+            'Open might fail', ...
+            'Still try', ...
+            'Cancel','Cancel');
+        switch answer_open
+            case 'Still try'
+                load(tempfilepath,'opt')
+                cfg = tempcfg.cfg;
+                tempcfg = [];
+                
+                cfg.hhyp = hhyp;
+                cfg.hhypfigax = hhypfigax;
+            otherwise
+                tempcfg = [];
+                return
+        end
+        
+    end
+    
+    
+else
+    error('');
+end
 
-% % legend artifacts/features
-% for iArt = 1:length(artlabel)
-%     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', artlabel{iArt}, 'userdata', num2str(iArt), 'position', [0.91, 0.9 - ((iArt-1)*0.09), 0.08, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
-%     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.91, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
-%     %   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.96, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
-%     uicontrol('tag', 'artifactui_button', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', ['artifact(' opt.artdata.label{opt.ftsel} ')'], 'userdata', 'a', 'position', [0.01, temp_lower_line_y2 - ((iArt-1)*0.09), 0.04, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
-%     uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.01, temp_lower_line_y - ((iArt-1)*0.09), 0.02, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
-%     uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.03, temp_lower_line_y - ((iArt-1)*0.09), 0.02, 0.04],'backgroundcolor',[0 0 0],'foregroundcolor',[1 1 1])
-%     
-% end
-
-
-
-opt.artdata = artdata;
+if ~isfield(cfg,'color_text_on_bg')
+    cfg.color_text_on_bg = [0.8 0.8 0.8];
 end
 
 end

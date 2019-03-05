@@ -279,7 +279,7 @@ if needhdr
     % continue with the subset of channels that has a consistent sampling frequency
     hdr.Fs           = EDF.SampleRate(chansel(1));
     hdr.nChans       = length(chansel);
-    ft_warning('Skipping "%s" as continuous data channel because of inconsistent sampling frequency (%g Hz)', deblank(EDF.Label(end,:)), EDF.SampleRate(end));
+    warning('Skipping "%s" as continuous data channel because of inconsistent sampling frequency (%g Hz)', deblank(EDF.Label(end,:)), EDF.SampleRate(end));
     hdr.label        = cellstr(EDF.Label(chansel,:));
     % it is continuous data, therefore append all records in one trial
     hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1));
@@ -314,7 +314,7 @@ if needhdr
     hdr.orig.chansel    = chansel;
     hdr.orig.annotation = find(strcmp(cellstr(hdr.orig.Label), 'EDF Annotations'));
     
-    ft_warning('channels with different sampling rate not supported, selecting subset of %d channels at %f Hz', length(hdr.label), hdr.Fs);
+    warning('channels with different sampling rate not supported, selecting subset of %d channels at %f Hz', length(hdr.label), hdr.Fs);
   end
   
   % return the header
@@ -450,7 +450,7 @@ if ~is_below_2GB || ~read_16bit_success
   fp = fopen(filename,'r','ieee-le');
   status = fseek(fp, offset, 'bof');
   if status
-    ft_error(['failed seeking ' filename]);
+    error(['failed seeking ' filename]);
   end
   [buf,num] = fread(fp,numwords,'bit16=>double');
   fclose(fp);

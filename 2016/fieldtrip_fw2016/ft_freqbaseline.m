@@ -63,7 +63,7 @@ cfg.parameter    =  ft_getopt(cfg, 'parameter', 'powspctrm');
 
 % check validity of input options
 cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector'});
-cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange','db'});
+cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange','db','normchange','zscore'});
 cfg =               ft_checkopt(cfg, 'parameter', {'char', 'charcell'});
 
 % make sure cfg.parameter is a cell array of strings
@@ -176,8 +176,12 @@ elseif (strcmp(baselinetype, 'relative'))
   data = data ./ meanVals;
 elseif (strcmp(baselinetype, 'relchange'))
   data = (data - meanVals) ./ meanVals;
+elseif (strcmp(baselinetype, 'normchange')) || (strcmp(baselinetype, 'vssum'))
+  data = (data - meanVals) ./ (data + meanVals);
 elseif (strcmp(baselinetype, 'db'))
   data = 10*log10(data ./ meanVals);
+elseif (strcmp(baselinetype,'zscore'))
+    data=(data-meanVals)./stdVals;
 else
   error('unsupported method for baseline normalization: %s', baselinetype);
 end

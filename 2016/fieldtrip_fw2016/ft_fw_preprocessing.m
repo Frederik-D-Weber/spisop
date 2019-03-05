@@ -1,4 +1,4 @@
-function [data] = ft_preprocessing(cfg, data)
+function [data] = ft_fw_preprocessing(cfg, data, varargin)
 
 % FT_PREPROCESSING reads MEG and/or EEG data according to user-specified trials
 % and applies several user-specified preprocessing steps to the signals.
@@ -159,6 +159,8 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+chanindx  = ft_getopt(varargin, 'chanindx'); % this is used for EDF and BDF with different sampling rates
+
 % return immediately after distributed execution
 if ~isempty(ft_getopt(cfg, 'distribute'))
   return
@@ -234,6 +236,9 @@ if isfield(cfg, 'export') && ~isempty(cfg.export)
 end
 
 hasdata = exist('data', 'var');
+if hasdata 
+    hasdata = hasdata && ~isempty(data);
+end
 if hasdata
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % do preprocessing of data that has already been read into memory
@@ -363,7 +368,7 @@ else
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
   % read the header
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'chanindx', chanindx);
   
   
 %    % FW BEGIN
